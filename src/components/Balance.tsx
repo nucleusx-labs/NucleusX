@@ -12,39 +12,22 @@ export default function Balance({ address, chainKey }: BalanceProps) {
   const [symbol, setSymbol] = useState('')
 
   useEffect(() => {
-    if (!address) {
-      return
-    }
-
+    if (!address) return
     let ignore = false
-
     const fetchBalance = async () => {
       const { balance, symbol } = await getBalance(chainKey, address)
-      if (!ignore) {
-        setBalance(balance)
-        setSymbol(symbol)
-      }
+      if (!ignore) { setBalance(balance); setSymbol(symbol) }
     }
-
     fetchBalance()
-
-    return () => {
-      ignore = true
-    }
+    return () => { ignore = true }
   }, [address, chainKey])
 
   return (
     <div>
-      <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-        Balance
-      </div>
+      <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-1">Balance</div>
       <div className="flex items-baseline space-x-2 font-mono">
-        <div className="font-light text-black text-2xl">
-          {balance || '---'}
-        </div>
-        <div className="text-xs text-gray-500 uppercase tracking-wider">
-          {symbol}
-        </div>
+        <div className="font-black text-brutalist-panel-text text-2xl">{balance || '---'}</div>
+        <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest">{symbol}</div>
       </div>
     </div>
   )

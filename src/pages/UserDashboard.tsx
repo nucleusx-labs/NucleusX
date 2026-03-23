@@ -1,13 +1,13 @@
-import { Wallet, TrendingUp, History, ArrowUpRight, Target } from 'lucide-react'
+import { Wallet, TrendingUp, History, ArrowUpRight, Target, Plus, Minus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function UserDashboard() {
   const assets = [
-    { symbol: 'DOT', name: 'Polkadot', balance: '142.5', value: '$598.50', change: '+2.4%' },
-    { symbol: 'USDC', name: 'USD Coin', balance: '1,050.00', value: '$1,050.00', change: '0.0%' },
-    { symbol: 'WETH', name: 'Wrapped Ether', balance: '1.24', value: '$4,120.40', change: '-1.2%' },
+    { symbol: 'DOT', name: 'Polkadot', balance: '142.5', value: '$598.50', change: '+2.4%', pct: 10.4 },
+    { symbol: 'USDC', name: 'USD Coin', balance: '1,050.00', value: '$1,050.00', change: '0.0%', pct: 18.2 },
+    { symbol: 'WETH', name: 'Wrapped Ether', balance: '1.24', value: '$4,120.40', change: '-1.2%', pct: 71.4 },
   ]
-  
+
   const transactions = [
     { type: 'Swap', details: 'Swapped 100 USDC for 23.8 DOT', time: '2 hours ago', status: 'Completed' },
     { type: 'Liquidity', details: 'Added 50 USDC and 11.9 DOT', time: '1 day ago', status: 'Completed' },
@@ -15,91 +15,165 @@ export default function UserDashboard() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto w-full py-8 space-y-8">
-      {/* Overview Cards */}
+    <div className="max-w-7xl mx-auto w-full py-8 space-y-8 px-4">
+
+      {/* Page header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="text-brutalist-text-muted font-black uppercase text-xs tracking-widest mb-1">Overview</div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter text-brutalist-text">Portfolio</h1>
+        </div>
+      </div>
+
+      {/* Overview Cards — Balance spans 2 cols, Staked+CTAs in 3rd */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass-panel p-8 rounded-[2rem] shadow-2xl col-span-1 lg:col-span-1 relative overflow-hidden group">
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-700" />
-          <h2 className="text-slate-400 font-medium mb-2 flex items-center gap-2">
+
+        {/* Balance — hero metric, 2 cols wide */}
+        <div className="bento-box p-8 relative overflow-hidden group lg:col-span-2">
+          <div className="noise-overlay opacity-20"></div>
+          <h2 className="text-brutalist-text-muted font-black uppercase text-xs tracking-widest mb-2 flex items-center gap-2 relative z-10">
             <Wallet className="w-5 h-5" /> Total Balance
           </h2>
-          <div className="text-5xl sm:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">$5,768.90</div>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 text-green-400 rounded-xl font-bold text-sm shadow-inner shadow-green-500/10">
-            <TrendingUp className="w-4 h-4" /> +$124.50 (2.4%) Today
+          <div className="text-5xl sm:text-7xl font-black text-brutalist-panel-text mb-6 tracking-tighter relative z-10">
+            $5,768<span className="text-brutalist-text-muted">.90</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 relative z-10">
+            {/* Orange for today's gain badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brutalist-orange border-[2px] border-black text-black font-black text-xs uppercase tracking-widest shadow-[2px_2px_0_#000]">
+              <TrendingUp className="w-4 h-4" /> +$124.50 (2.4%) Today
+            </div>
+            {/* Mini portfolio allocation bar */}
+            <div className="flex-1 min-w-32 hidden sm:flex flex-col gap-1">
+              <div className="flex h-2.5 border-[2px] border-black overflow-hidden">
+                <div className="h-full bg-brutalist-accent" style={{ width: '71.4%' }} />
+                <div className="h-full bg-brutalist-teal" style={{ width: '18.2%' }} />
+                <div className="h-full bg-brutalist-orange" style={{ width: '10.4%' }} />
+              </div>
+              <div className="flex items-center gap-3">
+                {[{ label: 'WETH', color: 'bg-brutalist-accent' }, { label: 'USDC', color: 'bg-brutalist-teal' }, { label: 'DOT', color: 'bg-brutalist-orange' }].map(({ label, color }) => (
+                  <div key={label} className="flex items-center gap-1">
+                    <div className={`w-2 h-2 border border-black ${color}`} />
+                    <span className="text-[10px] font-black uppercase text-brutalist-text-muted">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div className="glass-panel p-8 rounded-[2rem] shadow-2xl col-span-1 lg:col-span-1 relative overflow-hidden group">
-          <div className="absolute -top-32 -right-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors duration-700" />
-          <h2 className="text-slate-400 font-medium mb-2 flex items-center gap-2">
-            <Target className="w-5 h-5" /> Staked
-          </h2>
-          <div className="text-5xl sm:text-7xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">$1,234.56</div>
-          <Link to="/staking" className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-xl font-bold text-sm shadow-inner shadow-purple-500/10">
-            View Staking
-          </Link>
-        </div>
 
-        <div className="glass-panel p-8 rounded-[2rem] shadow-2xl flex flex-col justify-center gap-4">
-           <button className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-lg rounded-2xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-1">
-             Deposit Funds
-           </button>
-           <button className="w-full py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-200 font-bold text-lg rounded-2xl transition-all hover:-translate-y-1">
-             Withdraw
-           </button>
+        {/* Staked + CTAs combined — no more sparse button-only card */}
+        <div className="bento-box p-8 relative overflow-hidden flex flex-col justify-between">
+          <div className="noise-overlay opacity-20"></div>
+          <div className="relative z-10">
+            <h2 className="text-brutalist-text-muted font-black uppercase text-xs tracking-widest mb-2 flex items-center gap-2">
+              <Target className="w-5 h-5" /> Staked
+            </h2>
+            <div className="text-4xl sm:text-5xl font-black text-brutalist-panel-text mb-3 tracking-tighter">
+              $1,234<span className="text-brutalist-text-muted">.56</span>
+            </div>
+            <Link
+              to="/staking"
+              className="inline-flex items-center gap-2 px-3 py-1 bg-black border-[2px] border-black text-brutalist-text font-black text-xs uppercase tracking-widest shadow-[2px_2px_0_var(--brutalist-accent)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-75"
+            >
+              View Staking
+            </Link>
+          </div>
+          <div className="relative z-10 flex flex-col gap-2 mt-6">
+            <button className="btn-brutal w-full flex items-center justify-center gap-2 text-sm">
+              <Plus className="w-4 h-4" /> Deposit
+            </button>
+            <button className="w-full py-2.5 border-[3px] border-black bg-brutalist-panel text-brutalist-panel-text font-black uppercase hover:bg-black hover:text-brutalist-text transition-all duration-75 text-sm flex items-center justify-center gap-2">
+              <Minus className="w-4 h-4" /> Withdraw
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
         {/* Assets List */}
-        <div className="glass-panel rounded-[2rem] p-6 shadow-2xl flex flex-col lg:col-span-1">
-          <h3 className="text-xl font-bold text-slate-200 mb-6 px-2">Your Assets</h3>
-          <div className="space-y-2 flex-grow">
+        <div className="panel-brutal p-6 flex flex-col lg:col-span-1">
+          <div className="flex items-center justify-between mb-6 px-2">
+            <h3 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text">Your Assets</h3>
+            <span className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest">{assets.length} tokens</span>
+          </div>
+
+          <div className="space-y-1 flex-grow">
             {assets.map((asset, i) => (
-              <div key={i} className="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5 cursor-pointer group">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg group-hover:scale-110 transition-transform">
-                     {asset.symbol[0]}
-                   </div>
-                   <div>
-                     <div className="font-bold text-slate-200 group-hover:text-white transition-colors text-lg">{asset.symbol}</div>
-                     <div className="text-sm text-slate-500">{asset.name}</div>
-                   </div>
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 border-[2px] border-transparent hover:border-black hover:bg-black/[0.04] transition-all duration-75 cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Purple for asset icon */}
+                  <div className="w-10 h-10 bg-brutalist-accent border-[2px] border-black flex items-center justify-center font-black text-black text-sm shadow-[2px_2px_0_#000] group-hover:shadow-none group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-all duration-75 flex-shrink-0">
+                    {asset.symbol[0]}
+                  </div>
+                  <div>
+                    <div className="font-black uppercase text-brutalist-panel-text">{asset.symbol}</div>
+                    <div className="text-xs text-brutalist-text-muted font-bold uppercase tracking-wider">{asset.name}</div>
+                  </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono font-bold text-slate-200 text-lg">{asset.balance}</div>
-                  <div className="text-sm text-slate-500">{asset.value} <span className={asset.change.startsWith('+') ? 'text-green-400' : asset.change.startsWith('-') ? 'text-red-400' : 'text-slate-500'}>{asset.change}</span></div>
+                  <div className="font-mono font-bold text-brutalist-panel-text">{asset.value}</div>
+                  <div className="text-xs font-mono flex items-center gap-1 justify-end">
+                    <span className={asset.change.startsWith('+') ? 'text-brutalist-teal font-black' : asset.change.startsWith('-') ? 'text-red-500 font-black' : 'text-brutalist-text-muted'}>
+                      {asset.change}
+                    </span>
+                    <span className="text-brutalist-text-muted">{asset.pct}%</span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Portfolio allocation bar */}
+          <div className="mt-5 px-2">
+            <div className="flex h-2 border-[2px] border-black overflow-hidden">
+              {assets.map((asset, i) => (
+                <div
+                  key={i}
+                  className={i === 2 ? 'bg-brutalist-accent' : i === 1 ? 'bg-brutalist-teal' : 'bg-brutalist-orange'}
+                  style={{ width: `${asset.pct}%` }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Recent Transactions */}
-        <div className="glass-panel rounded-[2rem] p-6 shadow-2xl flex flex-col lg:col-span-2">
-           <div className="flex items-center justify-between mb-6 px-2">
-             <h3 className="text-xl font-bold text-slate-200 flex items-center gap-2">
-               <History className="w-5 h-5 text-indigo-400" /> Recent History
-             </h3>
-             <button className="text-sm text-indigo-400 hover:text-indigo-300 font-bold px-3 py-1 hover:bg-indigo-500/10 rounded-lg transition-colors">View All</button>
-           </div>
-           
-           <div className="space-y-4 flex-grow">
-             {transactions.map((tx, i) => (
-               <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-900/40 hover:bg-slate-900/80 border border-white/5 hover:border-white/10 transition-colors group">
-                 <div className={`p-3 rounded-2xl flex-shrink-0 shadow-lg ${tx.type === 'Swap' ? 'bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20' : 'bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500/20'} transition-colors`}>
-                   {tx.type === 'Swap' ? <ArrowUpRight className="w-6 h-6" /> : <TrendingUp className="w-6 h-6" />}
-                 </div>
-                 <div className="flex-1 min-w-0">
-                   <div className="font-bold text-slate-200 truncate group-hover:text-white transition-colors">{tx.details}</div>
-                   <div className="text-sm text-slate-500">{tx.time}</div>
-                 </div>
-                 <div className="text-sm font-bold text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-lg">
-                   {tx.status}
-                 </div>
-               </div>
-             ))}
-           </div>
+        <div className="panel-brutal p-6 flex flex-col lg:col-span-2">
+          <div className="flex items-center justify-between mb-6 px-2">
+            <h3 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text flex items-center gap-2">
+              {/* Orange for history icon */}
+              <History className="w-5 h-5 text-brutalist-orange" /> Recent History
+            </h3>
+            <button className="text-xs font-black uppercase tracking-widest text-brutalist-text-muted hover:text-brutalist-panel-text border-[2px] border-transparent hover:border-black px-3 py-1 transition-all duration-75">
+              View All
+            </button>
+          </div>
+
+          <div className="space-y-2 flex-grow">
+            {transactions.map((tx, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 p-4 border-[2px] border-black hover:bg-black/[0.04] transition-all duration-75 group"
+              >
+                {/* Purple for swap, teal for liquidity */}
+                <div className={`p-3 flex-shrink-0 border-[2px] border-black ${tx.type === 'Swap' ? 'bg-brutalist-accent text-black' : 'bg-brutalist-teal text-black'}`}>
+                  {tx.type === 'Swap' ? <ArrowUpRight className="w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-brutalist-panel-text truncate">{tx.details}</div>
+                  <div className="text-xs text-brutalist-text-muted font-bold uppercase tracking-wider">{tx.time}</div>
+                </div>
+                {/* Teal for completed status */}
+                <div className="text-xs font-black uppercase tracking-widest text-black bg-brutalist-teal border-[2px] border-black px-3 py-1 shadow-[2px_2px_0_#000] flex-shrink-0">
+                  {tx.status}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

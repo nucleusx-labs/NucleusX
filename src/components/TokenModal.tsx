@@ -29,80 +29,74 @@ export default function TokenModal({ isOpen, onClose, onSelectToken }: TokenModa
 
   if (!isOpen) return null
 
-  const filteredTokens = MOCK_TOKENS.filter(t => 
-    t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredTokens = MOCK_TOKENS.filter(t =>
+    t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
     t.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative w-full max-w-md glass-panel rounded-3xl overflow-hidden shadow-2xl shadow-indigo-500/10 flex flex-col max-h-[85vh]">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-slate-200">Select a token</h3>
-          <button 
+      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+
+      <div className="relative w-full max-w-md panel-brutal overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="noise-overlay opacity-20"></div>
+        <div className="p-4 border-b-[3px] border-black flex items-center justify-between relative z-10">
+          <h3 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text">Select Token</h3>
+          <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400 hover:text-slate-200"
+            className="p-2 border-[2px] border-transparent hover:border-black text-brutalist-text-muted hover:text-black hover:bg-brutalist-accent transition-all duration-75"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-white/5">
+        <div className="p-4 border-b-[2px] border-black relative z-10">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-            <input 
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brutalist-text-muted" />
+            <input
               type="text"
               placeholder="Search name or paste address"
-              className="w-full bg-slate-900/50 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+              className="w-full bg-brutalist-input-bg border-[2px] border-black py-3 pl-11 pr-4 text-brutalist-panel-text placeholder:text-brutalist-text-muted focus:outline-none font-bold text-sm uppercase tracking-wider"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="overflow-y-auto flex-1 p-2 space-y-1">
+        <div className="overflow-y-auto flex-1 p-2 relative z-10">
           {filteredTokens.length > 0 ? (
             filteredTokens.map((token) => (
               <button
                 key={token.address}
                 onClick={() => onSelectToken(token)}
-                className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-colors group"
+                className="w-full flex items-center justify-between p-3 border-[2px] border-transparent hover:border-black hover:bg-brutalist-hover transition-all duration-75 group"
               >
                 <div className="flex items-center gap-4">
                   {token.iconClass ? (
-                    <div className={`${token.iconClass} w-10 h-10 rounded-full shadow-lg bg-white ring-1 ring-white/10`} />
+                    <div className={`${token.iconClass} w-10 h-10 rounded-full bg-white border-[2px] border-black shadow-[2px_2px_0_#000]`} />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                    <div className="w-10 h-10 bg-brutalist-accent flex items-center justify-center text-black font-black text-sm border-[2px] border-black shadow-[2px_2px_0_#000]">
                       {token.symbol[0]}
                     </div>
                   )}
                   <div className="text-left">
-                    <div className="font-bold text-slate-200 group-hover:text-white transition-colors">
+                    <div className="font-black uppercase text-brutalist-panel-text">
                       {token.symbol}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-brutalist-text-muted font-bold uppercase">
                       {token.name}
                     </div>
                   </div>
                 </div>
                 {token.balance && (
-                  <div className="text-right">
-                    <div className="font-mono text-slate-300">
-                      {token.balance}
-                    </div>
+                  <div className="font-mono font-bold text-brutalist-panel-text">
+                    {token.balance}
                   </div>
                 )}
               </button>
             ))
           ) : (
-            <div className="py-8 text-center text-slate-500">
+            <div className="py-8 text-center text-brutalist-text-muted font-black uppercase tracking-widest text-sm">
               No tokens found.
             </div>
           )}

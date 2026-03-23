@@ -9,88 +9,64 @@ interface SignTransactionProps {
 
 export default function SignTransaction({ chainKey }: SignTransactionProps) {
   const { selectedAccount } = useConnect()
-  const {
-    isProcessing,
-    result,
-    txHash,
-    signRemarkTransaction,
-  } = useTransaction()
+  const { isProcessing, result, txHash, signRemarkTransaction } = useTransaction()
 
   async function signTransaction() {
-    if (!selectedAccount)
-      return
-
-    const message = 'Hello from create-dot-app'
-
-    await signRemarkTransaction(chainKey, message)
+    if (!selectedAccount) return
+    await signRemarkTransaction(chainKey, 'Hello from create-dot-app')
   }
 
   return (
     <div>
-      {/* Status */}
+      {/* Orange for processing/pending state */}
       {isProcessing && (
-        <div role="alert" className="alert alert-info mb-4">
-          <span className="icon-[mdi--loading] animate-spin" />
-          <span>
-            Processing transaction...
-          </span>
+        <div className="mb-4 p-3 border-[2px] border-brutalist-orange bg-[var(--brutalist-orange-10)] flex items-center gap-2">
+          <span className="icon-[mdi--loading] animate-spin text-brutalist-orange" />
+          <span className="text-sm font-black uppercase text-brutalist-panel-text">Processing transaction...</span>
         </div>
       )}
 
-      {/* Result */}
+      {/* Teal for success, red for error */}
       {result && (
-        <div role="alert" className={`alert mb-4 ${result.includes('Error') ? 'alert-error' : 'alert-success'}`}>
+        <div className={`mb-4 p-3 border-[2px] flex items-center gap-2 ${result.includes('Error') ? 'border-red-500 bg-red-500/10' : 'border-brutalist-teal bg-[var(--brutalist-teal-10)]'}`}>
           {result.includes('Error')
-            ? (
-                <span className="icon-[mdi--alert-circle]" />
-              )
-            : (
-                <span className="icon-[mdi--check-circle]" />
-              )}
-          <span>{result}</span>
+            ? <span className="icon-[mdi--alert-circle] text-red-500" />
+            : <span className="icon-[mdi--check-circle] text-brutalist-teal" />
+          }
+          <span className={`text-sm font-bold ${result.includes('Error') ? 'text-red-500' : 'text-brutalist-teal'}`}>{result}</span>
         </div>
       )}
 
-      {/* Transaction Hash Link */}
       {txHash && (
-        <div className="mb-4 p-3 border border-gray-200">
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-            Transaction Hash
-          </div>
-          <div className="text-sm text-gray-800 font-mono break-all mb-2 truncate">
-            {txHash}
-          </div>
+        <div className="mb-4 p-3 border-[2px] border-black">
+          <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-2">Transaction Hash</div>
+          <div className="text-sm text-brutalist-panel-text font-mono font-bold break-all mb-2 truncate">{txHash}</div>
           <a
             href={explorerDetail(chainKey, txHash)}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-black transition-colors uppercase tracking-wider"
+            className="inline-flex items-center gap-1 text-xs text-brutalist-teal hover:text-brutalist-orange transition-colors duration-75 font-black uppercase tracking-widest"
           >
-            View on Subscan
-            {' '}
-            <span className="icon-[mdi--open-in-new]" />
+            View on Subscan <span className="icon-[mdi--open-in-new]" />
           </a>
         </div>
       )}
 
-      {/* Action */}
-      {selectedAccount
-        ? (
-            <button
-              type="button"
-              disabled={isProcessing}
-              className="btn btn-sm btn-neutral w-full uppercase tracking-wider"
-              onClick={signTransaction}
-            >
-              {isProcessing && <span className="icon-[mdi--loading] animate-spin" />}
-              {isProcessing ? 'Processing...' : 'Sign Transaction'}
-            </button>
-          )
-        : (
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-              <span className="icon-[mdi--wallet-outline]" />
-              Connect wallet to sign transactions
-            </div>
-          )}
+      {selectedAccount ? (
+        <button
+          type="button"
+          disabled={isProcessing}
+          className="btn-brutal w-full text-sm"
+          onClick={signTransaction}
+        >
+          {isProcessing && <span className="icon-[mdi--loading] animate-spin" />}
+          {isProcessing ? 'Processing...' : 'Sign Transaction'}
+        </button>
+      ) : (
+        <div className="flex items-center justify-center gap-2 text-xs text-brutalist-text-muted font-black uppercase tracking-widest">
+          <span className="icon-[mdi--wallet-outline]" />
+          Connect wallet to sign transactions
+        </div>
+      )}
     </div>
   )
 }

@@ -15,95 +15,88 @@ export default function SwapForm() {
     const tempPayAmt = payAmount
     setPayAmount(receiveAmount)
     setReceiveAmount(tempPayAmt)
-    
+
     const tempPayToken = payToken
     setPayToken(receiveToken)
     setReceiveToken(tempPayToken)
   }
 
   return (
-    <div className="w-full max-w-md glass-panel rounded-[2rem] p-4 relative shadow-2xl shadow-indigo-500/10">
-      <div className="flex items-center justify-between px-2 mb-4">
-        <h2 className="text-xl text-slate-200 font-bold">Swap</h2>
-        <button 
+    <div className="w-full max-w-md panel-brutal p-4 relative">
+      <div className="noise-overlay opacity-20"></div>
+      <div className="flex items-center justify-between px-2 mb-4 relative z-10">
+        <h2 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text">Swap</h2>
+        <button
           onClick={() => setIsSettingsOpen(true)}
-          className="p-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors"
+          className="p-2 border-[2px] border-transparent hover:border-black text-brutalist-text-muted hover:text-black hover:bg-brutalist-accent transition-all duration-75"
         >
           <Settings className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="space-y-2 relative xl:mb-2">
+      <div className="space-y-2 relative z-10 xl:mb-2">
         {/* Pay Input */}
-        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-4 hover:border-white/10 transition-colors focus-within:border-indigo-500/50">
+        <div className="input-container-brutal">
           <div className="flex justify-between mb-2">
-            <span className="text-slate-400 text-sm font-medium">You Pay</span>
+            <span className="text-brutalist-text-muted text-xs font-black uppercase tracking-widest">You Pay</span>
             {payToken?.balance && (
-              <span className="text-slate-500 text-sm font-mono">
+              <span className="text-brutalist-text-muted text-xs font-mono">
                 Balance: {payToken.balance}
               </span>
             )}
           </div>
           <div className="flex justify-between items-center gap-4">
-            <input 
+            <input
               type="text"
               placeholder="0.0"
-              className="w-full bg-transparent text-3xl font-mono text-slate-200 focus:outline-none placeholder:text-slate-600"
+              className="input-brutal"
               value={payAmount}
               onChange={(e) => setPayAmount(e.target.value)}
             />
             <div className="shrink-0">
-              <TokenSelector 
-                selectedToken={payToken}
-                onSelectToken={setPayToken}
-              />
+              <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} />
             </div>
           </div>
         </div>
 
         {/* Swap Arrow Button */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <button 
+          <button
             onClick={handleSwapTokens}
-            className="p-2 bg-slate-800 border-4 border-slate-950 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700 transition-colors shadow-lg group"
+            className="p-2 bg-brutalist-accent border-[3px] border-black text-black hover:bg-black hover:text-brutalist-accent transition-all duration-75 shadow-[3px_3px_0_#000] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] group"
           >
-            <ArrowDown className="w-5 h-5 group-hover:rotate-180 transition-transform duration-300" />
+            <ArrowDown className="w-5 h-5 group-hover:rotate-180 transition-transform duration-75 step-end" />
           </button>
         </div>
 
         {/* Receive Input */}
-        <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-4 hover:border-white/10 transition-colors focus-within:border-indigo-500/50">
-           <div className="flex justify-between mb-2">
-            <span className="text-slate-400 text-sm font-medium">You Receive</span>
+        <div className="input-container-brutal">
+          <div className="flex justify-between mb-2">
+            <span className="text-brutalist-text-muted text-xs font-black uppercase tracking-widest">You Receive</span>
             {receiveToken?.balance && (
-              <span className="text-slate-500 text-sm font-mono">
+              <span className="text-brutalist-text-muted text-xs font-mono">
                 Balance: {receiveToken.balance}
               </span>
             )}
           </div>
           <div className="flex justify-between items-center gap-4">
-            <input 
+            <input
               type="text"
               placeholder="0.0"
-              className="w-full bg-transparent text-3xl font-mono text-slate-200 focus:outline-none placeholder:text-slate-600"
+              className="input-brutal"
               value={receiveAmount}
               onChange={(e) => setReceiveAmount(e.target.value)}
               readOnly
             />
             <div className="shrink-0">
-              <TokenSelector 
-                selectedToken={receiveToken}
-                onSelectToken={setReceiveToken}
-              />
+              <TokenSelector selectedToken={receiveToken} onSelectToken={setReceiveToken} />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 opacity-80 group-hover:opacity-100 transition-opacity">
-         <button className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-lg shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all active:scale-[0.98]">
-           Swap
-         </button>
+      <div className="mt-4 relative z-10">
+        <button className="btn-brutal w-full text-lg">Swap</button>
       </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

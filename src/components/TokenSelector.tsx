@@ -19,29 +19,29 @@ export default function TokenSelector({ selectedToken, onSelectToken }: TokenSel
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 bg-slate-900/80 hover:bg-slate-800 border border-white/5 rounded-2xl px-3 py-2 transition-all shadow-sm group"
+        className="flex items-center gap-2 bg-brutalist-bg border-[2px] border-black px-3 py-2 transition-all duration-75 shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] group"
       >
         {selectedToken ? (
           <>
             {selectedToken.iconClass ? (
               <div className={`${selectedToken.iconClass} w-6 h-6 rounded-full bg-white`} />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
+              <div className="w-6 h-6 bg-brutalist-accent flex items-center justify-center text-black font-black text-xs border-[1px] border-black">
                 {selectedToken.symbol[0]}
               </div>
             )}
-            <span className="font-bold text-slate-200 group-hover:text-white">{selectedToken.symbol}</span>
+            <span className="font-black uppercase text-brutalist-text group-hover:text-brutalist-accent">{selectedToken.symbol}</span>
           </>
         ) : (
-          <span className="font-bold text-slate-200 px-2">Select Token</span>
+          <span className="font-black uppercase text-brutalist-text px-2">Select</span>
         )}
-        <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-colors" />
+        <ChevronDown className="w-4 h-4 text-brutalist-text-muted group-hover:text-brutalist-accent transition-colors duration-75" />
       </button>
 
-      <TokenModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSelectToken={handleSelectToken} 
+      <TokenModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelectToken={handleSelectToken}
       />
     </>
   )

@@ -3,19 +3,57 @@
 @plugin "daisyui";
 
 @theme {
-  --color-brutalist-charcoal: #121212;
-  --color-brutalist-cement: #8c8c8c;
-  --color-brutalist-white: #e8e8e4;
-  --color-brutalist-sand: #d4c0a8;
-  --color-brutalist-neon: #ff3300; /* Neon Orange */
+  --color-brutalist-bg: var(--brutalist-bg);
+  --color-brutalist-surface: var(--brutalist-surface);
+  --color-brutalist-text: var(--brutalist-text);
+  --color-brutalist-text-muted: var(--brutalist-text-muted);
+  --color-brutalist-accent: var(--brutalist-accent);
+  --color-brutalist-teal: #00BFB2;
+  --color-brutalist-orange: #EE8434;
+  --color-brutalist-hover: var(--brutalist-hover);
+  --color-brutalist-panel: var(--brutalist-panel);
+  --color-brutalist-panel-text: var(--brutalist-panel-text);
+  --color-brutalist-input-bg: var(--brutalist-input-bg);
 }
 
-:root {
+/* Dark mode (default) */
+:root, .dark {
+  --brutalist-bg: #1c1c1e;
+  --brutalist-surface: #252528;
+  --brutalist-text: #e8e8e4;
+  --brutalist-text-muted: #8c8c8c;
+  --brutalist-accent: #A855F7;
+  --brutalist-hover: #2e2a3a;
+  --brutalist-panel: #e8e8e4;
+  --brutalist-panel-text: #121212;
+  --brutalist-input-bg: #e8e8e4;
+  --brutalist-shadow-accent: rgba(168, 85, 247, 0.8);
+  --brutalist-accent-10: rgba(168, 85, 247, 0.1);
+  --brutalist-teal-10: rgba(0, 191, 178, 0.1);
+  --brutalist-orange-10: rgba(238, 132, 52, 0.1);
+  --bento-border: 4px solid #000;
+}
+
+/* Light mode */
+.light {
+  --brutalist-bg: #e8e8e4;
+  --brutalist-surface: #f5f0eb;
+  --brutalist-text: #121212;
+  --brutalist-text-muted: #6b6b6b;
+  --brutalist-accent: #A855F7;
+  --brutalist-hover: #f0e8ff;
+  --brutalist-panel: #ffffff;
+  --brutalist-panel-text: #121212;
+  --brutalist-input-bg: #ffffff;
+  --brutalist-shadow-accent: rgba(168, 85, 247, 0.5);
+  --brutalist-accent-10: rgba(168, 85, 247, 0.08);
+  --brutalist-teal-10: rgba(0, 191, 178, 0.08);
+  --brutalist-orange-10: rgba(238, 132, 52, 0.08);
   --bento-border: 4px solid #000;
 }
 
 @plugin "daisyui" {
-  themes: dark;
+  themes: dark --default, light;
 }
 
 .container {
@@ -24,21 +62,18 @@
 
 /* --- SURREAL BRUTALIST UTILITIES --- */
 
-/* The 'prison' - explicit, thick borders, harsh edges */
 @utility bento-box {
-  @apply border-[3px] border-black bg-[#e8e8e4] text-[#121212] overflow-hidden relative rounded-xl shadow-[6px_6px_0px_#000];
+  @apply border-[3px] border-black bg-brutalist-panel text-brutalist-panel-text overflow-hidden relative rounded-xl shadow-[6px_6px_0px_#000];
 }
 
 @utility bento-box-dark {
-  @apply border-[3px] border-black bg-[#121212] text-[#e8e8e4] overflow-hidden relative rounded-xl shadow-[8px_8px_0px_rgba(255,51,0,0.8)];
+  @apply border-[3px] border-black bg-brutalist-surface text-brutalist-text overflow-hidden relative rounded-xl shadow-[8px_8px_0px_var(--brutalist-shadow-accent)];
 }
 
-/* Hard brutalist button */
 @utility btn-brutal {
-  @apply border-[3px] border-black bg-[#ff3300] text-black font-black uppercase px-6 py-3 transition-all duration-75 relative rounded-none hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] active:translate-x-0 active:translate-y-0 active:shadow-none;
+  @apply border-[3px] border-black bg-brutalist-accent text-black font-black uppercase px-6 py-3 transition-all duration-75 relative rounded-none hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] active:translate-x-0 active:translate-y-0 active:shadow-none;
 }
 
-/* Glitch / delayed hover jitter */
 @utility hover-jitter {
   transition: transform 0.1s step-end 0.1s;
 }
@@ -46,32 +81,52 @@
   transform: translate(2px, -3px) rotate(-1deg);
 }
 
-/* Typography that feels stamped / rigid */
 @utility font-brutal {
   font-family: ui-monospaced, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   letter-spacing: -0.05em;
   font-weight: 900;
 }
 
-/* Noise overlay for surrealism */
-.bg-noise {
+@utility noise-overlay {
+  @apply absolute inset-0 pointer-events-none mix-blend-overlay opacity-40 z-0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
 }
 
-/* Blends the noise with the background */
-@utility noise-overlay {
-  @apply absolute inset-0 pointer-events-none mix-blend-overlay opacity-40 bg-noise z-0;
+@utility input-brutal {
+  @apply w-full bg-transparent text-3xl font-black text-brutalist-panel-text focus:outline-none placeholder:text-brutalist-text-muted/50 font-mono;
+}
+
+@utility input-container-brutal {
+  @apply bg-brutalist-input-bg border-[2px] border-black p-4 relative;
+}
+
+@utility input-container-brutal-dark {
+  @apply bg-brutalist-bg border-[2px] border-brutalist-text-muted p-4 relative;
+}
+
+@utility panel-brutal {
+  @apply border-[3px] border-black bg-brutalist-panel text-brutalist-panel-text overflow-hidden relative shadow-[6px_6px_0px_#000];
+}
+
+@utility panel-brutal-dark {
+  @apply border-[3px] border-black bg-brutalist-surface text-brutalist-text overflow-hidden relative shadow-[6px_6px_0px_var(--brutalist-shadow-accent)];
+}
+
+@utility th-brutal {
+  @apply p-4 font-black uppercase text-xs tracking-widest text-brutalist-text-muted border-b-[3px] border-black;
+}
+
+@utility td-brutal {
+  @apply p-4 font-bold text-sm border-b-[2px] border-black/20;
+}
+
+@utility backdrop-brutal {
+  @apply fixed inset-0 bg-black/80 z-[100];
 }
 
 @keyframes flash-highlight {
-  0% {
-    background-color: rgb(187 247 208);
-    transform: scale(1.05);
-  }
-  100% {
-    background-color: transparent;
-    transform: scale(1);
-  }
+  0% { background-color: rgba(0, 191, 178, 0.3); transform: scale(1.05); }
+  100% { background-color: transparent; transform: scale(1); }
 }
 
 .block-highlight {
