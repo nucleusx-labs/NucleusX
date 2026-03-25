@@ -98,7 +98,7 @@ const FEATURES = [
   { icon: Zap,       title: 'Lightning Execution',      desc: "Sub-second finality on QF network's high-performance consensus layer." },
   { icon: Shield,    title: 'Audited & Immutable',       desc: 'Third-party audited contracts with immutable core logic and live risk monitoring.' },
   { icon: TrendingUp,title: 'Concentrated Liquidity',   desc: 'Capital-efficient AMM — LPs earn significantly more fees with less deployed capital.' },
-  { icon: Globe,     title: 'QF-Native',                desc: 'Built specifically for QF — optimised for its unique finality model and asset types.' },
+  { icon: Globe,     title: 'QF-Native',                desc: 'Built specifically for QF.' },
   { icon: Star,      title: 'Advanced Analytics',       desc: 'Real-time charts, portfolio tracking, and unified position management in one UI.' },
   { icon: Activity,  title: 'Permissionless Markets',   desc: '24/7 on-chain markets with transparent price discovery across all QF asset pairs.' },
 ]
@@ -412,7 +412,7 @@ export default function Home() {
                 Built different.
               </h2>
               <p className="text-[#A1A1A1] max-w-xl">
-                Engineered from the ground up for QF — no compromises on performance, security, or usability.
+                Engineered from the ground up for QF.
               </p>
             </div>
 
