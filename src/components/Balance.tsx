@@ -24,10 +24,10 @@ export default function Balance({ address, chainKey }: BalanceProps) {
 
   return (
     <div>
-      <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-1">Balance</div>
-      <div className="flex items-baseline space-x-2 font-mono">
-        <div className="font-black text-brutalist-panel-text text-2xl">{balance || '---'}</div>
-        <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest">{symbol}</div>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-1">Balance</p>
+      <div className="flex items-baseline gap-2">
+        <span className="font-bold tracking-tight text-[#F2F2F2] text-2xl">{balance || '---'}</span>
+        <span className="text-xs font-bold uppercase text-[#A1A1A1]">{symbol}</span>
       </div>
     </div>
   )

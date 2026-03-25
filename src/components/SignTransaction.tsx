@@ -18,33 +18,31 @@ export default function SignTransaction({ chainKey }: SignTransactionProps) {
 
   return (
     <div>
-      {/* Orange for processing/pending state */}
       {isProcessing && (
-        <div className="mb-4 p-3 border-[2px] border-brutalist-orange bg-[var(--brutalist-orange-10)] flex items-center gap-2">
-          <span className="icon-[mdi--loading] animate-spin text-brutalist-orange" />
-          <span className="text-sm font-black uppercase text-brutalist-panel-text">Processing transaction...</span>
+        <div className="mb-4 p-3 border border-[#7B3FE4] bg-[#7B3FE4]/10 flex items-center gap-2">
+          <span className="icon-[mdi--loading] animate-spin text-[#7B3FE4]" />
+          <span className="text-sm font-bold uppercase text-[#A1A1A1]">Processing transaction...</span>
         </div>
       )}
 
-      {/* Teal for success, red for error */}
       {result && (
-        <div className={`mb-4 p-3 border-[2px] flex items-center gap-2 ${result.includes('Error') ? 'border-red-500 bg-red-500/10' : 'border-brutalist-teal bg-[var(--brutalist-teal-10)]'}`}>
+        <div className={`mb-4 p-3 border flex items-center gap-2 ${result.includes('Error') ? 'border-[#FF4040] bg-[#FF4040]/10' : 'border-[#00D084] bg-[#00D084]/10'}`}>
           {result.includes('Error')
-            ? <span className="icon-[mdi--alert-circle] text-red-500" />
-            : <span className="icon-[mdi--check-circle] text-brutalist-teal" />
+            ? <span className="icon-[mdi--alert-circle] text-[#FF4040]" />
+            : <span className="icon-[mdi--check-circle] text-[#00D084]" />
           }
-          <span className={`text-sm font-bold ${result.includes('Error') ? 'text-red-500' : 'text-brutalist-teal'}`}>{result}</span>
+          <span className={`text-sm font-bold ${result.includes('Error') ? 'text-[#FF4040]' : 'text-[#00D084]'}`}>{result}</span>
         </div>
       )}
 
       {txHash && (
-        <div className="mb-4 p-3 border-[2px] border-black">
-          <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-2">Transaction Hash</div>
-          <div className="text-sm text-brutalist-panel-text font-mono font-bold break-all mb-2 truncate">{txHash}</div>
+        <div className="mb-4 p-3 border border-[#2D0A5B]">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-2">Transaction Hash</p>
+          <p className="text-sm text-[#F2F2F2] font-bold break-all mb-2 truncate">{txHash}</p>
           <a
             href={explorerDetail(chainKey, txHash)}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs text-brutalist-teal hover:text-brutalist-orange transition-colors duration-75 font-black uppercase tracking-widest"
+            className="inline-flex items-center gap-1 text-xs text-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 font-bold uppercase tracking-widest underline"
           >
             View on Subscan <span className="icon-[mdi--open-in-new]" />
           </a>
@@ -55,14 +53,14 @@ export default function SignTransaction({ chainKey }: SignTransactionProps) {
         <button
           type="button"
           disabled={isProcessing}
-          className="btn-brutal w-full text-sm"
+          className="w-full py-3 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           onClick={signTransaction}
         >
           {isProcessing && <span className="icon-[mdi--loading] animate-spin" />}
           {isProcessing ? 'Processing...' : 'Sign Transaction'}
         </button>
       ) : (
-        <div className="flex items-center justify-center gap-2 text-xs text-brutalist-text-muted font-black uppercase tracking-widest">
+        <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
           <span className="icon-[mdi--wallet-outline]" />
           Connect wallet to sign transactions
         </div>

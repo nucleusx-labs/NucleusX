@@ -20,45 +20,58 @@ export default function AddLiquidity() {
   }, [searchParams])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] py-8 w-full px-4">
-      <div className="w-full max-w-lg panel-brutal p-6 relative">
-        <div className="noise-overlay opacity-20"></div>
-        <Link to="/pools" className="absolute top-6 left-6 z-10 border-[2px] border-transparent hover:border-black text-brutalist-text-muted hover:text-brutalist-panel-text p-1 transition-all duration-75">
-          <ArrowLeft className="w-6 h-6" />
+    <div className="flex flex-col items-center justify-center min-h-[70vh] py-8 w-full">
+      <div className="w-full max-w-lg border-2 border-[#2D0A5B] p-8 relative">
+        <Link to="/pools" className="absolute top-8 left-8 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150">
+          <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h2 className="text-2xl font-black uppercase tracking-tight text-center text-brutalist-panel-text mb-8 relative z-10">Add Liquidity</h2>
+        <h2 className="text-xl font-bold uppercase tracking-widest text-center text-[#F2F2F2] mb-8">Add Liquidity</h2>
 
-        <div className="space-y-4 relative z-10">
-          <div className="input-container-brutal">
-            <div className="flex justify-between mb-2">
-              <span className="text-brutalist-text-muted text-xs font-black uppercase tracking-widest">Deposit Amount</span>
-              {tokenA?.balance && <span className="text-brutalist-text-muted text-xs font-mono">Balance: {tokenA.balance}</span>}
+        <div className="space-y-4">
+          <div className="border border-[#2D0A5B] p-4">
+            <div className="flex justify-between mb-3">
+              <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
+              {tokenA?.balance && <span className="text-[#A1A1A1] text-xs font-bold">Balance: {tokenA.balance}</span>}
             </div>
             <div className="flex justify-between items-center gap-4">
-              <input type="text" placeholder="0.0" className="input-brutal" value={amountA} onChange={(e) => setAmountA(e.target.value)} />
+              <input
+                type="text"
+                placeholder="0.0"
+                className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
+                value={amountA}
+                onChange={(e) => setAmountA(e.target.value)}
+              />
               <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} />
             </div>
           </div>
 
           <div className="flex justify-center -my-2 relative z-10">
-            <div className="bg-brutalist-accent border-[3px] border-black p-2 text-black shadow-[3px_3px_0_#000]">
-              <Plus className="w-5 h-5" />
+            <div className="bg-[#2D0A5B] p-2 text-[#7B3FE4]">
+              <Plus className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="input-container-brutal">
-            <div className="flex justify-between mb-2">
-              <span className="text-brutalist-text-muted text-xs font-black uppercase tracking-widest">Deposit Amount</span>
-              {tokenB?.balance && <span className="text-brutalist-text-muted text-xs font-mono">Balance: {tokenB.balance}</span>}
+          <div className="border border-[#2D0A5B] p-4">
+            <div className="flex justify-between mb-3">
+              <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
+              {tokenB?.balance && <span className="text-[#A1A1A1] text-xs font-bold">Balance: {tokenB.balance}</span>}
             </div>
             <div className="flex justify-between items-center gap-4">
-              <input type="text" placeholder="0.0" className="input-brutal" value={amountB} onChange={(e) => setAmountB(e.target.value)} />
+              <input
+                type="text"
+                placeholder="0.0"
+                className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
+                value={amountB}
+                onChange={(e) => setAmountB(e.target.value)}
+              />
               <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} />
             </div>
           </div>
 
           <div className="pt-4">
-            <button className="btn-brutal w-full text-lg">Supply</button>
+            <button className="w-full py-4 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150">
+              Supply
+            </button>
           </div>
         </div>
       </div>

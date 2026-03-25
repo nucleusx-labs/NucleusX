@@ -13,36 +13,33 @@ export default function AccountCard({ chainKey, address }: AccountCardProps) {
   const { name, currentBlock, isConnected } = useCurrentBlock(chainKey)
 
   return (
-    <div className="group bento-box p-4 hover:shadow-[8px_8px_0px_#000] transition-all duration-75">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-black uppercase tracking-wider text-brutalist-panel-text">
+    <div className="border-2 border-[#2D0A5B] p-6 hover:bg-[#2D0A5B] transition-colors duration-150">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="font-bold uppercase tracking-wider text-[#F2F2F2] text-sm">
           {name || '---'}
         </h3>
-        {/* Orange for live status badge */}
         {isConnected && (
-          <div className="text-xs px-2 py-1 bg-brutalist-orange text-black border-[2px] border-black font-black uppercase tracking-widest flex items-center gap-1 shadow-[2px_2px_0_#000]">
-            <span className="icon-[mdi--check-circle] text-xs" />
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#00D084]">
+            <div className="w-2 h-2 rounded-full bg-[#00D084]" />
             Live
           </div>
         )}
       </div>
 
-      <div className="mb-4">
-        <div className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-1">
-          Current Block
-        </div>
-        <div key={currentBlock} className="font-black text-brutalist-panel-text font-mono text-lg block-highlight">
+      <div className="mb-5">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-1">Current Block</p>
+        <div key={currentBlock} className="font-bold text-[#F2F2F2] font-mono text-lg">
           #{currentBlock ? currentBlock.toLocaleString() : '---'}
         </div>
       </div>
 
-      <div className="border-t-[2px] border-black pt-4">
+      <div className="border-t border-[#2D0A5B] pt-5">
         {address ? (
           <Balance key={address} address={address} chainKey={chainKey} />
         ) : (
           <div className="flex flex-col items-center py-3">
-            <span className="icon-[mdi--wallet-plus] text-2xl text-brutalist-text-muted mb-2" />
-            <p className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest">
+            <span className="icon-[mdi--wallet-plus] text-2xl text-[#A1A1A1] mb-2" />
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
               Connect wallet for balance
             </p>
           </div>
@@ -50,26 +47,34 @@ export default function AccountCard({ chainKey, address }: AccountCardProps) {
       </div>
 
       {address && (
-        <div className="mt-4">
-          <div className="pt-3 border-t-[2px] border-black">
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <a href={buyTokenUrl(chainKey, address)} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-black uppercase tracking-widest border-[2px] border-black text-brutalist-panel-text hover:bg-black hover:text-brutalist-text transition-all duration-75 text-center">
-                Get Tokens
-              </a>
-              <a href={explorerAccount(chainKey, address)} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 text-xs font-black uppercase tracking-widest border-[2px] border-black text-brutalist-panel-text hover:bg-black hover:text-brutalist-text transition-all duration-75 text-center flex items-center justify-center gap-1">
-                <span className="icon-[mdi--open-in-new]" />
-                Explorer
-              </a>
-            </div>
-            {isConnected ? (
-              <SignTransaction chainKey={chainKey} />
-            ) : (
-              <div className="flex items-center justify-center gap-2 text-xs text-brutalist-text-muted font-black uppercase tracking-widest">
-                <span className="icon-[mdi--link-off]" />
-                Chain not connected
-              </div>
-            )}
+        <div className="mt-5 border-t border-[#2D0A5B] pt-5 space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={buyTokenUrl(chainKey, address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 text-xs font-bold uppercase tracking-widest border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 text-center"
+            >
+              Get Tokens
+            </a>
+            <a
+              href={explorerAccount(chainKey, address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 text-xs font-bold uppercase tracking-widest border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 text-center flex items-center justify-center gap-1"
+            >
+              <span className="icon-[mdi--open-in-new]" />
+              Explorer
+            </a>
           </div>
+          {isConnected ? (
+            <SignTransaction chainKey={chainKey} />
+          ) : (
+            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
+              <span className="icon-[mdi--link-off]" />
+              Chain not connected
+            </div>
+          )}
         </div>
       )}
     </div>

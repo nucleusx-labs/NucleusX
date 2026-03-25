@@ -42,17 +42,17 @@ export default function Connect() {
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="flex items-center gap-2 px-4 py-2 bg-brutalist-accent border-[2px] border-black text-black font-black uppercase text-sm shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-75"
+          className="flex items-center gap-2 px-4 py-2 border border-[#2D0A5B] text-[#A1A1A1] text-sm font-bold uppercase tracking-widest hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150"
           onClick={openConnectModal}
         >
           {!selectedAccount ? (
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4" />
+              <Wallet className="w-4 h-4 text-[#7B3FE4]" />
               <span className="hidden sm:block">Connect</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Wallet className="w-4 h-4" />
+              <Wallet className="w-4 h-4 text-[#7B3FE4]" />
               <span className="hidden sm:block font-mono">{formatAddress(selectedAccount.address)}</span>
               {connectedWallet?.logo && (
                 <img src={connectedWallet.logo.src} alt={connectedWallet.logo.alt} className="w-4 h-4" />
@@ -64,7 +64,7 @@ export default function Connect() {
         {selectedAccount && (
           <button
             type="button"
-            className="flex items-center gap-2 px-3 py-2 border-[2px] border-black text-brutalist-panel-text hover:bg-black hover:text-brutalist-text transition-all duration-75"
+            className="flex items-center gap-2 px-3 py-2 border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150"
             onClick={disconnect}
           >
             <LogOut className="w-4 h-4" />
@@ -73,15 +73,14 @@ export default function Connect() {
       </div>
 
       <dialog ref={modalRef} className="modal modal-bottom sm:modal-middle">
-        <div className="modal-box max-w-2xl panel-brutal !rounded-none">
-          <div className="noise-overlay opacity-20"></div>
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <h2 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text">
+        <div className="modal-box max-w-2xl border-2 border-[#2D0A5B] bg-[#0A0A0A] !rounded-none">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">
               Connect Wallet
             </h2>
             <button
               type="button"
-              className="p-2 border-[2px] border-transparent hover:border-black text-brutalist-text-muted hover:text-black hover:bg-brutalist-accent transition-all duration-75"
+              className="p-1 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
               onClick={closeConnectModal}
             >
               <X className="w-5 h-5" />
@@ -90,35 +89,33 @@ export default function Connect() {
 
           {/* Account Selection */}
           {listAccounts.length > 0 && (
-            <div className="mb-6 relative z-10">
-              <h3 className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-3">
+            <div className="mb-6">
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-3">
                 Select Account
               </h3>
               <div className="space-y-2">
                 {listAccounts.map(account => (
                   <div
                     key={account.address}
-                    className={`border-[2px] cursor-pointer transition-all duration-75 p-4 ${
+                    className={`border cursor-pointer transition-colors duration-150 p-4 ${
                       isAccountSelected(account)
-                        ? 'border-brutalist-accent bg-[var(--brutalist-accent-10)] shadow-[4px_4px_0_#000]'
-                        : 'border-black hover:bg-brutalist-hover'
+                        ? 'border-[#7B3FE4] bg-[#2D0A5B]'
+                        : 'border-[#2D0A5B] hover:bg-[#2D0A5B]'
                     }`}
                     onClick={() => handleSelectAccount(account)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brutalist-accent border-[2px] border-black flex items-center justify-center text-black font-black text-sm shadow-[2px_2px_0_#000]">
+                        <div className="w-9 h-9 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">
                           {account.name?.charAt(0).toUpperCase() || 'A'}
                         </div>
                         <div>
-                          <p className="text-sm font-black uppercase text-brutalist-panel-text">{account.name}</p>
-                          <p className="text-xs text-brutalist-text-muted font-mono font-bold">{formatAddress(account.address)}</p>
+                          <p className="text-sm font-bold uppercase text-[#F2F2F2]">{account.name}</p>
+                          <p className="text-xs text-[#A1A1A1] font-mono">{formatAddress(account.address)}</p>
                         </div>
                       </div>
                       {isAccountSelected(account) && (
-                        <div className="w-6 h-6 bg-brutalist-accent border-[2px] border-black flex items-center justify-center">
-                          <Check className="w-3 h-3 text-black" />
-                        </div>
+                        <Check className="w-4 h-4 text-[#7B3FE4]" />
                       )}
                     </div>
                   </div>
@@ -129,37 +126,37 @@ export default function Connect() {
 
           {/* Installed Wallets */}
           {installedWallets.length > 0 && (
-            <div className="mb-6 relative z-10">
-              <h3 className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest mb-3">
+            <div className="mb-6">
+              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-3">
                 Installed Wallets
               </h3>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {installedWallets.map(wallet => (
                   <div
                     key={wallet.extensionName}
-                    className={`border-[2px] cursor-pointer transition-all duration-75 p-4 flex flex-col items-center text-center ${
+                    className={`border cursor-pointer transition-colors duration-150 p-4 flex flex-col items-center text-center ${
                       isWalletConnected(wallet)
-                        ? 'border-brutalist-accent bg-[var(--brutalist-accent-10)] shadow-[4px_4px_0_#000]'
-                        : 'border-black hover:bg-brutalist-hover hover:shadow-[4px_4px_0_#000]'
+                        ? 'border-[#7B3FE4] bg-[#2D0A5B]'
+                        : 'border-[#2D0A5B] hover:bg-[#2D0A5B] hover:border-[#7B3FE4]'
                     }`}
                     onClick={() => connect(wallet)}
                   >
                     <div className="relative">
-                      <img src={wallet.logo.src} alt={wallet.logo.alt} className="w-12 h-12" />
+                      <img src={wallet.logo.src} alt={wallet.logo.alt} className="w-10 h-10" />
                       {isWalletConnected(wallet) && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-brutalist-accent border-[2px] border-black flex items-center justify-center">
-                          <Check className="w-3 h-3 text-black" />
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#7B3FE4] flex items-center justify-center">
+                          <Check className="w-2.5 h-2.5 text-[#F2F2F2]" />
                         </div>
                       )}
                     </div>
-                    <div className="text-sm font-black uppercase text-brutalist-panel-text mt-2">{wallet.title}</div>
+                    <div className="text-sm font-bold uppercase text-[#F2F2F2] mt-2">{wallet.title}</div>
                     <button
                       type="button"
                       disabled={isConnecting === wallet.extensionName}
-                      className={`w-full mt-2 px-3 py-1.5 text-xs font-black uppercase border-[2px] border-black transition-all duration-75 ${
+                      className={`w-full mt-2 px-3 py-1.5 text-xs font-bold uppercase border transition-colors duration-150 ${
                         isWalletConnected(wallet)
-                          ? 'bg-brutalist-accent text-black'
-                          : 'bg-black text-brutalist-text hover:bg-brutalist-accent hover:text-black'
+                          ? 'border-[#7B3FE4] text-[#7B3FE4]'
+                          : 'border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2]'
                       }`}
                     >
                       {isConnecting === wallet.extensionName && <span className="loading loading-spinner loading-xs" />}
@@ -176,14 +173,14 @@ export default function Connect() {
 
           {/* Available Wallets */}
           {availableWallets.length > 0 && (
-            <div className="relative z-10">
+            <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs text-brutalist-text-muted font-black uppercase tracking-widest">
+                <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
                   Available Wallets
                 </h3>
                 <button
                   type="button"
-                  className="text-xs font-black uppercase text-brutalist-text-muted hover:text-brutalist-panel-text border-[2px] border-transparent hover:border-black px-2 py-1 transition-all duration-75"
+                  className="text-xs font-bold uppercase text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
                   onClick={toggleOtherWallets}
                 >
                   {showOtherWallets ? 'Hide' : 'Show'}
@@ -195,18 +192,18 @@ export default function Connect() {
                   {availableWallets.map(wallet => (
                     <div
                       key={wallet.extensionName}
-                      className="border-[2px] border-black p-4 flex flex-col items-center text-center hover:bg-brutalist-hover transition-all duration-75"
+                      className="border border-[#2D0A5B] p-4 flex flex-col items-center text-center"
                     >
-                      <img src={wallet.logo.src} alt={wallet.logo.alt} className="w-12 h-12 opacity-60" />
-                      <div className="text-xs font-black uppercase text-brutalist-text-muted mt-2">{wallet.title}</div>
+                      <img src={wallet.logo.src} alt={wallet.logo.alt} className="w-10 h-10 opacity-50" />
+                      <div className="text-xs font-bold uppercase text-[#A1A1A1] mt-2">{wallet.title}</div>
                       <a
                         href={wallet.installUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full mt-2 px-3 py-1.5 text-xs font-black uppercase border-[2px] border-black text-brutalist-panel-text hover:bg-black hover:text-brutalist-text transition-all duration-75 flex items-center justify-center gap-1"
+                        className="w-full mt-2 px-3 py-1.5 text-xs font-bold uppercase border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 flex items-center justify-center gap-1"
                       >
                         <Download className="w-3 h-3" />
-                        <span>Install</span>
+                        Install
                       </a>
                     </div>
                   ))}
@@ -215,9 +212,9 @@ export default function Connect() {
             </div>
           )}
 
-          <div className="mt-6 p-4 border-[2px] border-brutalist-accent bg-[var(--brutalist-accent-10)] relative z-10">
-            <p className="text-xs text-brutalist-panel-text font-bold">
-              <span className="font-black uppercase text-brutalist-accent">Note:</span> Your wallet uses SS58 addresses (Substrate format).
+          <div className="mt-6 p-4 border border-[#2D0A5B]">
+            <p className="text-xs text-[#A1A1A1] font-bold">
+              <span className="font-bold uppercase text-[#7B3FE4]">Note:</span> Your wallet uses SS58 addresses (Substrate format).
               The first transaction will automatically map your address to an EVM-compatible format.
             </p>
           </div>

@@ -19,23 +19,23 @@ export default function TokenSelector({ selectedToken, onSelectToken }: TokenSel
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 bg-brutalist-bg border-[2px] border-black px-3 py-2 transition-all duration-75 shadow-[2px_2px_0_#000] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] group"
+        className="flex items-center gap-2 border border-[#2D0A5B] px-3 py-2 hover:border-[#7B3FE4] transition-colors duration-150 group"
       >
         {selectedToken ? (
           <>
             {selectedToken.iconClass ? (
-              <div className={`${selectedToken.iconClass} w-6 h-6 rounded-full bg-white`} />
+              <div className={`${selectedToken.iconClass} w-5 h-5 rounded-full`} />
             ) : (
-              <div className="w-6 h-6 bg-brutalist-accent flex items-center justify-center text-black font-black text-xs border-[1px] border-black">
+              <div className="w-5 h-5 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-xs">
                 {selectedToken.symbol[0]}
               </div>
             )}
-            <span className="font-black uppercase text-brutalist-text group-hover:text-brutalist-accent">{selectedToken.symbol}</span>
+            <span className="font-bold uppercase text-[#F2F2F2] text-sm">{selectedToken.symbol}</span>
           </>
         ) : (
-          <span className="font-black uppercase text-brutalist-text px-2">Select</span>
+          <span className="font-bold uppercase text-[#A1A1A1] text-sm px-1">Select</span>
         )}
-        <ChevronDown className="w-4 h-4 text-brutalist-text-muted group-hover:text-brutalist-accent transition-colors duration-75" />
+        <ChevronDown className="w-4 h-4 text-[#A1A1A1] group-hover:text-[#7B3FE4] transition-colors duration-150" />
       </button>
 
       <TokenModal

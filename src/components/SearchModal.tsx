@@ -12,30 +12,29 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative w-full max-w-lg panel-brutal overflow-hidden flex flex-col">
-        <div className="noise-overlay opacity-20"></div>
-        <div className="p-4 border-b-[3px] border-black flex items-center justify-between relative z-10">
-          <h3 className="text-xl font-black uppercase tracking-tight text-brutalist-panel-text">Search Tokens & Pairs</h3>
-          <button onClick={onClose} className="p-2 border-[2px] border-transparent hover:border-black text-brutalist-text-muted hover:text-black hover:bg-brutalist-accent transition-all duration-75">
+      <div className="relative w-full max-w-lg border-2 border-[#2D0A5B] bg-[#0A0A0A]">
+        <div className="p-5 border-b border-[#2D0A5B] flex items-center justify-between">
+          <h3 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Search</h3>
+          <button onClick={onClose} className="p-1 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150">
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="p-4 relative z-10">
+        <div className="p-5">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brutalist-text-muted" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
             <input
               type="text"
               autoFocus
-              placeholder="Search by name, symbol or paste address"
-              className="w-full bg-brutalist-input-bg border-[2px] border-black py-4 pl-11 pr-4 text-brutalist-panel-text placeholder:text-brutalist-text-muted focus:outline-none font-bold text-sm uppercase tracking-wider"
+              placeholder="Search by name, symbol or address"
+              className="w-full bg-transparent border-b-2 border-[#7B3FE4] py-3 pl-10 pr-4 text-[#F2F2F2] placeholder:text-[#A1A1A1]/50 focus:outline-none font-bold text-sm uppercase tracking-wider"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
-          <div className="mt-6 text-center py-8">
-            <p className="text-sm font-black uppercase tracking-widest text-brutalist-text-muted">Start typing to search...</p>
+          <div className="mt-8 text-center py-6">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#A1A1A1]/50">Start typing to search...</p>
           </div>
         </div>
       </div>
