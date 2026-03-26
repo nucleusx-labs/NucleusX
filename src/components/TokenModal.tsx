@@ -39,7 +39,7 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances }:
   )
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
 
       <div className="relative w-full max-w-md border-2 border-[#2D0A5B] bg-[#0A0A0A] overflow-hidden flex flex-col max-h-[85vh]">

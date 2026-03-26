@@ -13,7 +13,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#2D0A5B] bg-[#0A0A0A]">
-      <div className="w-full max-w-[90rem] mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+      <div className="w-full max-w-360 mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2 group">
@@ -32,7 +32,7 @@ export default function Header() {
             >
               <button
                 onClick={() => setTradeMenuOpen(v => !v)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-[0.1em] text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-widest text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
               >
                 <Repeat className="w-4 h-4" />
                 Trade
@@ -45,7 +45,7 @@ export default function Header() {
                       to="/swap"
                       onClick={() => setTradeMenuOpen(false)}
                       className={({ isActive }) =>
-                        `block px-4 py-3 text-sm font-bold uppercase tracking-[0.1em] transition-colors duration-150 ${
+                        `block px-4 py-3 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
                           isActive ? 'bg-[#2D0A5B] text-[#F2F2F2]' : 'text-[#A1A1A1] hover:text-[#F2F2F2] hover:bg-[#2D0A5B]'
                         }`
                       }
@@ -61,7 +61,7 @@ export default function Header() {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-[0.1em] transition-colors duration-150 ${
+                  `flex items-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
                     isActive
                       ? 'text-[#F2F2F2] bg-[#2D0A5B]'
                       : 'text-[#A1A1A1] hover:text-[#F2F2F2] hover:bg-[#2D0A5B]'

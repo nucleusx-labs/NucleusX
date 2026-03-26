@@ -14,7 +14,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F2F2F2] flex flex-col" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
       <Header />
-      <main className="grow w-full max-w-[90rem] mx-auto px-4 sm:px-6 py-8">
+      <main className="grow w-full max-w-360 mx-auto px-4 sm:px-6 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/swap" element={<Swap />} />

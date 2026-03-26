@@ -12,7 +12,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 p-4">
+    <div className="fixed inset-0 z-100 flex items-start justify-center pt-20 p-4">
       <div className="absolute inset-0 bg-black/80" onClick={onClose} />
       <div className="relative w-full max-w-lg border-2 border-[#2D0A5B] bg-[#0A0A0A]">
         <div className="p-5 border-b border-[#2D0A5B] flex items-center justify-between">

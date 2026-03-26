@@ -3,7 +3,7 @@ import { Github } from 'lucide-react'
 export default function Footer() {
   return (
     <footer className="w-full bg-[#0A0A0A] py-8 border-t border-[#2D0A5B]">
-      <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6">
+      <div className="w-full max-w-360 mx-auto px-4 sm:px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">
             VOID © {new Date().getFullYear()} NUCLEUSX. NO RIGHTS SECURED.

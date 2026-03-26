@@ -97,11 +97,11 @@
 }
 
 @utility input-container-brutal {
-  @apply bg-brutalist-input-bg border-[2px] border-black p-4 relative;
+  @apply bg-brutalist-input-bg border-2 border-black p-4 relative;
 }
 
 @utility input-container-brutal-dark {
-  @apply bg-brutalist-bg border-[2px] border-brutalist-text-muted p-4 relative;
+  @apply bg-brutalist-bg border-2 border-brutalist-text-muted p-4 relative;
 }
 
 @utility panel-brutal {
@@ -117,11 +117,11 @@
 }
 
 @utility td-brutal {
-  @apply p-4 font-bold text-sm border-b-[2px] border-black/20;
+  @apply p-4 font-bold text-sm border-b-2 border-black/20;
 }
 
 @utility backdrop-brutal {
-  @apply fixed inset-0 bg-black/80 z-[100];
+  @apply fixed inset-0 bg-black/80 z-100;
 }
 
 @keyframes flash-highlight {

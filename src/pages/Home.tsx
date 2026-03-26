@@ -235,7 +235,7 @@ export default function Home() {
           </div>
 
           {/* ── Content ── */}
-          <div className="relative z-10 max-w-[58rem] mx-auto">
+          <div className="relative z-10 max-w-232 mx-auto">
 
             {/* Eyebrow */}
             <div
@@ -267,7 +267,7 @@ export default function Home() {
 
             {/* Sub-heading */}
             <p
-              className="text-lg md:text-xl text-[#A1A1A1] max-w-[38rem] mx-auto leading-relaxed mb-10"
+              className="text-lg md:text-xl text-[#A1A1A1] max-w-152 mx-auto leading-relaxed mb-10"
               style={{ animation: a(0.52), opacity: o() }}
             >
               Swap, earn, and govern with the most advanced DeFi tooling on QF network.
@@ -315,7 +315,7 @@ export default function Home() {
             PRODUCTS
         ════════════════════════════════════════════════════════════════ */}
         <section aria-labelledby="products-heading" ref={prodRef.ref} className="py-24 lg:py-36 px-4 sm:px-8">
-          <div className="max-w-[90rem] mx-auto">
+          <div className="max-w-360 mx-auto">
 
             <div style={{ animation: prodRef.visible ? 'fadeUp .5s ease both' : 'none', opacity: prodRef.visible ? undefined : 0 }}
               className="mb-14"
@@ -362,7 +362,7 @@ export default function Home() {
             HOW IT WORKS
         ════════════════════════════════════════════════════════════════ */}
         <section aria-labelledby="how-heading" ref={stepsRef.ref} className="border-y border-[#2D0A5B] py-24 lg:py-36">
-          <div className="max-w-[90rem] mx-auto px-4 sm:px-8">
+          <div className="max-w-360 mx-auto px-4 sm:px-8">
 
             <div
               className="mb-14"
@@ -401,7 +401,7 @@ export default function Home() {
             WHY NUCLEUSX
         ════════════════════════════════════════════════════════════════ */}
         <section aria-labelledby="why-heading" ref={featRef.ref} className="py-24 lg:py-36 px-4 sm:px-8">
-          <div className="max-w-[90rem] mx-auto">
+          <div className="max-w-360 mx-auto">
 
             <div
               className="mb-14"
@@ -448,7 +448,7 @@ export default function Home() {
           </div>
 
           <div
-            className="relative max-w-[90rem] mx-auto px-4 sm:px-8 py-28 lg:py-44 text-center"
+            className="relative max-w-360 mx-auto px-4 sm:px-8 py-28 lg:py-44 text-center"
             style={{ animation: ctaRef.visible ? 'fadeUp .65s ease both' : 'none', opacity: ctaRef.visible ? undefined : 0 }}
           >
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#7B3FE4] mb-6">Get Started Today</p>
