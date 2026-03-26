@@ -1,4 +1,6 @@
+import type { Abi, ContractFunctionArgs, ContractFunctionName } from 'viem'
 import type { PolkadotSigner, TypedApi } from 'polkadot-api'
+import { decodeFunctionResult, encodeFunctionData } from 'viem'
 
 /**
  * Revive API types for contract interactions
@@ -42,25 +44,39 @@ export interface ReviveTransactionOptions {
 }
 
 export interface TransactionCallbacks {
-  onTxHash: (hash: string) => void
+  onTxHash?: (hash: string) => void
   onFinalized: () => void
   onError: (error: string) => void
   onBroadcast?: () => void
 }
 
 /**
- * Encode contract function call data
- * For ABI encoding, you can use viem's encodeFunctionData or @polkadot/api
+ * Encode a contract function call into EVM ABI calldata using viem.
+ * Chain interaction is still handled by polkadot-api / Revive.
  */
-export function encodeContractCall(
-  _abi: any[],
-  _functionName: string,
-  _args: any[] = [],
+export function encodeContractCall<
+  TAbi extends Abi,
+  TFunctionName extends ContractFunctionName<TAbi>,
+>(
+  abi: TAbi,
+  functionName: TFunctionName,
+  args?: ContractFunctionArgs<TAbi, 'pure' | 'view' | 'nonpayable' | 'payable', TFunctionName>,
 ): `0x${string}` {
-  // Simple placeholder - in production, use viem or @polkadot/api
-  // Example with viem: return encodeFunctionData({ abi, functionName, args })
-  console.warn('encodeContractCall is a placeholder. Install viem for proper ABI encoding.')
-  return '0x' as `0x${string}`
+  return encodeFunctionData({ abi, functionName, args } as Parameters<typeof encodeFunctionData>[0])
+}
+
+/**
+ * Decode a contract call result using viem.
+ */
+export function decodeContractResult<
+  TAbi extends Abi,
+  TFunctionName extends ContractFunctionName<TAbi>,
+>(
+  abi: TAbi,
+  functionName: TFunctionName,
+  data: `0x${string}`,
+) {
+  return decodeFunctionResult({ abi, functionName, data } as Parameters<typeof decodeFunctionResult>[0])
 }
 
 /**
@@ -112,7 +128,7 @@ export async function submitContractTransaction(
       switch (event.type) {
         case 'txBestBlocksState':
           if (event.found) {
-            callbacks.onTxHash(event.txHash)
+            callbacks.onTxHash?.(event.txHash)
           }
           break
         case 'finalized':

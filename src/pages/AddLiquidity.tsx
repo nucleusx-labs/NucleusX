@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import TokenSelector from '../components/TokenSelector'
 import type { Token } from '../components/TokenModal'
-import { MOCK_TOKENS } from '../components/TokenModal'
+import { KNOWN_TOKENS } from '../components/TokenModal'
 
 export default function AddLiquidity() {
   const [searchParams] = useSearchParams()
@@ -15,8 +15,8 @@ export default function AddLiquidity() {
   useEffect(() => {
     const paramA = searchParams.get('tokenA')
     const paramB = searchParams.get('tokenB')
-    if (paramA) { const f = MOCK_TOKENS.find(t => t.symbol === paramA); if (f) setTokenA(f) }
-    if (paramB) { const f = MOCK_TOKENS.find(t => t.symbol === paramB); if (f) setTokenB(f) }
+    if (paramA) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramA); if (f) setTokenA(f) }
+    if (paramB) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramB); if (f) setTokenB(f) }
   }, [searchParams])
 
   return (
@@ -31,7 +31,7 @@ export default function AddLiquidity() {
           <div className="border border-[#2D0A5B] p-4">
             <div className="flex justify-between mb-3">
               <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
-              {tokenA?.balance && <span className="text-[#A1A1A1] text-xs font-bold">Balance: {tokenA.balance}</span>}
+              {tokenA && <span className="text-[#A1A1A1] text-xs font-bold">{tokenA.symbol}</span>}
             </div>
             <div className="flex justify-between items-center gap-4">
               <input
@@ -54,7 +54,7 @@ export default function AddLiquidity() {
           <div className="border border-[#2D0A5B] p-4">
             <div className="flex justify-between mb-3">
               <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
-              {tokenB?.balance && <span className="text-[#A1A1A1] text-xs font-bold">Balance: {tokenB.balance}</span>}
+              {tokenB && <span className="text-[#A1A1A1] text-xs font-bold">{tokenB.symbol}</span>}
             </div>
             <div className="flex justify-between items-center gap-4">
               <input

@@ -1,7 +1,7 @@
 import { ArrowLeft, Minus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { MOCK_TOKENS } from '../components/TokenModal'
+import { KNOWN_TOKENS } from '../components/TokenModal'
 
 export default function RemoveLiquidity() {
   const [searchParams] = useSearchParams()
@@ -12,8 +12,8 @@ export default function RemoveLiquidity() {
   useEffect(() => {
     const paramA = searchParams.get('tokenA')
     const paramB = searchParams.get('tokenB')
-    if (paramA) { const f = MOCK_TOKENS.find(t => t.symbol === paramA); if (f) setTokenASymbol(f.symbol) }
-    if (paramB) { const f = MOCK_TOKENS.find(t => t.symbol === paramB); if (f) setTokenBSymbol(f.symbol) }
+    if (paramA) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramA); if (f) setTokenASymbol(f.symbol) }
+    if (paramB) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramB); if (f) setTokenBSymbol(f.symbol) }
   }, [searchParams])
 
   const presets = ['25', '50', '75', '100']

@@ -1,24 +1,90 @@
-import { useState } from 'react'
-import { ArrowDown, Settings } from 'lucide-react'
+import { useAtom } from '@xstate/store/react'
+import { ArrowDown, Loader2, Settings } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTokenBalances } from '../hooks/useTokenBalances'
+import { useSwap } from '../hooks/useSwap'
+import { selectedAccount } from '../hooks/useConnect'
+import SettingsModal from './SettingsModal'
 import TokenSelector from './TokenSelector'
 import type { Token } from './TokenModal'
-import SettingsModal from './SettingsModal'
 
 export default function SwapForm() {
+  const account = useAtom(selectedAccount)
+
   const [payAmount, setPayAmount] = useState('')
   const [receiveAmount, setReceiveAmount] = useState('')
   const [payToken, setPayToken] = useState<Token | undefined>()
   const [receiveToken, setReceiveToken] = useState<Token | undefined>()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const handleSwapTokens = () => {
-    const tempPayAmt = payAmount
-    setPayAmount(receiveAmount)
-    setReceiveAmount(tempPayAmt)
+  const { quote, isQuoting, isApproving, isSwapping, txHash, error, evmAddress, fetchQuote, swap, clearError } = useSwap()
 
-    const tempPayToken = payToken
+  const balances = useTokenBalances(
+    evmAddress,
+    [payToken?.address, receiveToken?.address],
+  )
+
+  // Debounced quote fetch
+  const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current)
+
+    if (!payAmount || !payToken || !receiveToken || payAmount === '0') {
+      setReceiveAmount('')
+      return
+    }
+
+    quoteTimerRef.current = setTimeout(() => {
+      const inDecimals = payToken.decimals
+      const amountIn = BigInt(Math.floor(Number(payAmount) * 10 ** inDecimals))
+      if (amountIn > 0n) {
+        fetchQuote(amountIn, payToken.address, receiveToken.address, receiveToken.decimals)
+      }
+    }, 400)
+
+    return () => {
+      if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current)
+    }
+  }, [payAmount, payToken?.address, receiveToken?.address])
+
+  // Sync quote result to receive input
+  useEffect(() => {
+    if (quote) {
+      setReceiveAmount(quote.amountOutFormatted)
+    }
+    else if (!isQuoting) {
+      setReceiveAmount('')
+    }
+  }, [quote, isQuoting])
+
+  const handleSwapTokens = () => {
+    const tempAmt = payAmount
+    setPayAmount(receiveAmount)
+    setReceiveAmount(tempAmt)
+    const tempToken = payToken
     setPayToken(receiveToken)
-    setReceiveToken(tempPayToken)
+    setReceiveToken(tempToken)
+  }
+
+  const handleSwap = async () => {
+    if (!payToken || !receiveToken || !payAmount) return
+    clearError()
+    const amountIn = BigInt(Math.floor(Number(payAmount) * 10 ** payToken.decimals))
+    await swap(amountIn, payToken.address, receiveToken.address)
+  }
+
+  const isProcessing = isApproving || isSwapping
+  const canSwap = !!account && !!payToken && !!receiveToken && !!payAmount && !!quote && !isProcessing
+
+  function getButtonLabel() {
+    if (!account) return 'Connect Wallet'
+    if (isApproving) return 'Approving...'
+    if (isSwapping) return 'Swapping...'
+    if (isQuoting) return 'Fetching Quote...'
+    if (!payToken || !receiveToken) return 'Select Tokens'
+    if (!payAmount) return 'Enter Amount'
+    if (!quote) return 'No Route Found'
+    return 'Swap'
   }
 
   return (
@@ -38,8 +104,10 @@ export default function SwapForm() {
         <div className="border border-[#2D0A5B] p-4">
           <div className="flex justify-between mb-3">
             <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">You Pay</span>
-            {payToken?.balance && (
-              <span className="text-[#A1A1A1] text-xs font-bold">Balance: {payToken.balance}</span>
+            {payToken && (
+              <span className="text-[#A1A1A1] text-xs font-bold">
+                Balance: {balances.get(payToken.address.toLowerCase())?.formatted ?? '—'}
+              </span>
             )}
           </div>
           <div className="flex justify-between items-center gap-4">
@@ -48,10 +116,10 @@ export default function SwapForm() {
               placeholder="0.0"
               className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
               value={payAmount}
-              onChange={(e) => setPayAmount(e.target.value)}
+              onChange={e => setPayAmount(e.target.value)}
             />
             <div className="shrink-0">
-              <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} />
+              <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} balances={balances} />
             </div>
           </div>
         </div>
@@ -70,31 +138,69 @@ export default function SwapForm() {
         <div className="border border-[#2D0A5B] p-4">
           <div className="flex justify-between mb-3">
             <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">You Receive</span>
-            {receiveToken?.balance && (
-              <span className="text-[#A1A1A1] text-xs font-bold">Balance: {receiveToken.balance}</span>
+            {receiveToken && (
+              <span className="text-[#A1A1A1] text-xs font-bold">
+                Balance: {balances.get(receiveToken.address.toLowerCase())?.formatted ?? '—'}
+              </span>
             )}
           </div>
           <div className="flex justify-between items-center gap-4">
-            <input
-              type="text"
-              placeholder="0.0"
-              className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
-              value={receiveAmount}
-              onChange={(e) => setReceiveAmount(e.target.value)}
-              readOnly
-            />
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="0.0"
+                className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
+                value={receiveAmount}
+                readOnly
+              />
+              {isQuoting && (
+                <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B3FE4] animate-spin" />
+              )}
+            </div>
             <div className="shrink-0">
-              <TokenSelector selectedToken={receiveToken} onSelectToken={setReceiveToken} />
+              <TokenSelector selectedToken={receiveToken} onSelectToken={setReceiveToken} balances={balances} />
             </div>
           </div>
         </div>
       </div>
 
+      {/* Quote info */}
+      {quote && payToken && receiveToken && (
+        <div className="mt-3 px-1 flex justify-between text-xs text-[#A1A1A1] font-bold uppercase tracking-wider">
+          <span>Min. Received</span>
+          <span>
+            {(Number(quote.amountOutMin) / 10 ** receiveToken.decimals).toFixed(6)}
+            {' '}
+            {receiveToken.symbol}
+          </span>
+        </div>
+      )}
+
+      {/* Swap Button */}
       <div className="mt-4">
-        <button className="w-full py-4 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150">
-          Swap
+        <button
+          onClick={handleSwap}
+          disabled={!canSwap}
+          className="w-full py-4 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+          {getButtonLabel()}
         </button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mt-3 p-3 border border-red-800 bg-red-950/30 text-red-400 text-xs font-bold uppercase tracking-wider">
+          {error}
+        </div>
+      )}
+
+      {/* Success */}
+      {txHash && !isProcessing && (
+        <div className="mt-3 p-3 border border-[#2D0A5B] bg-[#2D0A5B]/20 text-[#7B3FE4] text-xs font-bold uppercase tracking-wider break-all">
+          Tx: {txHash}
+        </div>
+      )}
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>

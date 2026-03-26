@@ -1,5 +1,6 @@
+import { useAtom } from '@xstate/store/react'
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { swapSettings } from '../store/swapSettings'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -7,8 +8,7 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [slippage, setSlippage] = useState('0.5')
-  const [deadline, setDeadline] = useState('20')
+  const { slippage, deadline } = useAtom(swapSettings)
 
   if (!isOpen) return null
 
@@ -31,7 +31,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {['0.1', '0.5', '1.0'].map(val => (
                 <button
                   key={val}
-                  onClick={() => setSlippage(val)}
+                  onClick={() => swapSettings.set({ ...swapSettings.get(), slippage: val })}
                   className={`flex-1 py-2 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
                     slippage === val
                       ? 'bg-[#7B3FE4] text-[#F2F2F2]'
@@ -45,7 +45,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <input
                   type="text"
                   value={slippage}
-                  onChange={(e) => setSlippage(e.target.value)}
+                  onChange={e => swapSettings.set({ ...swapSettings.get(), slippage: e.target.value })}
                   className="w-full bg-transparent border border-[#2D0A5B] py-2 px-3 pr-6 text-right text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] font-bold text-sm transition-colors duration-150"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A1A1] font-bold text-sm">%</span>
@@ -62,7 +62,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 <input
                   type="text"
                   value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
+                  onChange={e => swapSettings.set({ ...swapSettings.get(), deadline: e.target.value })}
                   className="w-24 bg-transparent border border-[#2D0A5B] py-2 px-3 pr-8 text-right text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] font-bold text-sm transition-colors duration-150"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A1A1] text-xs font-bold uppercase">m</span>

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { MOCK_TOKENS } from '../components/TokenModal'
+import { KNOWN_TOKENS } from '../components/TokenModal'
 
 const mockPools = [
   { tokenA: 'DOT', tokenB: 'USDC', tvl: '$28.3M', volume24h: '$4.1M', fee: '0.3%' },
@@ -11,7 +11,7 @@ const mockPools = [
 ]
 
 function TokenIcon({ symbol }: { symbol: string }) {
-  const token = MOCK_TOKENS.find(t => t.symbol === symbol)
+  const token = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === symbol)
   if (token?.iconClass) {
     return <div className={`${token.iconClass} w-7 h-7 rounded-full`} />
   }

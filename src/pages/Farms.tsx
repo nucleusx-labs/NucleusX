@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { MOCK_TOKENS } from '../components/TokenModal'
+import { KNOWN_TOKENS } from '../components/TokenModal'
 
 export default function Farms() {
   const mockFarms = [
@@ -47,7 +47,7 @@ export default function Farms() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       {(() => {
-                        const token = MOCK_TOKENS.find(t => t.symbol === farm.stakedToken)
+                        const token = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === farm.stakedToken)
                         return token?.iconClass
                           ? <div className={`${token.iconClass} w-8 h-8 rounded-full`} />
                           : <div className="w-8 h-8 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">{farm.stakedToken[0]}</div>

@@ -1,37 +1,41 @@
 import { X, Search } from 'lucide-react'
 import { useState } from 'react'
+import { CONTRACTS } from '../utils/contracts'
+import type { TokenBalance } from '../hooks/useTokenBalances'
 
 export interface Token {
   symbol: string
   name: string
-  address: string
+  address: `0x${string}`
   decimals: number
-  iconUrl?: string
   iconClass?: string
-  balance?: string
 }
 
-export const MOCK_TOKENS: Token[] = [
-  { symbol: 'DOT', name: 'Polkadot', address: '0x1', decimals: 10, balance: '142.5', iconClass: 'icon-[token-branded--polkadot]' },
-  { symbol: 'USDC', name: 'USD Coin', address: '0x2', decimals: 6, balance: '1050.00', iconClass: 'icon-[token-branded--usdc]' },
-  { symbol: 'USDT', name: 'Tether USD', address: '0x3', decimals: 6, balance: '0.00', iconClass: 'icon-[token-branded--usdt]' },
-  { symbol: 'WETH', name: 'Wrapped Ether', address: '0x4', decimals: 18, balance: '1.24', iconClass: 'icon-[token-branded--eth]' },
+export const KNOWN_TOKENS: Token[] = [
+  {
+    symbol: 'WQF',
+    name: 'Wrapped QF',
+    address: CONTRACTS.WQF,
+    decimals: 18,
+  },
 ]
 
 interface TokenModalProps {
   isOpen: boolean
   onClose: () => void
   onSelectToken: (token: Token) => void
+  balances?: Map<string, TokenBalance>
 }
 
-export default function TokenModal({ isOpen, onClose, onSelectToken }: TokenModalProps) {
+export default function TokenModal({ isOpen, onClose, onSelectToken, balances }: TokenModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
 
   if (!isOpen) return null
 
-  const filteredTokens = MOCK_TOKENS.filter(t =>
-    t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTokens = KNOWN_TOKENS.filter(t =>
+    t.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+    || t.name.toLowerCase().includes(searchQuery.toLowerCase())
+    || t.address.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   return (
@@ -57,42 +61,49 @@ export default function TokenModal({ isOpen, onClose, onSelectToken }: TokenModa
               placeholder="Search name or paste address"
               className="w-full bg-transparent border border-[#2D0A5B] py-3 pl-10 pr-4 text-[#F2F2F2] placeholder:text-[#A1A1A1]/50 focus:outline-none focus:border-[#7B3FE4] text-sm uppercase tracking-wider transition-colors duration-150"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
         <div className="overflow-y-auto flex-1">
-          {filteredTokens.length > 0 ? (
-            filteredTokens.map((token) => (
-              <button
-                key={token.address}
-                onClick={() => onSelectToken(token)}
-                className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150"
-              >
-                <div className="flex items-center gap-4">
-                  {token.iconClass ? (
-                    <div className={`${token.iconClass} w-9 h-9 rounded-full`} />
-                  ) : (
-                    <div className="w-9 h-9 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">
-                      {token.symbol[0]}
-                    </div>
-                  )}
-                  <div className="text-left">
-                    <div className="font-bold uppercase text-[#F2F2F2] text-sm">{token.symbol}</div>
-                    <div className="text-xs text-[#A1A1A1]">{token.name}</div>
-                  </div>
+          {filteredTokens.length > 0
+            ? (
+                filteredTokens.map((token) => {
+                  const bal = balances?.get(token.address.toLowerCase())
+                  return (
+                    <button
+                      key={token.address}
+                      onClick={() => onSelectToken(token)}
+                      className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150"
+                    >
+                      <div className="flex items-center gap-4">
+                        {token.iconClass
+                          ? (
+                              <div className={`${token.iconClass} w-9 h-9 rounded-full`} />
+                            )
+                          : (
+                              <div className="w-9 h-9 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">
+                                {token.symbol[0]}
+                              </div>
+                            )}
+                        <div className="text-left">
+                          <div className="font-bold uppercase text-[#F2F2F2] text-sm">{token.symbol}</div>
+                          <div className="text-xs text-[#A1A1A1]">{token.name}</div>
+                        </div>
+                      </div>
+                      <div className="font-bold text-[#F2F2F2] text-sm">
+                        {bal ? bal.formatted : '—'}
+                      </div>
+                    </button>
+                  )
+                })
+              )
+            : (
+                <div className="py-12 text-center text-[#A1A1A1] font-bold uppercase tracking-[0.2em] text-sm">
+                  No tokens found.
                 </div>
-                {token.balance && (
-                  <div className="font-bold text-[#F2F2F2] text-sm">{token.balance}</div>
-                )}
-              </button>
-            ))
-          ) : (
-            <div className="py-12 text-center text-[#A1A1A1] font-bold uppercase tracking-[0.2em] text-sm">
-              No tokens found.
-            </div>
-          )}
+              )}
         </div>
       </div>
     </div>
