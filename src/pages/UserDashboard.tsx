@@ -158,15 +158,11 @@ export default function UserDashboard() {
               : (
                   <>
                     <div className="text-6xl font-bold tracking-tighter text-[#F2F2F2]">
-                      {nativeFormatted ?? '—'}
+                      {nativeFormatted ? parseFloat(nativeFormatted).toFixed(4) : '—'}
                     </div>
                     <span className="text-xl font-bold text-[#A1A1A1]">{nativeSymbol}</span>
                   </>
                 )}
-          </div>
-          <div className="flex items-center gap-2 text-sm text-[#A1A1A1] font-bold">
-            <TrendingUp className="w-4 h-4" />
-            <span className="truncate font-mono text-xs">{account.address}</span>
           </div>
 
           {/* Allocation bar */}
@@ -252,7 +248,7 @@ export default function UserDashboard() {
               <div className="text-right">
                 {nativeLoading
                   ? <Skeleton className="h-4 w-16 ml-auto" />
-                  : <div className="font-bold text-[#F2F2F2] text-sm">{nativeFormatted ?? '—'}</div>}
+                  : <div className="font-bold text-[#F2F2F2] text-sm">{nativeFormatted ? parseFloat(nativeFormatted).toFixed(4) : '—'}</div>}
               </div>
             </div>
 
@@ -278,15 +274,6 @@ export default function UserDashboard() {
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Allocation bar */}
-          <div className="px-6 py-4 border-t border-[#2D0A5B]">
-            <div className="flex h-1 overflow-hidden">
-              {allTokens.map(({ colorClass }, i) => (
-                <div key={i} className={colorClass} style={{ width: `${segmentPct}%` }} />
-              ))}
-            </div>
           </div>
         </div>
 
