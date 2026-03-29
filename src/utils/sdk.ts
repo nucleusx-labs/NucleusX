@@ -1,27 +1,11 @@
-import type { PolkadotClient, TypedApi } from 'polkadot-api'
 import { createAtom } from '@xstate/store'
+import type { PolkadotClient, TypedApi } from 'polkadot-api'
 import { createClient } from 'polkadot-api'
 import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat'
 import { getWsProvider } from 'polkadot-api/ws-provider'
-import { dot, dot_asset_hub, pas, pas_asset_hub, qf_network } from '../descriptors'
+import { qf_network } from '../descriptors'
 
 const config = {
-  dot: {
-    descriptor: dot,
-    providers: ['wss://dot-rpc.stakeworld.io'],
-  },
-  dot_asset_hub: {
-    descriptor: dot_asset_hub,
-    providers: ['wss://dot-rpc.stakeworld.io/assethub'],
-  },
-  pas: {
-    descriptor: pas,
-    providers: ['wss://pas-rpc.stakeworld.io'],
-  },
-  pas_asset_hub: {
-    descriptor: pas_asset_hub,
-    providers: ['wss://pas-rpc.stakeworld.io/assethub'],
-  },
   qf_network: {
     descriptor: qf_network,
     providers: ['wss://mainnet.qfnode.net'],

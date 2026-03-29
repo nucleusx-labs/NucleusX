@@ -1,6 +1,7 @@
 import type { Abi, ContractFunctionArgs, ContractFunctionName } from 'viem'
 import type { PolkadotSigner, TypedApi } from 'polkadot-api'
 import { decodeFunctionResult, encodeFunctionData } from 'viem'
+import { getSmProvider } from 'polkadot-api/sm-provider'
 
 /**
  * Revive API types for contract interactions
@@ -164,29 +165,24 @@ export async function estimateGas(
 }
 
 /**
- * Check if an account needs to be mapped (SS58 -> EVM)
- * This is typically done automatically by the wallet on first transaction
+ * Get the EVM (H160) address associated with a Substrate SS58 account.
+ * The mapping is registered on-chain via the revive.mapAccount extrinsic.
  */
 export async function checkAccountMapping(
   api: TypedApi<any>,
   address: string,
 ): Promise<{ isMapped: boolean, evmAddress?: string }> {
   try {
-    // Query the account mapping from the Revive pallet
-    const accountsQuery = api.query.Revive.Accounts as any
-    const accountInfo = await accountsQuery.getValue(address)
-
-    if (accountInfo) {
+    const h160 = await (api.apis.ReviveApi.address as any)(address)
+    if (h160) {
       return {
         isMapped: true,
-        evmAddress: accountInfo.evm_address,
+        evmAddress: h160.asHex(),
       }
     }
-
     return { isMapped: false }
   }
   catch {
-    // If query fails, account likely doesn't exist yet
     return { isMapped: false }
   }
 }
