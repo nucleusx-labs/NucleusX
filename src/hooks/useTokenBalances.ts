@@ -1,14 +1,23 @@
 import { useEffect, useState } from 'react'
+import { createPublicClient, http } from 'viem'
 import { ERC20_ABI } from '../utils/contracts'
-import { decodeContractResult, encodeContractCall } from '../utils/revive'
-import { reviveCall } from '../utils/sdk-interface'
 
-function toHexString(data: unknown): `0x${string}` {
-  if (data && typeof (data as any).asHex === 'function') {
-    return (data as any).asHex() as `0x${string}`
-  }
-  const s = String(data)
-  return (s.startsWith('0x') ? s : `0x${s}`) as `0x${string}`
+const qfPublicClient = createPublicClient({
+  chain: {
+    id: 3426,
+    name: 'QF Network',
+    nativeCurrency: { name: 'QF', symbol: 'QF', decimals: 18 },
+    rpcUrls: { default: { http: ['https://archive.mainnet.qfnode.net/eth'] } },
+  },
+  transport: http('https://archive.mainnet.qfnode.net/eth'),
+})
+
+function formatBigIntBalance(balance: bigint, decimals: number): string {
+  if (decimals === 0) return balance.toString()
+  const divisor = 10n ** BigInt(decimals)
+  const whole = balance / divisor
+  const frac = (balance % divisor).toString().padStart(decimals, '0').slice(0, 4)
+  return `${whole}.${frac}`
 }
 
 export interface TokenBalance {
@@ -37,24 +46,27 @@ export function useTokenBalances(
 
       await Promise.all(validAddresses.map(async (tokenAddress) => {
         try {
-          const dest = tokenAddress as `0x${string}`
+          const addr = tokenAddress as `0x${string}`
 
-          const decimalsCalldata = encodeContractCall(ERC20_ABI, 'decimals')
-          const decimalsRes = await reviveCall('qf_network', { dest, value: 0n, calldata: decimalsCalldata })
-          const decimals = decimalsRes.result.success
-            ? Number(decodeContractResult(ERC20_ABI, 'decimals', toHexString(decimalsRes.result.value.data)))
-            : 18
+          const [decimals, balance] = await Promise.all([
+            qfPublicClient.readContract({
+              address: addr,
+              abi: ERC20_ABI,
+              functionName: 'decimals',
+            }) as Promise<number>,
+            qfPublicClient.readContract({
+              address: addr,
+              abi: ERC20_ABI,
+              functionName: 'balanceOf',
+              args: [resolvedEvmAddress],
+            }) as Promise<bigint>,
+          ])
 
-          const balanceCalldata = encodeContractCall(ERC20_ABI, 'balanceOf', [resolvedEvmAddress])
-          const balanceRes = await reviveCall('qf_network', { dest, value: 0n, calldata: balanceCalldata })
-          const balance = balanceRes.result.success
-            ? BigInt(String(decodeContractResult(ERC20_ABI, 'balanceOf', toHexString(balanceRes.result.value.data))))
-            : 0n
-
-          const formatted = (Number(balance) / 10 ** decimals).toFixed(4)
+          const formatted = formatBigIntBalance(balance, decimals)
           result.set(tokenAddress.toLowerCase(), { balance, decimals, formatted })
         }
-        catch {
+        catch (err) {
+          console.error(`Failed to fetch balance for token ${tokenAddress}:`, err)
           result.set(tokenAddress.toLowerCase(), { balance: 0n, decimals: 18, formatted: '0.0000' })
         }
       }))

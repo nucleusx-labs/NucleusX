@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Wallet, History, ArrowUpRight, Target, Plus, Minus, AlertTriangle } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { useAtom } from '@xstate/store/react'
+import { AlertTriangle, ArrowUpRight, History, Minus, Plus, Target, Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { KNOWN_TOKENS } from '../components/TokenModal'
 import { selectedAccount } from '../hooks/useConnect'
 import { useTokenBalances } from '../hooks/useTokenBalances'
-import { getBalance } from '../utils/sdk-interface'
 import { checkAccountMapping } from '../utils/revive'
-import { KNOWN_TOKENS } from '../components/TokenModal'
 import sdk from '../utils/sdk'
+import { getBalance } from '../utils/sdk-interface'
 
 const TOKEN_COLORS = ['bg-[#7B3FE4]', 'bg-[#00D084]', 'bg-[#E4A83F]', 'bg-[#3F9BE4]']
 
@@ -163,10 +163,6 @@ export default function UserDashboard() {
           </div>
 
           <div className="flex flex-col gap-2 mb-6">
-            {/* <div className="flex items-center gap-3">
-              <span className="text-xs font-bold uppercase tracking-widest text-[#A1A1A1] w-12 shrink-0">SS58</span>
-              <span className="font-mono text-xs text-[#A1A1A1] truncate">{account.address}</span>
-            </div> */}
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold uppercase tracking-widest text-[#A1A1A1] w-12 shrink-0">EVM</span>
               {evmLoading
