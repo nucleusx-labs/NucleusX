@@ -2,11 +2,7 @@ import type { Prefix } from '../utils/sdk'
 import { AccountId } from 'polkadot-api'
 
 const subscan: Record<Prefix, string> = {
-  dot: 'https://polkadot.subscan.io',
-  dot_asset_hub: 'https://assethub-polkadot.subscan.io',
-  pas: 'https://paseo.subscan.io',
-  pas_asset_hub: 'https://assethub-paseo.subscan.io',
-  qf_network: 'https://portal.qfnetwork.xyz/?rpc=wss%3A%2F%2Fmainnet.qfnode.net#/explorer'
+  qf_network: 'https://portal.qfnetwork.xyz/?rpc=wss%3A%2F%2Fmainnet.qfnode.net#/explorer',
 }
 
 export function unifyAddress(address: string) {
@@ -33,22 +29,6 @@ export function explorerDetail(chain: Prefix, hash: string): string {
   return url.toString()
 }
 
-export function buyTokenUrl(chainKey: Prefix, address?: string) {
-  if (chainKey === 'dot' || chainKey === 'dot_asset_hub') {
-    const url = new URL('https://checkout.banxa.com')
-    url.searchParams.set('coinType', 'DOT')
-    url.searchParams.set('blockchain', 'DOT')
-    url.searchParams.set('walletAddress', address || '')
-    url.searchParams.set('orderType', 'BUY')
-
-    return url.toString()
-  }
-
-  const faucetUrl = new URL('https://faucet.polkadot.io/')
-
-  if (chainKey === 'pas_asset_hub') {
-    faucetUrl.searchParams.set('parachain', '1000')
-  }
-
-  return faucetUrl.toString()
+export function buyTokenUrl(_chainKey: Prefix, _address?: string) {
+  return new URL('https://faucet.polkadot.io/').toString()
 }

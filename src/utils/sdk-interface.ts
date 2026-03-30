@@ -119,7 +119,7 @@ export async function getBalance(chainPrefix: Prefix, address: string) {
   ])
   const tokenDecimals = chainSpec.properties.tokenDecimals
   const tokenSymbol = chainSpec.properties.tokenSymbol
-  const freeBalance = formatValue(balance.data.free, tokenDecimals)
+  const freeBalance = formatValue(balance.data.free, tokenDecimals, false)
 
   return {
     balance: freeBalance,

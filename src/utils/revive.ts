@@ -1,7 +1,7 @@
 import type { Abi, ContractFunctionArgs, ContractFunctionName } from 'viem'
 import type { PolkadotSigner, TypedApi } from 'polkadot-api'
+import { Binary, FixedSizeBinary } from 'polkadot-api'
 import { decodeFunctionResult, encodeFunctionData } from 'viem'
-import { getSmProvider } from 'polkadot-api/sm-provider'
 
 /**
  * Revive API types for contract interactions
@@ -16,23 +16,13 @@ export interface ReviveCallOptions {
 }
 
 export interface ReviveCallResult {
-  result: {
-    ok?: {
-      flags: number
-      data: string
-    }
-    err?: {
-      revert?: string
-      error?: string
-    }
-  }
-  gasConsumed: bigint
-  gasRequired: bigint
-  storageDeposit: {
-    ok?: bigint
-    err?: string
-  }
-  debugMessage: string
+  result:
+    | { success: true; value: { flags: number; data: { asHex: () => `0x${string}` } } }
+    | { success: false; value: unknown }
+  gas_consumed: { ref_time: bigint; proof_size: bigint }
+  gas_required: { ref_time: bigint; proof_size: bigint }
+  storage_deposit: { success: true; value: bigint } | { success: false; value: bigint }
+  debug_message: unknown
 }
 
 export interface ReviveTransactionOptions {
@@ -90,14 +80,21 @@ export async function callContract(
 ): Promise<ReviveCallResult> {
   const { origin, dest, value, calldata } = options
 
+  // Convert dest (EVM hex address) to FixedSizeBinary<20> as required by the runtime API
+  const destHex = dest.startsWith('0x') ? dest.slice(2) : dest
+  const destFixed = FixedSizeBinary.fromArray([...Buffer.from(destHex, 'hex')])
+
+  // Convert calldata hex string to Binary as required by the runtime API
+  const inputData = Binary.fromHex(calldata)
+
   // Call the ReviveApi runtime API
   const result = await (api.apis.ReviveApi.call as any)(
     origin,
-    dest,
+    destFixed,
     value,
     undefined, // gasLimit - let the runtime estimate
     undefined, // storageDepositLimit
-    calldata,
+    inputData,
   )
 
   return result as ReviveCallResult
@@ -159,8 +156,8 @@ export async function estimateGas(
   const result = await callContract(api, options)
 
   return {
-    gasConsumed: result.gasConsumed,
-    gasRequired: result.gasRequired,
+    gasConsumed: result.gas_consumed.ref_time,
+    gasRequired: result.gas_required.ref_time,
   }
 }
 

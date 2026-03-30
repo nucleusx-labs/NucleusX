@@ -33,6 +33,7 @@ export default function UserDashboard() {
     }
 
     let cancelled = false
+    setEvmAddress(undefined)
     setEvmLoading(true)
     setEvmMapped(null)
 
@@ -148,10 +149,6 @@ export default function UserDashboard() {
 
         {/* Native Balance — hero metric */}
         <div className="border-2 border-[#2D0A5B] p-8 lg:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <Wallet className="w-4 h-4 text-[#7B3FE4]" />
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">Native Balance</p>
-          </div>
           <div className="flex items-baseline gap-4 mb-6">
             {nativeLoading
               ? <Skeleton className="h-14 w-52" />
@@ -166,10 +163,10 @@ export default function UserDashboard() {
           </div>
 
           <div className="flex flex-col gap-2 mb-6">
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <span className="text-xs font-bold uppercase tracking-widest text-[#A1A1A1] w-12 shrink-0">SS58</span>
               <span className="font-mono text-xs text-[#A1A1A1] truncate">{account.address}</span>
-            </div>
+            </div> */}
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold uppercase tracking-widest text-[#A1A1A1] w-12 shrink-0">EVM</span>
               {evmLoading
@@ -304,7 +301,7 @@ export default function UserDashboard() {
             <History className="w-8 h-8 text-[#2D0A5B]" />
             <p className="text-sm font-bold uppercase tracking-widest text-[#A1A1A1]">No activity</p>
             <p className="text-xs text-[#A1A1A1] max-w-xs">
-              Transaction history is not available yet. On-chain indexing coming soon.
+              Transaction history is not available yet.
             </p>
           </div>
         </div>
