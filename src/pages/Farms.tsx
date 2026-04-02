@@ -1,8 +1,10 @@
 import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { KNOWN_TOKENS } from '../components/TokenModal'
+import { useSelector } from '@xstate/store/react'
+import { dexStore, selectTokenList } from '../store/dexStore'
 
 export default function Farms() {
+  const tokenList = useSelector(dexStore, selectTokenList)
   const mockFarms = [
     { stakedToken: 'DOT', rewardToken: 'NCL', tvl: '$12.4M', apy: '114.2%' },
     { stakedToken: 'WETH', rewardToken: 'NCL', tvl: '$45.1M', apy: '88.5%' },
@@ -47,7 +49,7 @@ export default function Farms() {
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       {(() => {
-                        const token = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === farm.stakedToken)
+                        const token = tokenList.find(t => t.symbol === farm.stakedToken)
                         return token?.iconClass
                           ? <div className={`${token.iconClass} w-8 h-8 rounded-full`} />
                           : <div className="w-8 h-8 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">{farm.stakedToken[0]}</div>

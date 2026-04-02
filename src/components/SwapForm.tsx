@@ -5,7 +5,7 @@ import { selectedAccount } from '../hooks/useConnect'
 import { useSwap } from '../hooks/useSwap'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import SettingsModal from './SettingsModal'
-import type { Token } from './TokenModal'
+import type { Token } from '../store/dexStore'
 import TokenSelector from './TokenSelector'
 
 export default function SwapForm() {
@@ -22,6 +22,7 @@ export default function SwapForm() {
   const balances = useTokenBalances(
     evmAddress,
     [payToken?.address, receiveToken?.address],
+    account?.address,
   )
 
   // Debounced quote fetch
@@ -38,7 +39,7 @@ export default function SwapForm() {
       const inDecimals = payToken.decimals
       const amountIn = BigInt(Math.floor(Number(payAmount) * 10 ** inDecimals))
       if (amountIn > 0n) {
-        fetchQuote(amountIn, payToken.address, receiveToken.address, receiveToken.decimals)
+        fetchQuote(amountIn, payToken, receiveToken)
       }
     }, 400)
 
@@ -66,11 +67,10 @@ export default function SwapForm() {
     setReceiveToken(tempToken)
   }
 
-  const handleSwap = async () => {
+  const handleSwap = () => {
     if (!payToken || !receiveToken || !payAmount) return
     clearError()
-    const amountIn = BigInt(Math.floor(Number(payAmount) * 10 ** payToken.decimals))
-    await swap(amountIn, payToken.address, receiveToken.address)
+    swap()
   }
 
   const isProcessing = isApproving || isSwapping

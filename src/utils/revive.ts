@@ -17,11 +17,11 @@ export interface ReviveCallOptions {
 
 export interface ReviveCallResult {
   result:
-    | { success: true; value: { flags: number; data: { asHex: () => `0x${string}` } } }
-    | { success: false; value: unknown }
+    | { ok: { flags: number; data: `0x${string}` }; err?: never }
+    | { ok?: never; err: { error: string } }
   gas_consumed: { ref_time: bigint; proof_size: bigint }
   gas_required: { ref_time: bigint; proof_size: bigint }
-  storage_deposit: { success: true; value: bigint } | { success: false; value: bigint }
+  storage_deposit: { value: bigint }
   debug_message: unknown
 }
 
@@ -82,7 +82,9 @@ export async function callContract(
 
   // Convert dest (EVM hex address) to FixedSizeBinary<20> as required by the runtime API
   const destHex = dest.startsWith('0x') ? dest.slice(2) : dest
-  const destFixed = FixedSizeBinary.fromArray([...Buffer.from(destHex, 'hex')])
+  const destFixed = FixedSizeBinary.fromArray(
+    destHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)),
+  )
 
   // Convert calldata hex string to Binary as required by the runtime API
   const inputData = Binary.fromHex(calldata)

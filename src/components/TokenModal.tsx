@@ -1,24 +1,11 @@
 import { X, Search } from 'lucide-react'
 import { useState } from 'react'
-import { CONTRACTS } from '../utils/contracts'
+import { useSelector } from '@xstate/store/react'
+import { dexStore, selectTokenList } from '../store/dexStore'
+import type { Token } from '../store/dexStore'
 import type { TokenBalance } from '../hooks/useTokenBalances'
 
-export interface Token {
-  symbol: string
-  name: string
-  address: `0x${string}`
-  decimals: number
-  iconClass?: string
-}
-
-export const KNOWN_TOKENS: Token[] = [
-  {
-    symbol: 'WQF',
-    name: 'Wrapped QF',
-    address: CONTRACTS.WQF,
-    decimals: 18,
-  },
-]
+export type { Token }
 
 interface TokenModalProps {
   isOpen: boolean
@@ -29,10 +16,11 @@ interface TokenModalProps {
 
 export default function TokenModal({ isOpen, onClose, onSelectToken, balances }: TokenModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const tokenList = useSelector(dexStore, selectTokenList)
 
   if (!isOpen) return null
 
-  const filteredTokens = KNOWN_TOKENS.filter(t =>
+  const filteredTokens = tokenList.filter(t =>
     t.symbol.toLowerCase().includes(searchQuery.toLowerCase())
     || t.name.toLowerCase().includes(searchQuery.toLowerCase())
     || t.address.toLowerCase().includes(searchQuery.toLowerCase()),

@@ -121,8 +121,6 @@ export async function getBalance(chainPrefix: Prefix, address: string) {
   const tokenSymbol = chainSpec.properties.tokenSymbol
   const freeBalance = formatValue(balance.data.free, tokenDecimals, false)
 
-  console.log({chainSpec})
-
   return {
     balance: freeBalance,
     symbol: tokenSymbol,

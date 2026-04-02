@@ -1,20 +1,22 @@
 import { ArrowLeft, Minus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { KNOWN_TOKENS } from '../components/TokenModal'
+import { useSelector } from '@xstate/store/react'
+import { dexStore, selectTokenList } from '../store/dexStore'
 
 export default function RemoveLiquidity() {
   const [searchParams] = useSearchParams()
   const [percent, setPercent] = useState('50')
   const [tokenASymbol, setTokenASymbol] = useState('')
   const [tokenBSymbol, setTokenBSymbol] = useState('')
+  const tokenList = useSelector(dexStore, selectTokenList)
 
   useEffect(() => {
     const paramA = searchParams.get('tokenA')
     const paramB = searchParams.get('tokenB')
-    if (paramA) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramA); if (f) setTokenASymbol(f.symbol) }
-    if (paramB) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramB); if (f) setTokenBSymbol(f.symbol) }
-  }, [searchParams])
+    if (paramA) { const f = tokenList.find(t => t.symbol === paramA); if (f) setTokenASymbol(f.symbol) }
+    if (paramB) { const f = tokenList.find(t => t.symbol === paramB); if (f) setTokenBSymbol(f.symbol) }
+  }, [searchParams, tokenList])
 
   const presets = ['25', '50', '75', '100']
 

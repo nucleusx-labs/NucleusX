@@ -2,9 +2,10 @@ import { useAtom } from '@xstate/store/react'
 import { AlertTriangle, ArrowUpRight, History, Minus, Plus, Target, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { KNOWN_TOKENS } from '../components/TokenModal'
 import { selectedAccount } from '../hooks/useConnect'
 import { useTokenBalances } from '../hooks/useTokenBalances'
+import { useSelector } from '@xstate/store/react'
+import { dexStore, selectTokenList } from '../store/dexStore'
 import { checkAccountMapping } from '../utils/revive'
 import sdk from '../utils/sdk'
 import { getBalance } from '../utils/sdk-interface'
@@ -17,6 +18,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export default function UserDashboard() {
   const account = useAtom(selectedAccount)
+  const tokenList = useSelector(dexStore, selectTokenList)
 
   const [evmAddress, setEvmAddress] = useState<`0x${string}` | undefined>()
   const [evmLoading, setEvmLoading] = useState(false)
@@ -93,14 +95,15 @@ export default function UserDashboard() {
   // ERC20 balances
   const erc20Balances = useTokenBalances(
     evmAddress,
-    KNOWN_TOKENS.map(t => t.address),
+    tokenList.map(t => t.address),
+    account?.address,
   )
 
   // Build asset rows: native first, then ERC20 tokens with non-zero or all
   const nativeSymbol = nativeBalance?.symbol ?? 'QF'
   const nativeFormatted = nativeBalance?.balance ?? null
 
-  const erc20Rows = KNOWN_TOKENS.map((token, i) => ({
+  const erc20Rows = tokenList.map((token, i) => ({
     ...token,
     formatted: erc20Balances.get(token.address.toLowerCase())?.formatted ?? null,
     colorClass: TOKEN_COLORS[(i + 1) % TOKEN_COLORS.length],

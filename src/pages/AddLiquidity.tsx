@@ -2,8 +2,9 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import TokenSelector from '../components/TokenSelector'
-import type { Token } from '../components/TokenModal'
-import { KNOWN_TOKENS } from '../components/TokenModal'
+import type { Token } from '../store/dexStore'
+import { useSelector } from '@xstate/store/react'
+import { dexStore, selectTokenList } from '../store/dexStore'
 
 export default function AddLiquidity() {
   const [searchParams] = useSearchParams()
@@ -11,13 +12,14 @@ export default function AddLiquidity() {
   const [tokenB, setTokenB] = useState<Token | undefined>()
   const [amountA, setAmountA] = useState('')
   const [amountB, setAmountB] = useState('')
+  const tokenList = useSelector(dexStore, selectTokenList)
 
   useEffect(() => {
     const paramA = searchParams.get('tokenA')
     const paramB = searchParams.get('tokenB')
-    if (paramA) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramA); if (f) setTokenA(f) }
-    if (paramB) { const f = KNOWN_TOKENS.find((t: { symbol: string }) => t.symbol === paramB); if (f) setTokenB(f) }
-  }, [searchParams])
+    if (paramA) { const f = tokenList.find(t => t.symbol === paramA); if (f) setTokenA(f) }
+    if (paramB) { const f = tokenList.find(t => t.symbol === paramB); if (f) setTokenB(f) }
+  }, [searchParams, tokenList])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] py-8 w-full">
