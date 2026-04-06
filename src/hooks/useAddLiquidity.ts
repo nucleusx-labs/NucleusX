@@ -85,7 +85,7 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
 
       // Helper: read current ERC20 allowance
       async function getAllowance(tokenAddress: `0x${string}`): Promise<bigint> {
-        const calldata = encodeContractCall(ERC20_ABI, 'allowance', [evmAddress, CONTRACTS.UniswapV2Router02])
+        const calldata = encodeContractCall(ERC20_ABI, 'allowance', [evmAddress!, CONTRACTS.UniswapV2Router02])
         const res = await callContract(api, { origin: account!.address, dest: tokenAddress, value: 0n, calldata })
         return res.result.ok
           ? BigInt(String(decodeContractResult(ERC20_ABI, 'allowance', res.result.ok.data)))
