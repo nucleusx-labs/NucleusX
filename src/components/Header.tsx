@@ -17,7 +17,7 @@ export default function Header() {
         <div className="flex items-center gap-8">
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2 group">
-            <span className="icon-[token-branded--polkadot] text-xl text-[#7B3FE4]" />
+            <img src="https://res.cloudinary.com/dma1c8i6n/image/upload/v1775509981/270346914_oknsqn.png" alt="NucleusX" className="w-14 h-14 object-contain" />
             <span className="text-xl font-bold uppercase tracking-tighter text-[#F2F2F2]">
               NucleusX
             </span>
