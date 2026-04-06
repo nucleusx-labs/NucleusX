@@ -43,6 +43,7 @@ export default function UserDashboard() {
       try {
         const { api } = sdk('qf_network')
         const mapping = await checkAccountMapping(api, account!.address)
+        console.log("ping")
         if (cancelled) return
         if (mapping.isMapped && mapping.evmAddress) {
           setEvmAddress(mapping.evmAddress as `0x${string}`)
@@ -80,6 +81,7 @@ export default function UserDashboard() {
 
     getBalance('qf_network', account.address)
       .then(({ balance, symbol }) => {
+        console.log("pong")
         if (!cancelled) setNativeBalance({ balance, symbol })
       })
       .catch(() => {
@@ -98,6 +100,8 @@ export default function UserDashboard() {
     tokenList.map(t => t.address),
     account?.address,
   )
+
+  console.log({erc20Balances})
 
   // Build asset rows: native first, then ERC20 tokens with non-zero or all
   const nativeSymbol = nativeBalance?.symbol ?? 'QF'

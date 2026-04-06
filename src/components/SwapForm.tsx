@@ -17,7 +17,7 @@ export default function SwapForm() {
   const [receiveToken, setReceiveToken] = useState<Token | undefined>()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
-  const { quote, isQuoting, isApproving, isSwapping, txHash, error, evmAddress, fetchQuote, swap, clearError } = useSwap()
+  const { quote, isQuoting, isCheckingAllowance, isApproving, isSwapping, txHash, error, evmAddress, fetchQuote, swap, clearError } = useSwap()
 
   const balances = useTokenBalances(
     evmAddress,
@@ -73,11 +73,12 @@ export default function SwapForm() {
     swap()
   }
 
-  const isProcessing = isApproving || isSwapping
+  const isProcessing = isCheckingAllowance || isApproving || isSwapping
   const canSwap = !!account && !!payToken && !!receiveToken && !!payAmount && !!quote && !isProcessing
 
   function getButtonLabel() {
     if (!account) return 'Connect Wallet'
+    if (isCheckingAllowance) return 'Checking Allowance...'
     if (isApproving) return 'Approving...'
     if (isSwapping) return 'Swapping...'
     if (isQuoting) return 'Fetching Quote...'

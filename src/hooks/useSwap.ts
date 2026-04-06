@@ -34,6 +34,7 @@ function pubkeyToH160(pubkey: Uint8Array): `0x${string}` {
 export interface UseSwapReturn {
   quote: SwapQuote | null
   isQuoting: boolean
+  isCheckingAllowance: boolean
   isApproving: boolean
   isSwapping: boolean
   isSuccess: boolean
@@ -130,7 +131,7 @@ export function useSwap(): UseSwapReturn {
               'qf_network',
               { dest: input.tokenIn.address, value: 0n, gasLimit: gas.gasRequired, data: calldata },
               { onFinalized: resolve, onError: (msg) => reject(new Error(msg)) },
-            )
+            ).catch(reject)
           })
         }),
 
@@ -165,7 +166,7 @@ export function useSwap(): UseSwapReturn {
                 onFinalized: () => {},
                 onError: (msg) => reject(new Error(msg)),
               },
-            )
+            ).catch(reject)
           })
         }),
       },
@@ -208,6 +209,7 @@ export function useSwap(): UseSwapReturn {
   return {
     quote: ctx.quote,
     isQuoting: state === 'quoting',
+    isCheckingAllowance: state === 'checkingAllowance',
     isApproving: state === 'approving',
     isSwapping: state === 'swapping',
     isSuccess: state === 'success',

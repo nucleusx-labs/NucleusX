@@ -113,17 +113,23 @@ export async function submitContractTransaction(
 ): Promise<() => void> {
   const { dest, value, gasLimit, storageDepositLimit, data, signer } = options
 
-  // Build the revivive.call extrinsic
+  const destHex = dest.startsWith('0x') ? dest.slice(2) : dest
+  const destFixed = FixedSizeBinary.fromArray(
+    destHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)),
+  )
+  const inputData = Binary.fromHex(data)
+
+  // Build the revive.call extrinsic
   const tx = (api.tx.Revive.call as any)({
-    dest,
+    dest: destFixed,
     value,
     gas_limit: gasLimit,
     storage_deposit_limit: storageDepositLimit,
-    data,
+    data: inputData,
   })
 
-  // Sign and submit
-  const unsub = tx.signAndSubmit(signer).subscribe({
+  // Sign, submit and watch for lifecycle events
+  const unsub = tx.signSubmitAndWatch(signer).subscribe({
     next: (event: any) => {
       switch (event.type) {
         case 'txBestBlocksState':

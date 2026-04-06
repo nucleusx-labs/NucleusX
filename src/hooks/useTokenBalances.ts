@@ -3,6 +3,7 @@ import { callContract, decodeContractResult, encodeContractCall } from '../utils
 import { ERC20_ABI } from '../utils/contracts'
 import { dexStore } from '../store/dexStore'
 import sdk from '../utils/sdk'
+import type { Address } from 'viem'
 
 // Fallback SS58 origin for read-only calls when no account is connected.
 // Balances will be 0 anyway without a real evmAddress.
@@ -46,7 +47,7 @@ export function useTokenBalances(
       await Promise.all(
         validAddresses.map(async (tokenAddress) => {
           try {
-            const addr = tokenAddress as `0x${string}`
+            const addr = tokenAddress as Address
             const decimalsCalldata = encodeContractCall(ERC20_ABI, 'decimals')
             const balanceCalldata = encodeContractCall(ERC20_ABI, 'balanceOf', [resolvedEvmAddress])
 
