@@ -90,7 +90,7 @@ export async function callContract(
   const inputData = Binary.fromHex(calldata)
 
   // Call the ReviveApi runtime API
-  const result = await (api.apis.ReviveApi.call as any)(
+  const raw = await (api.apis.ReviveApi.call as any)(
     origin,
     destFixed,
     value,
@@ -99,7 +99,20 @@ export async function callContract(
     inputData,
   )
 
-  return result as ReviveCallResult
+  // PAPI represents Result<T, E> as { value: T } for the Ok variant.
+  // Normalize into the typed ReviveCallResult shape expected by callers.
+  const inner = raw.result as Record<string, unknown>
+  const okValue = (inner?.value ?? inner) as { data?: { asHex(): `0x${string}` }; flags?: number } | undefined
+
+  let normalizedResult: ReviveCallResult['result']
+  if (okValue?.data) {
+    normalizedResult = { ok: { flags: okValue.flags ?? 0, data: okValue.data.asHex() } }
+  }
+  else {
+    normalizedResult = { err: { error: 'Contract call failed or returned no data' } }
+  }
+
+  return { ...raw, result: normalizedResult } as ReviveCallResult
 }
 
 /**
