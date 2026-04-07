@@ -1,22 +1,25 @@
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
-import { Layers, Repeat, LayoutDashboard, ChevronDown } from 'lucide-react'
+import { Layers, Repeat, LayoutDashboard, ChevronDown, Menu, X } from 'lucide-react'
 import Connect from './Connect'
 
 export default function Header() {
   const [isTradeMenuOpen, setTradeMenuOpen] = useState(false)
+  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navItems = [
     { name: 'Pools', path: '/pools', icon: Layers },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   ]
 
+  const closeMobileMenu = () => setMobileMenuOpen(false)
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#2D0A5B] bg-[#0A0A0A]">
       <div className="w-full max-w-360 mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-8">
           {/* Logo */}
-          <NavLink to="/" className="flex items-center gap-2 group">
+          <NavLink to="/" className="flex items-center gap-2 group" onClick={closeMobileMenu}>
             <img src="https://res.cloudinary.com/dma1c8i6n/image/upload/v1775509981/270346914_oknsqn.png" alt="NucleusX" className="w-14 h-14 object-contain" />
             <span className="text-xl font-bold uppercase tracking-tighter text-[#F2F2F2]">
               NucleusX
@@ -75,8 +78,69 @@ export default function Header() {
           </nav>
         </div>
 
-        <Connect />
+        <div className="flex items-center gap-3">
+          <Connect />
+          {/* Hamburger button */}
+          <button
+            className="md:hidden flex items-center justify-center w-9 h-9 border border-[#2D0A5B] text-[#A1A1A1] hover:text-[#F2F2F2] hover:bg-[#2D0A5B] transition-colors duration-150"
+            onClick={() => setMobileMenuOpen(v => !v)}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-[#2D0A5B] bg-[#0A0A0A]">
+          <nav className="flex flex-col px-4 py-2">
+            {/* Trade section */}
+            <div>
+              <button
+                onClick={() => setTradeMenuOpen(v => !v)}
+                className="flex items-center justify-between w-full px-2 py-3 text-sm font-bold uppercase tracking-widest text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
+              >
+                <span className="flex items-center gap-2">
+                  <Repeat className="w-4 h-4" />
+                  Trade
+                </span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${isTradeMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isTradeMenuOpen && (
+                <div className="pl-6 pb-1">
+                  <NavLink
+                    to="/swap"
+                    onClick={closeMobileMenu}
+                    className={({ isActive }) =>
+                      `block px-2 py-2 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
+                        isActive ? 'text-[#F2F2F2]' : 'text-[#A1A1A1] hover:text-[#F2F2F2]'
+                      }`
+                    }
+                  >
+                    Exchange
+                  </NavLink>
+                </div>
+              )}
+            </div>
+            {navItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={closeMobileMenu}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-2 py-3 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
+                    isActive ? 'text-[#F2F2F2]' : 'text-[#A1A1A1] hover:text-[#F2F2F2]'
+                  }`
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                {item.name}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   )
 }
