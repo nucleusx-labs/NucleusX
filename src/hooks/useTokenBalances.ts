@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import { ERC20_ABI } from '../utils/contracts'
-import { dexStore } from '../store/dexStore'
+import { dexStore, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import sdk from '../utils/sdk'
 import type { Address } from 'viem'
 
@@ -34,7 +34,9 @@ export function useTokenBalances(
   const addressKey = validAddresses.join(',')
 
   useEffect(() => {
-    if (!evmAddress || validAddresses.length === 0) return
+    if (validAddresses.length === 0) return
+    const hasOnlyNative = validAddresses.every(a => a.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase())
+    if (!evmAddress && !hasOnlyNative) return
 
     const origin = ss58Origin ?? ZERO_SS58
     const resolvedEvmAddress = evmAddress
@@ -47,9 +49,27 @@ export function useTokenBalances(
       await Promise.all(
         validAddresses.map(async (tokenAddress) => {
           try {
+            if (tokenAddress.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()) {
+              // Native QF token — fetch via substrate System.Account
+              if (!ss58Origin || ss58Origin === ZERO_SS58) {
+                result.set(tokenAddress.toLowerCase(), { balance: 0n, decimals: 18, formatted: '0.0000' })
+                return
+              }
+              const { client } = sdk('qf_network')
+              const [accountData, chainSpec] = await Promise.all([
+                api.query.System.Account.getValue(ss58Origin),
+                client.getChainSpecData(),
+              ])
+              const decimals = Number(chainSpec.properties.tokenDecimals) || 18
+              const balance = BigInt(String(accountData.data.free))
+              const formatted = formatBigIntBalance(balance, decimals)
+              result.set(tokenAddress.toLowerCase(), { balance, decimals, formatted })
+              return
+            }
+
             const addr = tokenAddress as Address
             const decimalsCalldata = encodeContractCall(ERC20_ABI, 'decimals')
-            const balanceCalldata = encodeContractCall(ERC20_ABI, 'balanceOf', [resolvedEvmAddress])
+            const balanceCalldata = encodeContractCall(ERC20_ABI, 'balanceOf', [resolvedEvmAddress!])
 
             const [decimalsRes, balanceRes] = await Promise.all([
               callContract(api, { origin, dest: addr, value: 0n, calldata: decimalsCalldata }),

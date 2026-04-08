@@ -1,15 +1,17 @@
-import { useAtom } from '@xstate/store/react'
+import { useAtom, useSelector } from '@xstate/store/react'
 import { ArrowDown, Loader2, Settings } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { selectedAccount } from '../hooks/useConnect'
 import { useSwap } from '../hooks/useSwap'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import SettingsModal from './SettingsModal'
+import { dexStore, selectTokenList } from '../store/dexStore'
 import type { Token } from '../store/dexStore'
 import TokenSelector from './TokenSelector'
 
 export default function SwapForm() {
   const account = useAtom(selectedAccount)
+  const tokenList = useSelector(dexStore, selectTokenList)
 
   const [payAmount, setPayAmount] = useState('')
   const [receiveAmount, setReceiveAmount] = useState('')
@@ -21,7 +23,7 @@ export default function SwapForm() {
 
   const balances = useTokenBalances(
     evmAddress,
-    [payToken?.address, receiveToken?.address],
+    tokenList.map(t => t.address),
     account?.address,
   )
 

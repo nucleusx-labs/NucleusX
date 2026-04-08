@@ -32,7 +32,7 @@ export default function AddLiquidityForm() {
 
   const balances = useTokenBalances(
     evmAddress,
-    [tokenA?.address, tokenB?.address],
+    tokenList.map(t => t.address),
     account?.address,
   )
 
