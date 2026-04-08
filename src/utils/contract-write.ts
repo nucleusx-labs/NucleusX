@@ -93,6 +93,7 @@ export async function contractWrite({
   await ensureMapped(signer, ss58Address)
 
   // 3. Dry-run for gas estimation
+  console.log('[contractWrite] dry-run', { functionName, address, ss58Address, value })
   const dryRunResult = await (typedApi as any).apis.ReviveApi.call(
     ss58Address,
     dest,
@@ -103,15 +104,27 @@ export async function contractWrite({
   )
 
   const dryRun = dryRunResult as any
+  console.log('[contractWrite] dry-run result', dryRun)
 
   // Check for dry-run dispatch errors
-  if (dryRun.result?.success === false) {
-    throw new Error(`Contract dry-run failed: ${formatDispatchError(dryRun.result?.value)}`)
+  // QF network returns { success: bool, value } but standard papi uses { type: 'Ok'|'Err', value }
+  const dryRunFailed = dryRun.result?.success === false || dryRun.result?.type === 'Err'
+  if (dryRunFailed) {
+    const errValue = dryRun.result?.value
+    console.error('[contractWrite] dry-run failed, full error:', JSON.stringify(
+      errValue,
+      (_, v) => typeof v === 'bigint' ? v.toString() : v,
+      2,
+    ))
+    throw new Error(`Contract dry-run failed: ${formatDispatchError(errValue)}`)
   }
 
+  // innerResult is the ExecReturnValue: { flags, data }
   const innerResult = dryRun.result?.value ?? dryRun.result
+  console.log('[contractWrite] inner exec result', innerResult)
   const returnFlags = Number(innerResult?.flags ?? 0)
   if ((returnFlags & 1) === 1) {
+    console.error('[contractWrite] contract reverted, return data:', innerResult?.data)
     throw new Error(`Contract call would revert: ${functionName} on ${address}`)
   }
 
@@ -123,13 +136,15 @@ export async function contractWrite({
   }
 
   // Storage deposit: extract value from Charge variant
-  let storageDeposit = 0n
+  let storageDeposit: bigint | undefined
   if (dryRun.storage_deposit?.type === 'Charge') {
     const depositValue = dryRun.storage_deposit.value
     if (typeof depositValue === 'bigint' && depositValue > 0n) {
       storageDeposit = (depositValue * 125n) / 100n
     }
   }
+
+  console.log('[contractWrite] submitting', { functionName, address, gasLimit, storageDeposit })
 
   // 4. Submit the transaction
   const result = await (typedApi as any).tx.Revive.call({
@@ -139,6 +154,8 @@ export async function contractWrite({
     storage_deposit_limit: storageDeposit,
     data: inputData,
   }).signAndSubmit(signer)
+
+  console.log('[contractWrite] result', result)
 
   if (!result.ok) {
     throw new Error(`Revive.call failed: ${formatDispatchError(result.dispatchError)}`)

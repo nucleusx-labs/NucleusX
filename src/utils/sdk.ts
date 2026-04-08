@@ -1,7 +1,6 @@
 import { createAtom } from '@xstate/store'
 import type { PolkadotClient, TypedApi } from 'polkadot-api'
 import { createClient } from 'polkadot-api'
-import { withPolkadotSdkCompat } from 'polkadot-api/polkadot-sdk-compat'
 import { getWsProvider } from 'polkadot-api/ws-provider'
 import { qf_network } from '../descriptors'
 
@@ -22,9 +21,7 @@ export default function sdk<T extends Prefix>(chain: T) {
 
   if (!clients[chain]) {
     clients[chain] = createClient(
-      withPolkadotSdkCompat(
-        getWsProvider(config[chain].providers[0]),
-      ),
+      getWsProvider(config[chain].providers[0]),
     )
   }
 

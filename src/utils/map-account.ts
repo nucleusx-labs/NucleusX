@@ -12,11 +12,16 @@ export async function ensureMapped(signer: PolkadotSigner, ss58Address: string):
 
   try {
     const h160 = await (api.apis.ReviveApi.address as any)(ss58Address)
-    if (h160) return
+    if (h160) {
+      console.log('[Revive] account already mapped', { ss58Address, h160: h160.asHex?.() ?? h160 })
+      return
+    }
   }
   catch {
     // Address not mapped yet — fall through and register
   }
 
+  console.log('[Revive] mapping account', { ss58Address })
   await (api.tx.Revive as any).map_account({}).signAndSubmit(signer)
+  console.log('[Revive] account mapped ok')
 }

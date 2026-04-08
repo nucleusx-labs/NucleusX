@@ -28,7 +28,7 @@ export interface ReviveCallResult {
 export interface ReviveTransactionOptions {
   dest: string // Contract address
   value: bigint // Value to transfer
-  gasLimit: bigint
+  gasLimit: { ref_time: bigint; proof_size: bigint }
   storageDepositLimit?: bigint
   data: `0x${string}` // Encoded calldata
   signer: PolkadotSigner
@@ -89,15 +89,21 @@ export async function callContract(
   // Convert calldata hex string to Binary as required by the runtime API
   const inputData = Binary.fromHex(calldata)
 
-  // Call the ReviveApi runtime API
+  // Call the ReviveApi runtime API.
+  // Pass a high explicit gas limit — passing undefined lets the runtime pick a default
+  // that may be too low for complex calls like addLiquidity + pair creation.
+  // The runtime silently caps this at the block max so a large value is safe.
+  const DRY_RUN_GAS_LIMIT = { ref_time: 500_000_000_000n, proof_size: 6_291_456n }
+  console.log('[Revive] dry-run call', { origin, dest, value })
   const raw = await (api.apis.ReviveApi.call as any)(
     origin,
     destFixed,
     value,
-    undefined, // gasLimit - let the runtime estimate
+    DRY_RUN_GAS_LIMIT,
     undefined, // storageDepositLimit
     inputData,
   )
+  console.log('[Revive] dry-run raw result', raw)
 
   // PAPI represents Result<T, E> as { value: T } for the Ok variant.
   // Normalize into the typed ReviveCallResult shape expected by callers.
@@ -132,6 +138,14 @@ export async function submitContractTransaction(
   )
   const inputData = Binary.fromHex(data)
 
+  console.log('[Revive] Submitting tx', {
+    dest,
+    value,
+    gas_limit: gasLimit,
+    storage_deposit_limit: storageDepositLimit,
+    data,
+  })
+
   // Build the revive.call extrinsic
   const tx = (api.tx.Revive.call as any)({
     dest: destFixed,
@@ -144,20 +158,29 @@ export async function submitContractTransaction(
   // Sign, submit and watch for lifecycle events
   const unsub = tx.signSubmitAndWatch(signer).subscribe({
     next: (event: any) => {
+      console.log('[Revive] tx event', event)
       switch (event.type) {
         case 'txBestBlocksState':
           if (event.found) {
+            console.log('[Revive] tx in best block, hash:', event.txHash)
             callbacks.onTxHash?.(event.txHash)
           }
           break
         case 'finalized':
-          callbacks.onFinalized()
+          if (event.ok === false) {
+            console.error('[Revive] tx finalized with error', event)
+            callbacks.onError('Transaction failed on-chain')
+          }
+          else {
+            console.log('[Revive] tx finalized ok, hash:', event.txHash)
+            callbacks.onFinalized()
+          }
           unsub.unsubscribe()
           break
       }
     },
     error: (err: any) => {
-      console.error('Transaction error:', err)
+      console.error('[Revive] tx subscription error:', err)
       callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
       unsub.unsubscribe()
     },
@@ -173,12 +196,23 @@ export async function submitContractTransaction(
 export async function estimateGas(
   api: TypedApi<any>,
   options: ReviveCallOptions,
-): Promise<{ gasConsumed: bigint, gasRequired: bigint }> {
+): Promise<{
+  gasConsumed: { ref_time: bigint; proof_size: bigint }
+  gasRequired: { ref_time: bigint; proof_size: bigint }
+}> {
   const result = await callContract(api, options)
 
+  console.log('[Revive] gas estimate', {
+    dest: options.dest,
+    consumed: result.gas_consumed,
+    required: result.gas_required,
+    storageDeposit: result.storage_deposit,
+    result: result.result,
+  })
+
   return {
-    gasConsumed: result.gas_consumed.ref_time,
-    gasRequired: result.gas_required.ref_time,
+    gasConsumed: result.gas_consumed,
+    gasRequired: result.gas_required,
   }
 }
 

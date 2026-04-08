@@ -124,12 +124,17 @@ export function useSwap(): UseSwapReturn {
             dest: input.tokenIn.address,
             value: 0n,
             calldata,
-          }).catch(() => ({ gasRequired: 200_000n }))
+          }).catch(() => ({ gasRequired: { ref_time: 200_000n, proof_size: 10_000n } }))
+
+          const gasLimit = {
+            ref_time: (gas.gasRequired.ref_time * 125n) / 100n,
+            proof_size: (gas.gasRequired.proof_size * 125n) / 100n,
+          }
 
           await new Promise<void>((resolve, reject) => {
             reviveTransaction(
               'qf_network',
-              { dest: input.tokenIn.address, value: 0n, gasLimit: gas.gasRequired, data: calldata },
+              { dest: input.tokenIn.address, value: 0n, gasLimit, data: calldata },
               { onFinalized: resolve, onError: (msg) => reject(new Error(msg)) },
             ).catch(reject)
           })
@@ -150,7 +155,12 @@ export function useSwap(): UseSwapReturn {
             dest: CONTRACTS.UniswapV2Router02,
             value: 0n,
             calldata,
-          }).catch(() => ({ gasRequired: 500_000n }))
+          }).catch(() => ({ gasRequired: { ref_time: 500_000n, proof_size: 10_000n } }))
+
+          const gasLimit = {
+            ref_time: (gas.gasRequired.ref_time * 125n) / 100n,
+            proof_size: (gas.gasRequired.proof_size * 125n) / 100n,
+          }
 
           return new Promise<SwapActorOutput>((resolve, reject) => {
             reviveTransaction(
@@ -158,7 +168,7 @@ export function useSwap(): UseSwapReturn {
               {
                 dest: CONTRACTS.UniswapV2Router02,
                 value: 0n,
-                gasLimit: gas.gasRequired,
+                gasLimit,
                 data: calldata,
               },
               {

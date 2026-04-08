@@ -188,8 +188,8 @@ export default function UserDashboard() {
               ))}
             </div>
             <div className="flex items-center gap-6 mt-2">
-              {allTokens.map(({ symbol, colorClass }) => (
-                <div key={symbol} className="flex items-center gap-1.5">
+              {allTokens.map(({ symbol, colorClass }, i) => (
+                <div key={i} className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${colorClass}`} />
                   <span className="text-xs font-bold uppercase text-[#A1A1A1]">{symbol}</span>
                 </div>

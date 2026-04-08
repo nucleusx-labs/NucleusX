@@ -137,7 +137,13 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
       setStep('success')
     }
     catch (err) {
-      setError(err instanceof Error ? err.message : 'Transaction failed')
+      console.error('[useAddLiquidity] error', err)
+      const msg = err instanceof Error
+        ? err.message
+        : typeof err === 'string'
+          ? err
+          : JSON.stringify(err)
+      setError(msg)
       setStep('error')
     }
   }
