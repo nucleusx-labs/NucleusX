@@ -34,6 +34,7 @@ export const NATIVE_TOKEN: Token = {
 }
 
 const INITIAL_TOKEN_LIST: Token[] = [
+  NATIVE_TOKEN,
   {
     symbol: 'WQF',
     name: 'Wrapped QF',
