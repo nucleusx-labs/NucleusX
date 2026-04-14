@@ -72,7 +72,7 @@ export async function reviveTransaction(
 export async function reviveEstimateGas(
   chainPrefix: Prefix,
   options: Omit<ReviveCallOptions, 'origin'>,
-): Promise<{ gasConsumed: bigint, gasRequired: bigint }> {
+): Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }> {
   const address = getSelectedAddress()
   if (!address) {
     throw new Error('No account selected')
@@ -144,7 +144,7 @@ export function createRemarkTransaction(
   const remark = Binary.fromText(message)
   const tx = api.tx.System.remark({ remark })
 
-  const unsub = tx.signSubmitAndWatch(signer).subscribe({
+  const unsub = tx.signSubmitAndWatch(signer, { withSignedTransaction: false }).subscribe({
     next: (event) => {
       if (event.type === 'txBestBlocksState' && event.found) {
         callbacks.onTxHash(event.txHash)

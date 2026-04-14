@@ -156,7 +156,7 @@ export async function submitContractTransaction(
   })
 
   // Sign, submit and watch for lifecycle events
-  const unsub = tx.signSubmitAndWatch(signer).subscribe({
+  const unsub = tx.signSubmitAndWatch(signer, { withSignedTransaction: false }).subscribe({
     next: (event: any) => {
       console.log('[Revive] tx event', event)
       switch (event.type) {

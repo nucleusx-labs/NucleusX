@@ -22,6 +22,6 @@ export async function ensureMapped(signer: PolkadotSigner, ss58Address: string):
   }
 
   console.log('[Revive] mapping account', { ss58Address })
-  await (api.tx.Revive as any).map_account({}).signAndSubmit(signer)
+  await (api.tx.Revive as any).map_account({}).signAndSubmit(signer, { withSignedTransaction: false })
   console.log('[Revive] account mapped ok')
 }

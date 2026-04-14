@@ -2,12 +2,13 @@ import { useAtom } from '@xstate/store/react'
 import { getSs58AddressInfo } from '@polkadot-api/substrate-bindings'
 import { useEffect, useState } from 'react'
 import { selectedAccount } from './useConnect'
-import { CONTRACTS, ERC20_ABI, ROUTER_ABI } from '../utils/contracts'
+import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contracts'
 import { callContract, checkAccountMapping, decodeContractResult, encodeContractCall } from '../utils/revive'
 import { polkadotSigner } from '../utils/sdk-interface'
 import { contractWrite } from '../utils/contract-write'
 import sdk from '../utils/sdk'
 import type { Token } from '../store/dexStore'
+import { NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 
 function pubkeyToH160(pubkey: Uint8Array): `0x${string}` {
   const h160 = pubkey.slice(12)
@@ -73,6 +74,12 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
       return
     }
 
+    if (tokenA.address.toLowerCase() === tokenB.address.toLowerCase()) {
+      setError('Cannot add liquidity for identical tokens')
+      setStep('error')
+      return
+    }
+
     setError(null)
     setTxHash(null)
     setStep('idle')
@@ -92,8 +99,11 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
           : 0n
       }
 
-      // Step 1: Approve Token A if needed
-      if ((await getAllowance(tokenA.address)) < amountA) {
+      const isNativeA = tokenA.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()
+      const isNativeB = tokenB.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()
+
+      // Step 1: Approve Token A if needed (skip for native token — cannot approve ETH)
+      if (!isNativeA && (await getAllowance(tokenA.address)) < amountA) {
         setStep('approving-a')
         await contractWrite({
           address: tokenA.address,
@@ -105,8 +115,8 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
         })
       }
 
-      // Step 2: Approve Token B if needed
-      if ((await getAllowance(tokenB.address)) < amountB) {
+      // Step 2: Approve Token B if needed (skip for native token)
+      if (!isNativeB && (await getAllowance(tokenB.address)) < amountB) {
         setStep('approving-b')
         await contractWrite({
           address: tokenB.address,
@@ -124,14 +134,65 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
       const amountBMin = (amountB * (10000n - SLIPPAGE_BPS)) / 10000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60)
 
-      const result = await contractWrite({
-        address: CONTRACTS.UniswapV2Router02,
-        abi: ROUTER_ABI,
-        functionName: 'addLiquidity',
-        args: [tokenA.address, tokenB.address, amountA, amountB, amountAMin, amountBMin, evmAddress, deadline],
-        signer,
-        ss58Address: account.address,
-      })
+      let result: { txHash: string; ok: boolean; events: unknown[] }
+
+      if (isNativeA || isNativeB) {
+        // One side is native QF — use addLiquidityETH
+        // addLiquidityETH(token, amountTokenDesired, amountTokenMin, amountETHMin, to, deadline)
+        const erc20Token = isNativeA ? tokenB : tokenA
+        const amountToken = isNativeA ? amountB : amountA
+        const amountTokenMin = isNativeA ? amountBMin : amountAMin
+        const amountETHMin = isNativeA ? amountAMin : amountBMin
+        const nativeAmount = isNativeA ? amountA : amountB
+
+        // Pre-flight: read router.WETH() to detect identical-address revert before it happens
+        const wethCalldata = encodeContractCall(ROUTER_ABI, 'WETH', [])
+        const wethRes = await callContract(api, { origin: account.address, dest: CONTRACTS.UniswapV2Router02, value: 0n, calldata: wethCalldata })
+        const routerWeth = wethRes.result.ok
+          ? (decodeContractResult(ROUTER_ABI, 'WETH', wethRes.result.ok.data) as string)
+          : null
+        console.log('[useAddLiquidity] router.WETH():', routerWeth, '| erc20Token:', erc20Token.address)
+
+        if (routerWeth && routerWeth.toLowerCase() === erc20Token.address.toLowerCase()) {
+          throw new Error(
+            `Cannot add QF + WQF liquidity: the router's internal WETH address is WQF (${routerWeth}). `
+            + 'Pairing WQF with itself would fail. Try adding liquidity for a different token pair, '
+            + 'or add liquidity directly using WQF + another ERC20 token.',
+          )
+        }
+
+        // Pre-flight: check whether the pair already exists via the factory
+        const getPairCalldata = encodeContractCall(FACTORY_ABI, 'getPair', [
+          erc20Token.address,
+          routerWeth ?? erc20Token.address,
+        ])
+        const pairRes = await callContract(api, { origin: account.address, dest: CONTRACTS.UniswapV2Factory, value: 0n, calldata: getPairCalldata })
+        const pairAddress = pairRes.result.ok
+          ? (decodeContractResult(FACTORY_ABI, 'getPair', pairRes.result.ok.data) as string)
+          : null
+        console.log('[useAddLiquidity] factory.getPair result:', pairAddress)
+
+        console.log('[useAddLiquidity] using addLiquidityETH, nativeAmount:', nativeAmount.toString())
+        result = await contractWrite({
+          address: CONTRACTS.UniswapV2Router02,
+          abi: ROUTER_ABI,
+          functionName: 'addLiquidityETH',
+          args: [erc20Token.address, amountToken, amountTokenMin, amountETHMin, evmAddress, deadline],
+          value: nativeAmount,
+          signer,
+          ss58Address: account.address,
+        })
+      }
+      else {
+        result = await contractWrite({
+          address: CONTRACTS.UniswapV2Router02,
+          abi: ROUTER_ABI,
+          functionName: 'addLiquidity',
+          args: [tokenA.address, tokenB.address, amountA, amountB, amountAMin, amountBMin, evmAddress, deadline],
+          signer,
+          ss58Address: account.address,
+        })
+      }
 
       setTxHash(result.txHash)
       setStep('success')

@@ -153,7 +153,7 @@ export async function contractWrite({
     gas_limit: gasLimit,
     storage_deposit_limit: storageDeposit,
     data: inputData,
-  }).signAndSubmit(signer)
+  }).signAndSubmit(signer, { withSignedTransaction: false })
 
   console.log('[contractWrite] result', result)
 

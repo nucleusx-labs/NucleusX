@@ -33,7 +33,7 @@ export interface UseReviveApiReturn {
   ) => Promise<void>
 
   // Utilities
-  estimateGas: (chainPrefix: Prefix, options: ReviveCallOptions) => Promise<{ gasConsumed: bigint, gasRequired: bigint }>
+  estimateGas: (chainPrefix: Prefix, options: ReviveCallOptions) => Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }>
   checkAccountMapping: (chainPrefix: Prefix, address: string) => Promise<{ isMapped: boolean, evmAddress?: string }>
 }
 
@@ -127,7 +127,7 @@ export function useReviveApi(): UseReviveApiReturn {
   const estimateGasFn = useCallback(async (
     chainPrefix: Prefix,
     options: ReviveCallOptions,
-  ): Promise<{ gasConsumed: bigint, gasRequired: bigint }> => {
+  ): Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }> => {
     const { api } = sdk(chainPrefix)
     return await estimateGas(api, options)
   }, [])

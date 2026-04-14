@@ -12,9 +12,10 @@ interface TokenModalProps {
   onClose: () => void
   onSelectToken: (token: Token) => void
   balances?: Map<string, TokenBalance>
+  disabledAddress?: string
 }
 
-export default function TokenModal({ isOpen, onClose, onSelectToken, balances }: TokenModalProps) {
+export default function TokenModal({ isOpen, onClose, onSelectToken, balances, disabledAddress }: TokenModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const tokenList = useSelector(dexStore, selectTokenList)
 
@@ -35,7 +36,7 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances }:
           <h3 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Select Token</h3>
           <button
             onClick={onClose}
-            className="p-1 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
+            className="p-1 text-[#A1A1A2] hover:text-[#F2F2F2] transition-colors duration-150"
           >
             <X className="w-5 h-5" />
           </button>
@@ -63,7 +64,8 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances }:
                     <button
                       key={token.address}
                       onClick={() => onSelectToken(token)}
-                      className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150"
+                      disabled={!!disabledAddress && token.address.toLowerCase() === disabledAddress.toLowerCase()}
+                      className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                       <div className="flex items-center gap-4">
                         {token.iconClass

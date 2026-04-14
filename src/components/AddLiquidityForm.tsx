@@ -78,7 +78,7 @@ export default function AddLiquidityForm() {
             onChange={e => setAmountA(e.target.value)}
           />
           <div className="shrink-0">
-            <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} balances={balances} />
+            <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} balances={balances} disabledAddress={tokenB?.address} />
           </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function AddLiquidityForm() {
             onChange={e => setAmountB(e.target.value)}
           />
           <div className="shrink-0">
-            <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} balances={balances} />
+            <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} balances={balances} disabledAddress={tokenA?.address} />
           </div>
         </div>
       </div>

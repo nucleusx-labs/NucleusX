@@ -7,9 +7,10 @@ interface TokenSelectorProps {
   selectedToken?: Token
   onSelectToken: (token: Token) => void
   balances?: Map<string, TokenBalance>
+  disabledAddress?: string
 }
 
-export default function TokenSelector({ selectedToken, onSelectToken, balances }: TokenSelectorProps) {
+export default function TokenSelector({ selectedToken, onSelectToken, balances, disabledAddress }: TokenSelectorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleSelectToken = (token: Token) => {
@@ -49,6 +50,7 @@ export default function TokenSelector({ selectedToken, onSelectToken, balances }
         onClose={() => setIsModalOpen(false)}
         onSelectToken={handleSelectToken}
         balances={balances}
+        disabledAddress={disabledAddress}
       />
     </>
   )
