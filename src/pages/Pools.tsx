@@ -1,15 +1,8 @@
-import { Search } from 'lucide-react'
+import { Search, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSelector } from '@xstate/store/react'
 import { dexStore, selectTokenList } from '../store/dexStore'
-
-const mockPools = [
-  { tokenA: 'DOT', tokenB: 'USDC', tvl: '$28.3M', volume24h: '$4.1M', fee: '0.3%' },
-  { tokenA: 'WETH', tokenB: 'USDC', tvl: '$91.7M', volume24h: '$18.4M', fee: '0.3%' },
-  { tokenA: 'DOT', tokenB: 'USDT', tvl: '$14.6M', volume24h: '$2.9M', fee: '0.05%' },
-  { tokenA: 'WETH', tokenB: 'DOT', tvl: '$33.2M', volume24h: '$7.8M', fee: '0.3%' },
-  { tokenA: 'USDC', tokenB: 'USDT', tvl: '$210.5M', volume24h: '$52.1M', fee: '0.01%' },
-]
+import { useUserPools } from '../hooks/useUserPools'
 
 function TokenIcon({ symbol }: { symbol: string }) {
   const tokenList = useSelector(dexStore, selectTokenList)
@@ -25,6 +18,8 @@ function TokenIcon({ symbol }: { symbol: string }) {
 }
 
 export default function Pools() {
+  const { pools, isLoading } = useUserPools()
+
   return (
     <div className="max-w-6xl mx-auto w-full py-8 space-y-10">
       <div>
@@ -36,13 +31,21 @@ export default function Pools() {
       <div className="border-2 border-[#2D0A5B]">
         <div className="p-5 border-b border-[#2D0A5B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h2 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">All Pools</h2>
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
-            <input
-              type="text"
-              placeholder="Search pools"
-              className="w-full bg-transparent border border-[#2D0A5B] py-2 pl-9 pr-4 text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] text-sm uppercase tracking-wider placeholder:text-[#A1A1A1]/50 transition-colors duration-150"
-            />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Link
+              to="/add-liquidity"
+              className="shrink-0 text-xs font-bold uppercase tracking-widest bg-[#7B3FE4] text-[#F2F2F2] px-4 py-2 hover:bg-[#2D0A5B] border border-[#7B3FE4] transition-colors duration-150"
+            >
+              Add Liquidity
+            </Link>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
+              <input
+                type="text"
+                placeholder="Search pools"
+                className="w-full bg-transparent border border-[#2D0A5B] py-2 pl-9 pr-4 text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] text-sm uppercase tracking-wider placeholder:text-[#A1A1A1]/50 transition-colors duration-150"
+              />
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -57,16 +60,29 @@ export default function Pools() {
               </tr>
             </thead>
             <tbody>
-              {mockPools.map((pool, i) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-[#A1A1A1] font-bold uppercase tracking-widest text-sm">
+                    <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#7B3FE4]" />
+                    Fetching pools...
+                  </td>
+                </tr>
+              ) : pools.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-[#A1A1A1] font-bold uppercase tracking-widest text-sm">
+                    No liquidity pools found. Add liquidity to get started.
+                  </td>
+                </tr>
+              ) : pools.map((pool, i) => (
                 <tr key={i} className="border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150 group">
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2">
-                        <TokenIcon symbol={pool.tokenA} />
-                        <TokenIcon symbol={pool.tokenB} />
+                        <TokenIcon symbol={pool.tokenA.symbol} />
+                        <TokenIcon symbol={pool.tokenB.symbol} />
                       </div>
                       <span className="font-bold uppercase text-[#F2F2F2] tracking-wider">
-                        {pool.tokenA}/{pool.tokenB}
+                        {pool.tokenA.symbol}/{pool.tokenB.symbol}
                       </span>
                     </div>
                   </td>
@@ -75,10 +91,10 @@ export default function Pools() {
                   <td className="px-6 py-5 font-bold text-[#00D084] text-right">{pool.fee}</td>
                   <td className="px-6 py-5 text-right">
                     <Link
-                      to={`/add-liquidity?tokenA=${pool.tokenA}&tokenB=${pool.tokenB}`}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-xs font-bold uppercase tracking-widest border border-[#7B3FE4] text-[#7B3FE4] px-4 py-2 inline-block hover:bg-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150"
+                      to={`/add-liquidity?tokenA=${pool.tokenA.symbol}&tokenB=${pool.tokenB.symbol}`}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-xs font-bold uppercase tracking-widest border border-[#7B3FE4] text-[#7B3FE4] px-4 py-2 inline-block hover:bg-[#7B3FE4] hover:text-[#F2F2F2] transition-colors"
                     >
-                      Add
+                      Manage
                     </Link>
                   </td>
                 </tr>

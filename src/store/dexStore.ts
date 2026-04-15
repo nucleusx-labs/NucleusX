@@ -1,6 +1,6 @@
 import { createStore } from '@xstate/store'
 import type { SnapshotFromStore } from '@xstate/store'
-import { CONTRACTS } from '../utils/contracts'
+import { TOKENS } from '../utils/contracts'
 
 export interface Token {
   symbol: string
@@ -35,12 +35,10 @@ export const NATIVE_TOKEN: Token = {
 
 const INITIAL_TOKEN_LIST: Token[] = [
   NATIVE_TOKEN,
-  {
-    symbol: 'WQF',
-    name: 'Wrapped QF',
-    address: CONTRACTS.WQF,
-    decimals: 18,
-  },
+  { symbol: 'WQF',    name: 'Wrapped QF',   address: TOKENS.WQF,    decimals: 18 },
+  { symbol: 'OTU',    name: 'OTU Token',     address: TOKENS.OTU,    decimals: 18 },
+  { symbol: 'QDPT',   name: 'QDPT Token',    address: TOKENS.QDPT,   decimals: 18 },
+  { symbol: 'Avatar', name: 'Avatar Token',  address: TOKENS.Avatar, decimals: 18 },
 ]
 
 export const dexStore = createStore({

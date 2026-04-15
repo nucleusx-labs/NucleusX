@@ -1,7 +1,7 @@
 import { formatValue } from '@polkadot-api/react-components'
 import type { PolkadotSigner } from 'polkadot-api'
 import { Binary } from 'polkadot-api'
-import { connectInjectedExtension } from 'polkadot-api/pjs-signer'
+import { connectInjectedExtension, getPolkadotSignerFromPjs } from 'polkadot-api/pjs-signer'
 import { name } from '../../package.json'
 import { connectedWallet, selectedAccount } from '../hooks/useConnect'
 import type { ReviveCallOptions, ReviveTransactionOptions, TransactionCallbacks } from '../utils/revive'
@@ -18,6 +18,37 @@ export async function polkadotSigner(): Promise<PolkadotSigner | undefined> {
     return undefined
   }
 
+  // Access the raw injected extension so we can wrap signPayload.
+  // Wallet extensions (SubWallet/Talisman) return a pre-built `signedTransaction`
+  // in their signPayload response. polkadot-api uses those bytes directly, but
+  // they are encoded for a different chain format → BadProof on QF network.
+  // Stripping `signedTransaction` forces polkadot-api to build the extrinsic
+  // itself from the raw signature via its internal `qn()` path, which is correct.
+  const rawExt = (window as any).injectedWeb3?.[walletName]
+  if (rawExt) {
+    try {
+      const enabledExt = await rawExt.enable(DAPP_NAME)
+      const accounts: any[] = await enabledExt.accounts.get()
+      const targetAddress = selectedAccount.get()?.address
+      const target = accounts.find(acc => acc.address === targetAddress)
+      if (target && enabledExt.signer?.signPayload) {
+        const wrappedSignPayload = async (payload: any) => {
+          const result = await enabledExt.signer.signPayload(payload)
+          // Strip signedTransaction so polkadot-api builds the extrinsic from
+          // the raw signature — avoids BadProof on QF network.
+          return { ...result, signedTransaction: undefined }
+        }
+        return getPolkadotSignerFromPjs(
+          target.address,
+          wrappedSignPayload,
+          enabledExt.signer.signRaw?.bind(enabledExt.signer),
+        )
+      }
+    }
+    catch { /* fall through to connectInjectedExtension */ }
+  }
+
+  // Fallback: standard pjs-signer path
   const selectedExtension = await connectInjectedExtension(walletName)
   const account = selectedExtension
     .getAccounts()
@@ -144,7 +175,7 @@ export function createRemarkTransaction(
   const remark = Binary.fromText(message)
   const tx = api.tx.System.remark({ remark })
 
-  const unsub = tx.signSubmitAndWatch(signer, { withSignedTransaction: false }).subscribe({
+  const unsub = tx.signSubmitAndWatch(signer).subscribe({
     next: (event) => {
       if (event.type === 'txBestBlocksState' && event.found) {
         callbacks.onTxHash(event.txHash)

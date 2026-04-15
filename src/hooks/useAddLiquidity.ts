@@ -1,14 +1,14 @@
-import { useAtom } from '@xstate/store/react'
 import { getSs58AddressInfo } from '@polkadot-api/substrate-bindings'
+import { useAtom } from '@xstate/store/react'
 import { useEffect, useState } from 'react'
-import { selectedAccount } from './useConnect'
-import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contracts'
-import { callContract, checkAccountMapping, decodeContractResult, encodeContractCall } from '../utils/revive'
-import { polkadotSigner } from '../utils/sdk-interface'
-import { contractWrite } from '../utils/contract-write'
-import sdk from '../utils/sdk'
 import type { Token } from '../store/dexStore'
 import { NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
+import { contractWrite } from '../utils/contract-write'
+import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contracts'
+import { callContract, checkAccountMapping, decodeContractResult, encodeContractCall } from '../utils/revive'
+import sdk from '../utils/sdk'
+import { polkadotSigner } from '../utils/sdk-interface'
+import { selectedAccount } from './useConnect'
 
 function pubkeyToH160(pubkey: Uint8Array): `0x${string}` {
   const h160 = pubkey.slice(12)
@@ -19,6 +19,7 @@ export type AddLiquidityStep =
   | 'idle'
   | 'approving-a'
   | 'approving-b'
+  | 'creating-pair'
   | 'adding'
   | 'success'
   | 'error'
@@ -164,7 +165,7 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
         // Pre-flight: check whether the pair already exists via the factory
         const getPairCalldata = encodeContractCall(FACTORY_ABI, 'getPair', [
           erc20Token.address,
-          routerWeth ?? erc20Token.address,
+          (routerWeth ?? erc20Token.address) as `0x${string}`,
         ])
         const pairRes = await callContract(api, { origin: account.address, dest: CONTRACTS.UniswapV2Factory, value: 0n, calldata: getPairCalldata })
         const pairAddress = pairRes.result.ok

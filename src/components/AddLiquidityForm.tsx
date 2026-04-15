@@ -5,7 +5,8 @@ import { useSearchParams } from 'react-router-dom'
 import { selectedAccount } from '../hooks/useConnect'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useAddLiquidity } from '../hooks/useAddLiquidity'
-import { dexStore, selectTokenList } from '../store/dexStore'
+import { dexStore, selectTokenList, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
+import { TOKENS } from '../utils/contracts'
 import TokenSelector from './TokenSelector'
 import type { Token } from '../store/dexStore'
 
@@ -36,13 +37,24 @@ export default function AddLiquidityForm() {
     account?.address,
   )
 
-  const isProcessing = step === 'approving-a' || step === 'approving-b' || step === 'adding'
+  // Build disabled address lists: always disable the other selected token, and
+  // also disable the QF/WQF pair (native QF and its wrapper cannot be paired).
+  function getDisabledAddresses(other: Token | undefined): string[] {
+    const disabled: string[] = []
+    if (other) disabled.push(other.address)
+    if (other?.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()) disabled.push(TOKENS.WQF)
+    if (other?.address.toLowerCase() === TOKENS.WQF.toLowerCase()) disabled.push(NATIVE_TOKEN_ADDRESS)
+    return disabled
+  }
+
+  const isProcessing = step === 'approving-a' || step === 'approving-b' || step === 'creating-pair' || step === 'adding'
   const canSupply = !!account && !!tokenA && !!tokenB && !!amountA && !!amountB && !isProcessing && step !== 'success'
 
   function getButtonLabel(): string {
     if (!account) return 'Connect Wallet'
     if (step === 'approving-a') return `Approving ${tokenA?.symbol ?? 'Token A'}...`
     if (step === 'approving-b') return `Approving ${tokenB?.symbol ?? 'Token B'}...`
+    if (step === 'creating-pair') return 'Creating Pair...'
     if (step === 'adding') return 'Adding Liquidity...'
     if (!tokenA || !tokenB) return 'Select Tokens'
     if (!amountA || !amountB) return 'Enter Amounts'
@@ -78,7 +90,7 @@ export default function AddLiquidityForm() {
             onChange={e => setAmountA(e.target.value)}
           />
           <div className="shrink-0">
-            <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} balances={balances} disabledAddress={tokenB?.address} />
+            <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} balances={balances} disabledAddresses={getDisabledAddresses(tokenB)} />
           </div>
         </div>
       </div>
@@ -108,7 +120,7 @@ export default function AddLiquidityForm() {
             onChange={e => setAmountB(e.target.value)}
           />
           <div className="shrink-0">
-            <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} balances={balances} disabledAddress={tokenA?.address} />
+            <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} balances={balances} disabledAddresses={getDisabledAddresses(tokenA)} />
           </div>
         </div>
       </div>

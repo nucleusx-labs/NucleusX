@@ -11,6 +11,7 @@ const config = {
   },
 } as const
 
+
 export type Prefix = keyof typeof config
 export const chainKeys = Object.keys(config) as Prefix[]
 

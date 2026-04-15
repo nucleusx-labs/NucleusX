@@ -5,8 +5,14 @@ import type { Abi } from 'viem'
  */
 export const CONTRACTS = {
   UniswapV2Factory: '0xf44c7411bb141a0e1036c92639e9ac64e8dc37fd',
-  WQF: '0x3e3a42e7e25d5004282ce13a96695c2805224f30',
   UniswapV2Router02: '0xcabe3ecba478b17a9b11d15e208f0d7390f3264d',
+} as const satisfies Record<string, `0x${string}`>
+
+export const TOKENS = {
+  WQF: '0x3e3a42e7e25d5004282ce13a96695c2805224f30',
+  OTU: '0x8Cd90E173bbB33F6d88c43B9Fc6199ffdED24e9B',
+  QDPT: '0x2390250C31f88dC1D48E895d2B8dEC68D590B0D6',
+  Avatar: '0xb39cCA71828a89E07aD473721281A24A9B3A5D84',
 } as const satisfies Record<string, `0x${string}`>
 
 export type ContractAddress = typeof CONTRACTS[keyof typeof CONTRACTS]
@@ -1501,5 +1507,12 @@ export const PAIR_ABI = [
     stateMutability: 'view',
     inputs: [{ name: 'owner', type: 'address' }],
     outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'mint',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'to', type: 'address' }],
+    outputs: [{ name: 'liquidity', type: 'uint256' }],
   },
 ] as const satisfies Abi

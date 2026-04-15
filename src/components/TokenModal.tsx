@@ -12,10 +12,10 @@ interface TokenModalProps {
   onClose: () => void
   onSelectToken: (token: Token) => void
   balances?: Map<string, TokenBalance>
-  disabledAddress?: string
+  disabledAddresses?: string[]
 }
 
-export default function TokenModal({ isOpen, onClose, onSelectToken, balances, disabledAddress }: TokenModalProps) {
+export default function TokenModal({ isOpen, onClose, onSelectToken, balances, disabledAddresses }: TokenModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const tokenList = useSelector(dexStore, selectTokenList)
 
@@ -64,7 +64,7 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
                     <button
                       key={token.address}
                       onClick={() => onSelectToken(token)}
-                      disabled={!!disabledAddress && token.address.toLowerCase() === disabledAddress.toLowerCase()}
+                      disabled={!!disabledAddresses?.some(a => a.toLowerCase() === token.address.toLowerCase())}
                       className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                     >
                       <div className="flex items-center gap-4">

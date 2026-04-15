@@ -92,14 +92,27 @@ export async function contractWrite({
   // 2. Ensure account mapping
   await ensureMapped(signer, ss58Address)
 
+  // Permissive storage deposit cap — must be supplied to both the dry-run and the
+  // actual extrinsic.  When undefined the runtime defaults to 0, which causes any
+  // call that internally deploys a contract (e.g. UniswapV2 factory.createPair via
+  // addLiquidityETH) to trap with ContractTrapped because the CREATE2 sub-call
+  // cannot charge any storage deposit.
+  const STORAGE_DEPOSIT_LIMIT = 10_000_000_000_000_000n
+
+  // High gas limit for dry-run — must be explicit. The runtime default (~200M ref_time)
+  // is too low for calls that deploy sub-contracts (e.g. UniswapV2 factory.createPair
+  // via addLiquidityETH). Without enough gas the EVM runs out mid-CREATE2 and traps,
+  // which shows up as ContractTrapped with gas_consumed === gas_required.
+  const DRY_RUN_GAS_LIMIT = { ref_time: 500_000_000_000n, proof_size: 6_291_456n }
+
   // 3. Dry-run for gas estimation
   console.log('[contractWrite] dry-run', { functionName, address, ss58Address, value })
   const dryRunResult = await (typedApi as any).apis.ReviveApi.call(
     ss58Address,
     dest,
     value,
-    undefined,
-    undefined,
+    DRY_RUN_GAS_LIMIT,
+    STORAGE_DEPOSIT_LIMIT,
     inputData,
   )
 
@@ -124,8 +137,22 @@ export async function contractWrite({
   console.log('[contractWrite] inner exec result', innerResult)
   const returnFlags = Number(innerResult?.flags ?? 0)
   if ((returnFlags & 1) === 1) {
-    console.error('[contractWrite] contract reverted, return data:', innerResult?.data)
-    throw new Error(`Contract call would revert: ${functionName} on ${address}`)
+    const revertHex: string = innerResult?.data?.asHex?.() ?? ''
+    console.error('[contractWrite] contract reverted, revert hex:', revertHex)
+    // Decode ABI-encoded Error(string) revert reason (selector 0x08c379a0)
+    let revertReason = ''
+    if (revertHex.startsWith('0x08c379a0')) {
+      try {
+        const hexBody = revertHex.slice(10) // strip '0x' + 4-byte selector
+        const bytes = new Uint8Array(hexBody.match(/.{2}/g)!.map(b => parseInt(b, 16)))
+        const msgLen = Number(BigInt('0x' + Array.from(bytes.slice(32, 64)).map(b => b.toString(16).padStart(2, '0')).join('')))
+        revertReason = new TextDecoder().decode(bytes.slice(64, 64 + msgLen))
+      } catch { /* ignore decode errors */ }
+    }
+    throw new Error(
+      `Contract call would revert: ${functionName} on ${address}`
+      + (revertReason ? ` — "${revertReason}"` : (revertHex ? ` (data: ${revertHex.slice(0, 66)})` : '')),
+    )
   }
 
   // Add 25% buffer to gas estimate
@@ -135,14 +162,9 @@ export async function contractWrite({
     proof_size: (BigInt(gasRequired.proof_size) * 125n) / 100n,
   }
 
-  // Storage deposit: extract value from Charge variant
-  let storageDeposit: bigint | undefined
-  if (dryRun.storage_deposit?.type === 'Charge') {
-    const depositValue = dryRun.storage_deposit.value
-    if (typeof depositValue === 'bigint' && depositValue > 0n) {
-      storageDeposit = (depositValue * 125n) / 100n
-    }
-  }
+  // Use the same fixed cap for the actual extrinsic — the dry-run value is
+  // unreliable for calls that create new contracts (returns 0 or Refund).
+  const storageDeposit = STORAGE_DEPOSIT_LIMIT
 
   console.log('[contractWrite] submitting', { functionName, address, gasLimit, storageDeposit })
 
