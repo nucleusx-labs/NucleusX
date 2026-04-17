@@ -6,6 +6,7 @@ import {
 import { Binary, FixedSizeBinary, type PolkadotSigner } from 'polkadot-api'
 import { typedApi } from './client'
 import { ensureMapped } from './map-account'
+import { signAndSubmitWithRetry } from './sign-retry'
 
 function collectErrorText(input: unknown): string {
   if (input == null) return ''
@@ -32,17 +33,29 @@ function formatDispatchError(dispatchError: unknown): string {
   if (!dispatchError || typeof dispatchError !== 'object') {
     return String(dispatchError ?? 'unknown dispatch error')
   }
-  const maybeDispatch = dispatchError as { type?: unknown; value?: unknown }
-  if (
-    typeof maybeDispatch.type === 'string'
-    && maybeDispatch.value
-    && typeof maybeDispatch.value === 'object'
+
+  // PAPI dispatch errors nest as {type, value: {type, value: {...}}}. Walk
+  // the chain joining each `.type` with a dot so callers see the innermost
+  // error (e.g. "Module.Revive.CodeNotFound") rather than stopping at the
+  // outer variant (e.g. "Module.Revive").
+  const segments: string[] = []
+  let current: unknown = dispatchError
+  while (
+    current
+    && typeof current === 'object'
+    && typeof (current as { type?: unknown }).type === 'string'
   ) {
-    const nested = maybeDispatch.value as { type?: unknown }
-    if (typeof nested.type === 'string') {
-      return `${maybeDispatch.type}.${nested.type}`
-    }
+    const node = current as { type: string; value?: unknown }
+    segments.push(node.type)
+    current = node.value
   }
+  // If the terminal value is a plain string (e.g. some Revive errors expose
+  // a string detail), append it so the user still gets the extra context.
+  if (typeof current === 'string' && current.length > 0) {
+    segments.push(current)
+  }
+  if (segments.length > 0) return segments.join('.')
+
   const text = collectErrorText(dispatchError).trim()
   return text || 'unknown dispatch error'
 }
@@ -96,14 +109,15 @@ export async function contractWrite({
   // actual extrinsic.  When undefined the runtime defaults to 0, which causes any
   // call that internally deploys a contract (e.g. UniswapV2 factory.createPair via
   // addLiquidityETH) to trap with ContractTrapped because the CREATE2 sub-call
-  // cannot charge any storage deposit.
-  const STORAGE_DEPOSIT_LIMIT = 10_000_000_000_000_000n
+  // cannot charge any storage deposit.  Bumped to 1 QF (at 18-dec) to cover chained
+  // deploys such as addLiquidity on a fresh 2-ERC20 pair.
+  const STORAGE_DEPOSIT_LIMIT = 1_000_000_000_000_000_000n
 
   // High gas limit for dry-run — must be explicit. The runtime default (~200M ref_time)
   // is too low for calls that deploy sub-contracts (e.g. UniswapV2 factory.createPair
   // via addLiquidityETH). Without enough gas the EVM runs out mid-CREATE2 and traps,
   // which shows up as ContractTrapped with gas_consumed === gas_required.
-  const DRY_RUN_GAS_LIMIT = { ref_time: 500_000_000_000n, proof_size: 6_291_456n }
+  const DRY_RUN_GAS_LIMIT = { ref_time: 2_000_000_000_000n, proof_size: 12_582_912n }
 
   // 3. Dry-run for gas estimation
   console.log('[contractWrite] dry-run', { functionName, address, ss58Address, value })
@@ -162,20 +176,40 @@ export async function contractWrite({
     proof_size: (BigInt(gasRequired.proof_size) * 125n) / 100n,
   }
 
-  // Use the same fixed cap for the actual extrinsic — the dry-run value is
-  // unreliable for calls that create new contracts (returns 0 or Refund).
-  const storageDeposit = STORAGE_DEPOSIT_LIMIT
+  // Prefer the actual storage deposit reported by the dry-run (with 25% buffer)
+  // and fall back to the fixed cap only when the dry-run doesn't surface a
+  // Charge value. A too-low cap causes the runtime to reject the extrinsic as
+  // StorageDepositLimitExceeded; a too-high cap reserves unnecessary balance.
+  let storageDeposit = STORAGE_DEPOSIT_LIMIT
+  const sd = dryRun.storage_deposit
+  if (sd && typeof sd === 'object' && sd.type === 'Charge') {
+    const reported = typeof sd.value === 'bigint' ? sd.value : BigInt(sd.value ?? 0)
+    if (reported > 0n) {
+      const buffered = (reported * 125n) / 100n
+      // Ensure we never submit below the CREATE2-safe floor.
+      storageDeposit = buffered > STORAGE_DEPOSIT_LIMIT ? buffered : STORAGE_DEPOSIT_LIMIT
+    }
+  }
 
-  console.log('[contractWrite] submitting', { functionName, address, gasLimit, storageDeposit })
+  console.log('[contractWrite] submitting', {
+    functionName,
+    address,
+    gasLimit,
+    storageDeposit,
+    dryRunStorageDeposit: sd,
+  })
 
-  // 4. Submit the transaction
-  const result = await (typedApi as any).tx.Revive.call({
-    dest,
-    value,
-    gas_limit: gasLimit,
-    storage_deposit_limit: storageDeposit,
-    data: inputData,
-  }).signAndSubmit(signer, { withSignedTransaction: false })
+  // 4. Submit the transaction. Wrapped in retry to swallow Talisman's
+  // intermittent BadProof — each attempt rebuilds a fresh payload.
+  const result = await signAndSubmitWithRetry<any>(() =>
+    (typedApi as any).tx.Revive.call({
+      dest,
+      value,
+      gas_limit: gasLimit,
+      storage_deposit_limit: storageDeposit,
+      data: inputData,
+    }).signAndSubmit(signer),
+  )
 
   console.log('[contractWrite] result', result)
 

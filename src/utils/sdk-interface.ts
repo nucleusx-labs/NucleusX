@@ -1,13 +1,19 @@
 import { formatValue } from '@polkadot-api/react-components'
 import type { PolkadotSigner } from 'polkadot-api'
 import { Binary } from 'polkadot-api'
-import { connectInjectedExtension, getPolkadotSignerFromPjs } from 'polkadot-api/pjs-signer'
 import { name } from '../../package.json'
 import { connectedWallet, selectedAccount } from '../hooks/useConnect'
-import type { ReviveCallOptions, ReviveTransactionOptions, TransactionCallbacks } from '../utils/revive'
+import type {
+  EstimatedCallResources,
+  ReviveCallOptions,
+  ReviveTransactionOptions,
+  TransactionCallbacks,
+} from '../utils/revive'
 import { callContract, checkAccountMapping, estimateGas, submitContractTransaction } from '../utils/revive'
 import type { Prefix } from '../utils/sdk'
 import sdk from '../utils/sdk'
+import { connectInjectedExtension } from './injected-extensions'
+import { signAndSubmitWithRetry } from './sign-retry'
 
 export const DAPP_NAME = name
 
@@ -18,39 +24,13 @@ export async function polkadotSigner(): Promise<PolkadotSigner | undefined> {
     return undefined
   }
 
-  // Access the raw injected extension so we can wrap signPayload.
-  // Wallet extensions (SubWallet/Talisman) return a pre-built `signedTransaction`
-  // in their signPayload response. polkadot-api uses those bytes directly, but
-  // they are encoded for a different chain format → BadProof on QF network.
-  // Stripping `signedTransaction` forces polkadot-api to build the extrinsic
-  // itself from the raw signature via its internal `qn()` path, which is correct.
-  const rawExt = (window as any).injectedWeb3?.[walletName]
-  if (rawExt) {
-    try {
-      const enabledExt = await rawExt.enable(DAPP_NAME)
-      const accounts: any[] = await enabledExt.accounts.get()
-      const targetAddress = selectedAccount.get()?.address
-      const target = accounts.find(acc => acc.address === targetAddress)
-      if (target && enabledExt.signer?.signPayload) {
-        const wrappedSignPayload = async (payload: any) => {
-          const result = await enabledExt.signer.signPayload(payload)
-          // Strip signedTransaction so polkadot-api builds the extrinsic from
-          // the raw signature — avoids BadProof on QF network.
-          return { ...result, signedTransaction: undefined }
-        }
-        return getPolkadotSignerFromPjs(
-          target.address,
-          wrappedSignPayload,
-          enabledExt.signer.signRaw?.bind(enabledExt.signer),
-        )
-      }
-    }
-    catch { /* fall through to connectInjectedExtension */ }
-  }
-
-  // Fallback: standard pjs-signer path
-  const selectedExtension = await connectInjectedExtension(walletName)
-  const account = selectedExtension
+  // Use the custom PAPI signer that fully owns payload construction and forces
+  // `withSignedTransaction: false` / `mode: 0` before sending the payload to
+  // the wallet — wallets (notably Talisman) otherwise build their own payload
+  // against stale cached metadata and return bytes that fail verification on
+  // QF network (BadProof).
+  const extension = await connectInjectedExtension(walletName, DAPP_NAME)
+  const account = extension
     .getAccounts()
     .find(acc => acc.address === selectedAccount.get()?.address)
 
@@ -103,7 +83,7 @@ export async function reviveTransaction(
 export async function reviveEstimateGas(
   chainPrefix: Prefix,
   options: Omit<ReviveCallOptions, 'origin'>,
-): Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }> {
+): Promise<EstimatedCallResources> {
   const address = getSelectedAddress()
   if (!address) {
     throw new Error('No account selected')
@@ -159,7 +139,7 @@ export async function getBalance(chainPrefix: Prefix, address: string) {
   }
 }
 
-export function createRemarkTransaction(
+export async function createRemarkTransaction(
   chainPrefix: Prefix,
   message: string,
   address = '',
@@ -172,24 +152,22 @@ export function createRemarkTransaction(
 ) {
   const { api } = sdk(chainPrefix)
 
-  const remark = Binary.fromText(message)
-  const tx = api.tx.System.remark({ remark })
+  try {
+    const result = await signAndSubmitWithRetry(() => {
+      const remark = Binary.fromText(message)
+      return api.tx.System.remark({ remark }).signAndSubmit(signer)
+    })
 
-  const unsub = tx.signSubmitAndWatch(signer).subscribe({
-    next: (event) => {
-      if (event.type === 'txBestBlocksState' && event.found) {
-        callbacks.onTxHash(event.txHash)
-      }
+    if (!result.ok) {
+      callbacks.onError('Transaction failed on-chain')
+      return
+    }
 
-      if (event.type === 'finalized') {
-        callbacks.onFinalized()
-        unsub.unsubscribe()
-      }
-    },
-    error: (err) => {
-      unsub.unsubscribe()
-      console.error(err, address)
-      callbacks.onError(err.message || 'Unknown error')
-    },
-  })
+    callbacks.onTxHash(result.txHash)
+    callbacks.onFinalized()
+  }
+  catch (err: any) {
+    console.error(err, address)
+    callbacks.onError(err?.message || 'Unknown error')
+  }
 }

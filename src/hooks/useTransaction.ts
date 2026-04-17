@@ -1,6 +1,7 @@
 import type { Prefix } from '../utils/sdk'
 import { useState } from 'react'
 import { createRemarkTransaction, polkadotSigner } from '../utils/sdk-interface'
+import { toast } from '../store/toastStore'
 import { useConnect } from './useConnect'
 
 export function useTransaction() {
@@ -27,23 +28,30 @@ export function useTransaction() {
         throw new Error('No signer found')
       }
 
+      toast.info('Signing transaction', 'Confirm in your wallet')
+
       createRemarkTransaction(chainPrefix, message, selectedAccount.address, signer, {
         onTxHash: (hash) => {
           setTxHash(hash)
+          toast.success('Transaction submitted', hash)
         },
         onFinalized: () => {
           setResult('Transaction successful!')
           setIsProcessing(false)
+          toast.success('Transaction finalized')
         },
         onError: (error) => {
           setResult(`Error: ${error}`)
           setIsProcessing(false)
+          toast.error('Transaction failed', error)
         },
       })
     }
     catch (err) {
-      setResult(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      setResult(`Error: ${msg}`)
       setIsProcessing(false)
+      toast.error('Transaction failed', msg)
     }
   }
 

@@ -8,6 +8,7 @@ import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contract
 import { callContract, checkAccountMapping, decodeContractResult, encodeContractCall } from '../utils/revive'
 import sdk from '../utils/sdk'
 import { polkadotSigner } from '../utils/sdk-interface'
+import { toast } from '../store/toastStore'
 import { selectedAccount } from './useConnect'
 
 function pubkeyToH160(pubkey: Uint8Array): `0x${string}` {
@@ -106,7 +107,8 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
       // Step 1: Approve Token A if needed (skip for native token — cannot approve ETH)
       if (!isNativeA && (await getAllowance(tokenA.address)) < amountA) {
         setStep('approving-a')
-        await contractWrite({
+        toast.info(`Approving ${tokenA.symbol}`, 'Confirm in your wallet')
+        const approveA = await contractWrite({
           address: tokenA.address,
           abi: ERC20_ABI,
           functionName: 'approve',
@@ -114,12 +116,14 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
           signer,
           ss58Address: account.address,
         })
+        toast.success(`${tokenA.symbol} approved`, approveA.txHash)
       }
 
       // Step 2: Approve Token B if needed (skip for native token)
       if (!isNativeB && (await getAllowance(tokenB.address)) < amountB) {
         setStep('approving-b')
-        await contractWrite({
+        toast.info(`Approving ${tokenB.symbol}`, 'Confirm in your wallet')
+        const approveB = await contractWrite({
           address: tokenB.address,
           abi: ERC20_ABI,
           functionName: 'approve',
@@ -127,10 +131,12 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
           signer,
           ss58Address: account.address,
         })
+        toast.success(`${tokenB.symbol} approved`, approveB.txHash)
       }
 
       // Step 3: Add liquidity
       setStep('adding')
+      toast.info('Adding liquidity', 'Confirm in your wallet')
       const amountAMin = (amountA * (10000n - SLIPPAGE_BPS)) / 10000n
       const amountBMin = (amountB * (10000n - SLIPPAGE_BPS)) / 10000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60)
@@ -185,6 +191,37 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
         })
       }
       else {
+        // Pre-flight: if the pair doesn't exist yet, deploy it in its own tx.
+        // Wrapping CREATE2 and the actual liquidity provision in one Revive.call
+        // blows past pallet-revive's per-call gas/storage budget on QF and traps
+        // with Module.Revive.ContractTrapped — splitting them fixes that.
+        const getPairCalldata = encodeContractCall(FACTORY_ABI, 'getPair', [tokenA.address, tokenB.address])
+        const pairRes = await callContract(api, {
+          origin: account.address,
+          dest: CONTRACTS.UniswapV2Factory,
+          value: 0n,
+          calldata: getPairCalldata,
+        })
+        const pairAddress = pairRes.result.ok
+          ? (decodeContractResult(FACTORY_ABI, 'getPair', pairRes.result.ok.data) as string)
+          : null
+        console.log('[useAddLiquidity] factory.getPair result:', pairAddress)
+
+        if (!pairAddress || /^0x0+$/.test(pairAddress)) {
+          setStep('creating-pair')
+          toast.info('Creating pair', 'Confirm in your wallet')
+          await contractWrite({
+            address: CONTRACTS.UniswapV2Factory,
+            abi: FACTORY_ABI,
+            functionName: 'createPair',
+            args: [tokenA.address, tokenB.address],
+            signer,
+            ss58Address: account.address,
+          })
+          toast.success('Pair created')
+          setStep('adding')
+        }
+
         result = await contractWrite({
           address: CONTRACTS.UniswapV2Router02,
           abi: ROUTER_ABI,
@@ -197,6 +234,7 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
 
       setTxHash(result.txHash)
       setStep('success')
+      toast.success('Liquidity added', result.txHash)
     }
     catch (err) {
       console.error('[useAddLiquidity] error', err)
@@ -207,6 +245,7 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
           : JSON.stringify(err)
       setError(msg)
       setStep('error')
+      toast.error('Add liquidity failed', msg)
     }
   }
 

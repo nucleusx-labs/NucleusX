@@ -34,6 +34,7 @@ export interface QuoteActorInput {
 
 export interface CheckAllowanceActorInput {
   tokenIn: Token
+  tokenOut: Token
   amountIn: bigint
   evmAddress: `0x${string}`
 }
@@ -206,6 +207,7 @@ export const swapMachine = setup({
         src: 'checkAllowance',
         input: ({ context }) => ({
           tokenIn: context.tokenIn!,
+          tokenOut: context.tokenOut!,
           amountIn: context.amountIn,
           evmAddress: context.evmAddress!,
         }),

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Prefix } from '../utils/sdk'
 import type {
+  EstimatedCallResources,
   ReviveCallOptions,
   ReviveCallResult,
   ReviveTransactionOptions,
@@ -33,7 +34,7 @@ export interface UseReviveApiReturn {
   ) => Promise<void>
 
   // Utilities
-  estimateGas: (chainPrefix: Prefix, options: ReviveCallOptions) => Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }>
+  estimateGas: (chainPrefix: Prefix, options: ReviveCallOptions) => Promise<EstimatedCallResources>
   checkAccountMapping: (chainPrefix: Prefix, address: string) => Promise<{ isMapped: boolean, evmAddress?: string }>
 }
 
@@ -127,7 +128,7 @@ export function useReviveApi(): UseReviveApiReturn {
   const estimateGasFn = useCallback(async (
     chainPrefix: Prefix,
     options: ReviveCallOptions,
-  ): Promise<{ gasConsumed: { ref_time: bigint; proof_size: bigint }, gasRequired: { ref_time: bigint; proof_size: bigint } }> => {
+  ): Promise<EstimatedCallResources> => {
     const { api } = sdk(chainPrefix)
     return await estimateGas(api, options)
   }, [])

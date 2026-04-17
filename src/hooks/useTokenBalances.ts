@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useSelector } from '@xstate/store/react'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import { ERC20_ABI } from '../utils/contracts'
-import { dexStore, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
+import { dexStore, NATIVE_TOKEN_ADDRESS, selectBalancesVersion } from '../store/dexStore'
 import sdk from '../utils/sdk'
 import type { Address } from 'viem'
 
@@ -29,6 +30,7 @@ export function useTokenBalances(
   ss58Origin?: string,
 ): Map<string, TokenBalance> {
   const [balances, setBalances] = useState<Map<string, TokenBalance>>(new Map())
+  const balancesVersion = useSelector(dexStore, selectBalancesVersion)
 
   const validAddresses = tokenAddresses.filter((a): a is string => !!a)
   const addressKey = validAddresses.join(',')
@@ -104,7 +106,7 @@ export function useTokenBalances(
 
     fetchBalances()
     return () => { cancelled = true }
-  }, [evmAddress, addressKey, ss58Origin])
+  }, [evmAddress, addressKey, ss58Origin, balancesVersion])
 
   return balances
 }

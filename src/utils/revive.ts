@@ -2,6 +2,7 @@ import type { Abi, ContractFunctionArgs, ContractFunctionName } from 'viem'
 import type { PolkadotSigner, TypedApi } from 'polkadot-api'
 import { Binary, FixedSizeBinary } from 'polkadot-api'
 import { decodeFunctionResult, encodeFunctionData } from 'viem'
+import { isRetryableSigningError } from './sign-retry'
 
 /**
  * Revive API types for contract interactions
@@ -15,20 +16,25 @@ export interface ReviveCallOptions {
   calldata: `0x${string}` // Encoded function call data
 }
 
+export interface GasMetrics {
+  ref_time: bigint
+  proof_size: bigint
+}
+
 export interface ReviveCallResult {
   result:
     | { ok: { flags: number; data: `0x${string}` }; err?: never }
     | { ok?: never; err: { error: string } }
-  gas_consumed: { ref_time: bigint; proof_size: bigint }
-  gas_required: { ref_time: bigint; proof_size: bigint }
-  storage_deposit: { value: bigint }
+  gas_consumed: GasMetrics
+  gas_required?: Partial<GasMetrics> | null
+  storage_deposit: unknown
   debug_message: unknown
 }
 
 export interface ReviveTransactionOptions {
   dest: string // Contract address
   value: bigint // Value to transfer
-  gasLimit: { ref_time: bigint; proof_size: bigint }
+  gasLimit: GasMetrics
   storageDepositLimit?: bigint
   data: `0x${string}` // Encoded calldata
   signer: PolkadotSigner
@@ -39,6 +45,44 @@ export interface TransactionCallbacks {
   onFinalized: () => void
   onError: (error: string) => void
   onBroadcast?: () => void
+}
+
+export interface EstimatedCallResources {
+  gasConsumed: GasMetrics
+  gasRequired: GasMetrics
+  storageDepositLimit: bigint
+}
+
+function toBigIntOrUndefined(value: unknown): bigint | undefined {
+  if (typeof value === 'bigint') return value
+  if (typeof value === 'number' && Number.isFinite(value)) return BigInt(value)
+  if (typeof value === 'string' && value.length > 0) {
+    try {
+      return BigInt(value)
+    }
+    catch {
+      return undefined
+    }
+  }
+  return undefined
+}
+
+function normalizeGasMetrics(value: unknown, fallback: GasMetrics): GasMetrics {
+  const metrics = value as { ref_time?: unknown; proof_size?: unknown } | null | undefined
+  return {
+    ref_time: toBigIntOrUndefined(metrics?.ref_time) ?? fallback.ref_time,
+    proof_size: toBigIntOrUndefined(metrics?.proof_size) ?? fallback.proof_size,
+  }
+}
+
+function normalizeStorageDepositLimit(storageDeposit: unknown): bigint {
+  if (!storageDeposit || typeof storageDeposit !== 'object') return 0n
+
+  const deposit = storageDeposit as { type?: unknown; value?: unknown }
+  if (deposit.type !== undefined && deposit.type !== 'Charge') return 0n
+
+  const reported = toBigIntOrUndefined(deposit.value) ?? 0n
+  return reported > 0n ? (reported * 125n) / 100n : 0n
 }
 
 /**
@@ -131,6 +175,7 @@ export async function submitContractTransaction(
   callbacks: TransactionCallbacks,
 ): Promise<() => void> {
   const { dest, value, gasLimit, storageDepositLimit, data, signer } = options
+  const explicitStorageDepositLimit = storageDepositLimit ?? 0n
 
   const destHex = dest.startsWith('0x') ? dest.slice(2) : dest
   const destFixed = FixedSizeBinary.fromArray(
@@ -142,52 +187,77 @@ export async function submitContractTransaction(
     dest,
     value,
     gas_limit: gasLimit,
-    storage_deposit_limit: storageDepositLimit,
+    storage_deposit_limit: explicitStorageDepositLimit,
     data,
   })
 
-  // Build the revive.call extrinsic
-  const tx = (api.tx.Revive.call as any)({
+  // Build the revive.call extrinsic fresh on each attempt — retries need a
+  // new nonce, block hash, and metadata snapshot, which PAPI handles when
+  // `.signSubmitAndWatch(...)` is re-invoked on a freshly built tx.
+  const buildTx = () => (api.tx.Revive.call as any)({
     dest: destFixed,
     value,
     gas_limit: gasLimit,
-    storage_deposit_limit: storageDepositLimit,
+    storage_deposit_limit: explicitStorageDepositLimit,
     data: inputData,
   })
 
-  // Sign, submit and watch for lifecycle events
-  const unsub = tx.signSubmitAndWatch(signer, { withSignedTransaction: false }).subscribe({
-    next: (event: any) => {
-      console.log('[Revive] tx event', event)
-      switch (event.type) {
-        case 'txBestBlocksState':
-          if (event.found) {
-            console.log('[Revive] tx in best block, hash:', event.txHash)
-            callbacks.onTxHash?.(event.txHash)
-          }
-          break
-        case 'finalized':
-          if (event.ok === false) {
-            console.error('[Revive] tx finalized with error', event)
-            callbacks.onError('Transaction failed on-chain')
-          }
-          else {
-            console.log('[Revive] tx finalized ok, hash:', event.txHash)
-            callbacks.onFinalized()
-          }
-          unsub.unsubscribe()
-          break
-      }
-    },
-    error: (err: any) => {
-      console.error('[Revive] tx subscription error:', err)
-      callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
-      unsub.unsubscribe()
-    },
-  })
+  const maxAttempts = 2
+  let attempt = 0
+  let activeUnsub: (() => void) | null = null
+  let cancelled = false
 
-  // Return unsubscribe function for manual cancellation
-  return () => unsub.unsubscribe()
+  const tryOnce = () => {
+    attempt++
+    const sub = buildTx().signSubmitAndWatch(signer).subscribe({
+      next: (event: any) => {
+        console.log('[Revive] tx event', event)
+        switch (event.type) {
+          case 'txBestBlocksState':
+            if (event.found) {
+              console.log('[Revive] tx in best block, hash:', event.txHash)
+              callbacks.onTxHash?.(event.txHash)
+            }
+            break
+          case 'finalized':
+            if (event.ok === false) {
+              console.error('[Revive] tx finalized with error', event)
+              callbacks.onError('Transaction failed on-chain')
+            }
+            else {
+              console.log('[Revive] tx finalized ok, hash:', event.txHash)
+              callbacks.onFinalized()
+            }
+            sub.unsubscribe()
+            activeUnsub = null
+            break
+        }
+      },
+      error: (err: any) => {
+        sub.unsubscribe()
+        activeUnsub = null
+        if (cancelled) return
+        if (attempt < maxAttempts && isRetryableSigningError(err)) {
+          console.warn(
+            `[papi] transient signing failure on attempt ${attempt}/${maxAttempts}; retrying with a fresh payload`,
+            err,
+          )
+          tryOnce()
+          return
+        }
+        console.error('[Revive] tx subscription error:', err)
+        callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
+      },
+    })
+    activeUnsub = () => sub.unsubscribe()
+  }
+
+  tryOnce()
+
+  return () => {
+    cancelled = true
+    activeUnsub?.()
+  }
 }
 
 /**
@@ -196,23 +266,27 @@ export async function submitContractTransaction(
 export async function estimateGas(
   api: TypedApi<any>,
   options: ReviveCallOptions,
-): Promise<{
-  gasConsumed: { ref_time: bigint; proof_size: bigint }
-  gasRequired: { ref_time: bigint; proof_size: bigint }
-}> {
+): Promise<EstimatedCallResources> {
   const result = await callContract(api, options)
+  const gasConsumed = normalizeGasMetrics(result.gas_consumed, {
+    ref_time: 500_000n,
+    proof_size: 10_000n,
+  })
+  const gasRequired = normalizeGasMetrics(result.gas_required, gasConsumed)
+  const storageDepositLimit = normalizeStorageDepositLimit(result.storage_deposit)
 
   console.log('[Revive] gas estimate', {
     dest: options.dest,
-    consumed: result.gas_consumed,
-    required: result.gas_required,
+    consumed: gasConsumed,
+    required: gasRequired,
     storageDeposit: result.storage_deposit,
     result: result.result,
   })
 
   return {
-    gasConsumed: result.gas_consumed,
-    gasRequired: result.gas_required,
+    gasConsumed,
+    gasRequired,
+    storageDepositLimit,
   }
 }
 

@@ -6,43 +6,43 @@
       "chain": "polkadot_asset_hub",
       "metadata": ".papi/metadata/asset_hub.scale",
       "genesis": "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f",
-      "codeHash": "0x6e20bc52aaaafd1de82ba7d2a3c0fa39193787e240b93608489cf72a4c46a584"
+      "codeHash": "0x04fa38c2fb117fbd73302c23b339ef18c4f3a200a0b487803208bf279161f1d7"
     },
     "people": {
       "chain": "polkadot_people",
       "metadata": ".papi/metadata/people.scale",
       "genesis": "0x67fa177a097bfa18f77ea95ab56e9bcdfeb0e5b8a40e46298bb93e16b6fc5008",
-      "codeHash": "0x5ad90a21b395a16a6d720983bb9fdd096577710beea33c7882bb61a7518dbb79"
+      "codeHash": "0xd7c36a7e033a490726c28d29ff83c192001ba8ade2e39d04940354cf15245a10"
     },
     "pas_asset_hub": {
       "chain": "paseo_asset_hub",
       "metadata": ".papi/metadata/pas_asset_hub.scale",
       "genesis": "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2",
-      "codeHash": "0xb7f52ff9b4fb5124568a5b8cbfcebba2bc9318bcb5916b69457c10bc6a2d0ac5"
+      "codeHash": "0x3b36085f46d6213d6f5a2fb26415d7c46da8e397977f2f7404ac431931ab5ae6"
     },
     "dot": {
       "chain": "polkadot",
       "metadata": ".papi/metadata/dot.scale",
       "genesis": "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3",
-      "codeHash": "0xe260d17fcfa34f10503c91148a7bc2fd820e356295d2e18f828b5fa4190d47f7"
+      "codeHash": "0xe29a1246273f74b2fbfde9ede985ccbe86b844be0a3537e34eb2bcd68c3b3358"
     },
     "dot_asset_hub": {
       "chain": "polkadot_asset_hub",
       "metadata": ".papi/metadata/dot_asset_hub.scale",
       "genesis": "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f",
-      "codeHash": "0x6e20bc52aaaafd1de82ba7d2a3c0fa39193787e240b93608489cf72a4c46a584"
+      "codeHash": "0x04fa38c2fb117fbd73302c23b339ef18c4f3a200a0b487803208bf279161f1d7"
     },
     "pas": {
       "chain": "paseo",
       "metadata": ".papi/metadata/pas.scale",
       "genesis": "0x77afd6190f1554ad45fd0d31aee62aacc33c6db0ea801129acb813f913e0764f",
-      "codeHash": "0xcc4b027a0dbb5e0f389dd8418c41012d618290a22f84af8411c8fd20b2738304"
+      "codeHash": "0x6581dc4ebeebf51f7c5a7914823712a53b77a4d9f84704da91307dd11a45aae1"
     },
     "qf_network": {
       "wsUrl": "wss://mainnet.qfnode.net",
       "metadata": ".papi/metadata/qf_network.scale",
       "genesis": "0xee971a91ef92d733d86d3acc67a6394caa105f37a7757155f623bc5d0c4b690f",
-      "codeHash": "0x9b76beea6773f221ea23ee18122159fa0b73f8f0182228f1a24b0f0a25c03257"
+      "codeHash": "0xf1adb833424379f30a0b7bed21ab901c3c9b3c1180805a3a2d037291996876be"
     }
   },
   "options": {
