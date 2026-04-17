@@ -3,7 +3,7 @@ import { getSs58AddressInfo } from '@polkadot-api/substrate-bindings'
 import { useMachine } from '@xstate/react'
 import { useEffect, useRef } from 'react'
 import { fromPromise } from 'xstate'
-import { CONTRACTS, ERC20_ABI, ROUTER_ABI, TOKENS } from '../utils/contracts'
+import { CONTRACTS, ERC20_ABI, FACTORY_ABI, PAIR_ABI, ROUTER_ABI, TOKENS } from '../utils/contracts'
 import {
   callContract,
   checkAccountMapping,
@@ -29,9 +29,31 @@ import type { Token } from '../store/dexStore'
 import sdk from '../utils/sdk'
 
 const DEFAULT_STORAGE_DEPOSIT_LIMIT = 1_000_000_000_000_000_000n
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 function isNativeQF(address: string): boolean {
   return address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()
+}
+
+/**
+ * Turn a raw router/pair revert into a user-facing message.
+ * Most reverts on pallet-revive come back as opaque strings, so the best we
+ * can do is catch common shapes and rewrite.
+ */
+function humanizeQuoteError(raw: unknown, tokenInSymbol: string, tokenOutSymbol: string): string {
+  const msg = raw instanceof Error ? raw.message : String(raw ?? '')
+  const lower = msg.toLowerCase()
+  if (lower.includes('insufficient_liquidity') || lower.includes('insufficient liquidity'))
+    return `Not enough liquidity in the ${tokenInSymbol}/${tokenOutSymbol} pool for this trade`
+  if (lower.includes('insufficient_input_amount') || lower.includes('insufficient input amount'))
+    return 'Input amount is too small to quote'
+  if (lower.includes('invalid_path') || lower.includes('identical_addresses'))
+    return 'Invalid token pair'
+  // Router reverts when a pair has never been created — "Contract call failed
+  // or returned no data" is what callContract surfaces for any revert.
+  if (lower.includes('no data') || lower.includes('call failed') || lower.includes('execution reverted'))
+    return `No liquidity pool exists for ${tokenInSymbol}/${tokenOutSymbol}`
+  return msg || 'Could not fetch a quote'
 }
 
 function isWQF(address: string): boolean {
@@ -91,13 +113,61 @@ export function useSwap(): UseSwapReturn {
           }
 
           const slippage = settingsRef.current.slippage
+          const { api } = sdk('qf_network')
+          const origin = accountRef.current?.address ?? ''
+
+          // Pre-check the pair exists so we can give a precise message instead
+          // of the generic "Contract call failed" that the router emits when
+          // getAmountsOut hits a non-existent pair.
+          const pairCalldata = encodeContractCall(FACTORY_ABI, 'getPair', [
+            input.tokenIn.address,
+            input.tokenOut.address,
+          ])
+          const pairResult = await callContract(api, {
+            origin,
+            dest: CONTRACTS.UniswapV2Factory,
+            value: 0n,
+            calldata: pairCalldata,
+          })
+          if (signal.aborted) throw new Error('AbortError')
+
+          const pairAddress = pairResult.result.ok
+            ? String(decodeContractResult(FACTORY_ABI, 'getPair', pairResult.result.ok.data))
+            : ZERO_ADDRESS
+          if (!pairAddress || pairAddress.toLowerCase() === ZERO_ADDRESS) {
+            throw new Error(
+              `No liquidity pool exists for ${input.tokenIn.symbol}/${input.tokenOut.symbol}`,
+            )
+          }
+
+          // Pair exists — confirm it actually has reserves before quoting.
+          const reservesCalldata = encodeContractCall(PAIR_ABI, 'getReserves', [])
+          const reservesResult = await callContract(api, {
+            origin,
+            dest: pairAddress,
+            value: 0n,
+            calldata: reservesCalldata,
+          })
+          if (signal.aborted) throw new Error('AbortError')
+          if (reservesResult.result.ok) {
+            const reserves = decodeContractResult(
+              PAIR_ABI,
+              'getReserves',
+              reservesResult.result.ok.data,
+            ) as readonly [bigint, bigint, number]
+            if (reserves[0] === 0n || reserves[1] === 0n) {
+              throw new Error(
+                `${input.tokenIn.symbol}/${input.tokenOut.symbol} pool has no liquidity yet`,
+              )
+            }
+          }
+
           const calldata = encodeContractCall(ROUTER_ABI, 'getAmountsOut', [
             input.amountIn,
             [input.tokenIn.address, input.tokenOut.address],
           ])
-          const { api } = sdk('qf_network')
           const result = await callContract(api, {
-            origin: accountRef.current?.address ?? '',
+            origin,
             dest: CONTRACTS.UniswapV2Router02,
             value: 0n,
             calldata,
@@ -105,7 +175,13 @@ export function useSwap(): UseSwapReturn {
 
           if (signal.aborted) throw new Error('AbortError')
           if (!result.result.ok) {
-            throw new Error(result.result.err?.error ?? 'Quote failed')
+            throw new Error(
+              humanizeQuoteError(
+                result.result.err?.error,
+                input.tokenIn.symbol,
+                input.tokenOut.symbol,
+              ),
+            )
           }
 
           const amounts = decodeContractResult(
@@ -115,6 +191,9 @@ export function useSwap(): UseSwapReturn {
           ) as bigint[]
 
           const amountOut = amounts[amounts.length - 1]
+          if (amountOut === 0n) {
+            throw new Error('Input amount is too small to quote — try a larger amount')
+          }
           const slippageBps = Math.floor(Number.parseFloat(slippage) * 100)
           const amountOutMin = amountOut * BigInt(10000 - slippageBps) / 10000n
           const amountOutFormatted = (Number(amountOut) / 10 ** input.tokenOut.decimals).toFixed(6)
@@ -185,7 +264,13 @@ export function useSwap(): UseSwapReturn {
                 storageDepositLimit: gas.storageDepositLimit,
                 data: calldata,
               },
-              { onFinalized: resolve, onError: (msg) => reject(new Error(msg)) },
+              {
+                onTxHash: (hash) => {
+                  toast.info(`${input.tokenIn.symbol} approval submitted`, hash)
+                },
+                onFinalized: resolve,
+                onError: (msg) => reject(new Error(msg)),
+              },
             ).catch(reject)
           })
 
@@ -223,6 +308,7 @@ export function useSwap(): UseSwapReturn {
             )
 
             return new Promise<SwapActorOutput>((resolve, reject) => {
+              let capturedHash = ''
               reviveTransaction(
                 'qf_network',
                 {
@@ -234,14 +320,19 @@ export function useSwap(): UseSwapReturn {
                 },
                 {
                   onTxHash: (hash) => {
-                    toast.success(
+                    capturedHash = hash
+                    toast.info(
                       wrapKind === 'wrap' ? 'Wrap submitted' : 'Unwrap submitted',
                       hash,
                     )
-                    resolve({ txHash: hash })
                   },
                   onFinalized: () => {
                     dexStore.send({ type: 'balances.invalidate' })
+                    toast.success(
+                      wrapKind === 'wrap' ? 'Wrap confirmed' : 'Unwrap confirmed',
+                      capturedHash || undefined,
+                    )
+                    resolve({ txHash: capturedHash })
                   },
                   onError: (msg) => reject(new Error(msg)),
                 },
@@ -277,6 +368,7 @@ export function useSwap(): UseSwapReturn {
           toast.info('Swapping tokens', 'Confirm in your wallet')
 
           return new Promise<SwapActorOutput>((resolve, reject) => {
+            let capturedHash = ''
             reviveTransaction(
               'qf_network',
               {
@@ -288,11 +380,13 @@ export function useSwap(): UseSwapReturn {
               },
               {
                 onTxHash: (hash) => {
-                  toast.success('Swap submitted', hash)
-                  resolve({ txHash: hash })
+                  capturedHash = hash
+                  toast.info('Swap submitted', hash)
                 },
                 onFinalized: () => {
                   dexStore.send({ type: 'balances.invalidate' })
+                  toast.success('Swap confirmed', capturedHash || undefined)
+                  resolve({ txHash: capturedHash })
                 },
                 onError: (msg) => reject(new Error(msg)),
               },
@@ -337,17 +431,20 @@ export function useSwap(): UseSwapReturn {
   const state = snapshot.value as string
 
   // Surface machine-level errors (actor rejections) as toasts so failures outside
-  // the approve/swap actors themselves still reach the user.
+  // the approve/swap actors themselves still reach the user. The title varies
+  // by where the error originated: quote failures return to 'idle', so those
+  // appear as "Quote unavailable"; approve/swap failures land in 'error'.
   const lastErrorRef = useRef<string | null>(null)
   useEffect(() => {
     if (ctx.error && ctx.error !== lastErrorRef.current) {
       lastErrorRef.current = ctx.error
-      toast.error('Swap failed', ctx.error)
+      const title = state === 'error' ? 'Swap failed' : 'Quote unavailable'
+      toast.error(title, ctx.error)
     }
     else if (!ctx.error) {
       lastErrorRef.current = null
     }
-  }, [ctx.error])
+  }, [ctx.error, state])
 
   return {
     quote: ctx.quote,

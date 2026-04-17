@@ -1,13 +1,25 @@
 import { useAtom, useSelector } from '@xstate/store/react'
 import { ArrowDown, Loader2, Settings } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { selectedAccount } from '../hooks/useConnect'
 import { useSwap } from '../hooks/useSwap'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import SettingsModal from './SettingsModal'
-import { dexStore, selectTokenList } from '../store/dexStore'
+import { dexStore, NATIVE_TOKEN_ADDRESS, selectTokenList } from '../store/dexStore'
 import type { Token } from '../store/dexStore'
 import TokenSelector from './TokenSelector'
+
+// Reserve a small amount of native QF so "Max" doesn't leave the account
+// without gas to sign the swap.
+const NATIVE_GAS_RESERVE = 10_000_000_000_000_000n // 0.01 QF
+
+function formatAmount(raw: bigint, decimals: number): string {
+  if (raw <= 0n) return ''
+  const divisor = 10n ** BigInt(decimals)
+  const whole = raw / divisor
+  const frac = (raw % divisor).toString().padStart(decimals, '0').slice(0, 6).replace(/0+$/, '')
+  return frac ? `${whole}.${frac}` : whole.toString()
+}
 
 export default function SwapForm() {
   const account = useAtom(selectedAccount)
@@ -75,8 +87,36 @@ export default function SwapForm() {
     swap()
   }
 
+  const payBalance = payToken ? balances.get(payToken.address.toLowerCase()) : undefined
+
+  const amountInRaw = useMemo(() => {
+    if (!payAmount || !payToken) return 0n
+    const n = Number(payAmount)
+    if (!Number.isFinite(n) || n <= 0) return 0n
+    return BigInt(Math.floor(n * 10 ** payToken.decimals))
+  }, [payAmount, payToken?.decimals])
+
+  const hasInsufficientBalance
+    = !!payToken && !!payBalance && amountInRaw > 0n && amountInRaw > payBalance.balance
+
+  const setPercent = (pct: number) => {
+    if (!payToken || !payBalance) return
+    let raw = (payBalance.balance * BigInt(pct)) / 100n
+    if (pct === 100 && payToken.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()) {
+      raw = raw > NATIVE_GAS_RESERVE ? raw - NATIVE_GAS_RESERVE : 0n
+    }
+    setPayAmount(formatAmount(raw, payToken.decimals))
+  }
+
   const isProcessing = isCheckingAllowance || isApproving || isSwapping
-  const canSwap = !!account && !!payToken && !!receiveToken && !!payAmount && !!quote && !isProcessing
+  const canSwap
+    = !!account
+    && !!payToken
+    && !!receiveToken
+    && !!payAmount
+    && !!quote
+    && !isProcessing
+    && !hasInsufficientBalance
 
   function getButtonLabel() {
     if (!account) return 'Connect Wallet'
@@ -86,6 +126,12 @@ export default function SwapForm() {
     if (isQuoting) return 'Fetching Quote...'
     if (!payToken || !receiveToken) return 'Select Tokens'
     if (!payAmount) return 'Enter Amount'
+    if (hasInsufficientBalance) return `Insufficient ${payToken.symbol}`
+    if (error && !quote) {
+      if (/no liquidity pool|no liquidity yet/i.test(error)) return 'No Pool Available'
+      if (/too small/i.test(error)) return 'Amount Too Small'
+      return 'Quote Unavailable'
+    }
     if (!quote) return 'No Route Found'
     return 'Swap'
   }
@@ -125,6 +171,20 @@ export default function SwapForm() {
               <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} balances={balances} />
             </div>
           </div>
+          {payToken && payBalance && payBalance.balance > 0n && (
+            <div className="flex gap-2 mt-3">
+              {[10, 25, 50, 100].map(pct => (
+                <button
+                  key={pct}
+                  type="button"
+                  onClick={() => setPercent(pct)}
+                  className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
+                >
+                  {pct === 100 ? 'Max' : `${pct}%`}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Swap Arrow Button */}

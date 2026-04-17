@@ -206,11 +206,36 @@ export async function submitContractTransaction(
   let attempt = 0
   let activeUnsub: (() => void) | null = null
   let cancelled = false
+  let settled = false
+  let watchdog: ReturnType<typeof setTimeout> | null = null
+
+  // Some wallets (notably Talisman) can confirm or reject without the PAPI
+  // subscription ever emitting another event. Without a watchdog the swap UI
+  // would hang indefinitely; 120s is longer than a healthy finalization but
+  // short enough that users aren't left guessing.
+  const WATCHDOG_MS = 120_000
+
+  const cleanup = () => {
+    if (watchdog) {
+      clearTimeout(watchdog)
+      watchdog = null
+    }
+    activeUnsub?.()
+    activeUnsub = null
+  }
+
+  const settle = (fn: () => void) => {
+    if (settled) return
+    settled = true
+    cleanup()
+    fn()
+  }
 
   const tryOnce = () => {
     attempt++
     const sub = buildTx().signSubmitAndWatch(signer).subscribe({
       next: (event: any) => {
+        if (settled) return
         console.log('[Revive] tx event', event)
         switch (event.type) {
           case 'txBestBlocksState':
@@ -222,21 +247,19 @@ export async function submitContractTransaction(
           case 'finalized':
             if (event.ok === false) {
               console.error('[Revive] tx finalized with error', event)
-              callbacks.onError('Transaction failed on-chain')
+              settle(() => callbacks.onError('Transaction failed on-chain'))
             }
             else {
               console.log('[Revive] tx finalized ok, hash:', event.txHash)
-              callbacks.onFinalized()
+              settle(() => callbacks.onFinalized())
             }
-            sub.unsubscribe()
-            activeUnsub = null
             break
         }
       },
       error: (err: any) => {
         sub.unsubscribe()
         activeUnsub = null
-        if (cancelled) return
+        if (cancelled || settled) return
         if (attempt < maxAttempts && isRetryableSigningError(err)) {
           console.warn(
             `[papi] transient signing failure on attempt ${attempt}/${maxAttempts}; retrying with a fresh payload`,
@@ -246,7 +269,7 @@ export async function submitContractTransaction(
           return
         }
         console.error('[Revive] tx subscription error:', err)
-        callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
+        settle(() => callbacks.onError(err instanceof Error ? err.message : 'Unknown error'))
       },
     })
     activeUnsub = () => sub.unsubscribe()
@@ -254,9 +277,19 @@ export async function submitContractTransaction(
 
   tryOnce()
 
+  watchdog = setTimeout(() => {
+    if (settled) return
+    console.warn(`[Revive] tx watchdog fired after ${WATCHDOG_MS}ms — no terminal event received`)
+    settle(() =>
+      callbacks.onError(
+        'Transaction timed out. Please check your wallet and block explorer before retrying.',
+      ),
+    )
+  }, WATCHDOG_MS)
+
   return () => {
     cancelled = true
-    activeUnsub?.()
+    cleanup()
   }
 }
 

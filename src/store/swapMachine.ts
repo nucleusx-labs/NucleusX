@@ -247,6 +247,17 @@ export const swapMachine = setup({
           },
         },
       },
+      after: {
+        150000: {
+          target: 'error',
+          actions: {
+            type: 'assignError',
+            params: () => ({
+              message: 'Approval timed out. Please check your wallet and try again.',
+            }),
+          },
+        },
+      },
     },
 
     swapping: {
@@ -275,9 +286,26 @@ export const swapMachine = setup({
           },
         },
       },
+      after: {
+        150000: {
+          target: 'error',
+          actions: {
+            type: 'assignError',
+            params: () => ({
+              message: 'Swap timed out. Please check your wallet and the explorer before retrying.',
+            }),
+          },
+        },
+      },
     },
 
     success: {
+      // Auto-reset so the swap button unsticks from "Swapping..." without a
+      // manual refresh. Balances are already invalidated via dexStore on
+      // finalization.
+      after: {
+        4000: { target: 'idle', actions: 'clearAll' },
+      },
       on: {
         RESET: { target: 'idle', actions: 'clearAll' },
       },

@@ -1,11 +1,24 @@
 import type { Abi } from 'viem'
 
 /**
- * QF Network deployed contract addresses
+ * QF Network deployed contract addresses.
+ *
+ * UniswapV2Router02 points at QFRouterLite (src/RouterLite.sol in the QF repo),
+ * not the original UniswapV2Router02 from Uniswap. The full router's bytecode
+ * traps on pallet-revive even for simple getters like factory()/WETH(), so we
+ * use a minimal single-hop router with the same external ABI shape for:
+ *   - addLiquidity, addLiquidityETH
+ *   - removeLiquidity, removeLiquidityETH
+ *   - removeLiquidityETHSupportingFeeOnTransferTokens
+ *   - swapExactTokensForTokens, swapExactETHForTokens, swapExactTokensForETH
+ *   - swapExactTokensForTokensSupportingFeeOnTransferTokens
+ *   - swapExactETHForTokensSupportingFeeOnTransferTokens
+ *   - swapExactTokensForETHSupportingFeeOnTransferTokens
+ *   - getAmountsOut, getAmountsIn, getAmountOut, getAmountIn, quote
  */
 export const CONTRACTS = {
   UniswapV2Factory: '0xf44c7411bb141a0e1036c92639e9ac64e8dc37fd',
-  UniswapV2Router02: '0xcabe3ecba478b17a9b11d15e208f0d7390f3264d',
+  UniswapV2Router02: '0x27aab828a5ee9d10699c6dc1d0d0f89aca914d16',
 } as const satisfies Record<string, `0x${string}`>
 
 export const TOKENS = {
@@ -499,12 +512,12 @@ export const ROUTER_ABI = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_factory",
+        "name": "factory_",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_WETH",
+        "name": "wqf_",
         "type": "address"
       }
     ],
@@ -940,247 +953,6 @@ export const ROUTER_ABI = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liquidity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountTokenMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountETHMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "approveMax",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint8",
-        "name": "v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "s",
-        "type": "bytes32"
-      }
-    ],
-    "name": "removeLiquidityETHWithPermit",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountToken",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountETH",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liquidity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountTokenMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountETHMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "approveMax",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint8",
-        "name": "v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "s",
-        "type": "bytes32"
-      }
-    ],
-    "name": "removeLiquidityETHWithPermitSupportingFeeOnTransferTokens",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountETH",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenA",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenB",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liquidity",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountAMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountBMin",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "approveMax",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint8",
-        "name": "v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "s",
-        "type": "bytes32"
-      }
-    ],
-    "name": "removeLiquidityWithPermit",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountA",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountB",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "path",
-        "type": "address[]"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      }
-    ],
-    "name": "swapETHForExactTokens",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "amountOutMin",
         "type": "uint256"
@@ -1385,84 +1157,6 @@ export const ROUTER_ABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountInMax",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "path",
-        "type": "address[]"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      }
-    ],
-    "name": "swapTokensForExactETH",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amountOut",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amountInMax",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "path",
-        "type": "address[]"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "deadline",
-        "type": "uint256"
-      }
-    ],
-    "name": "swapTokensForExactTokens",
-    "outputs": [
-      {
-        "internalType": "uint256[]",
-        "name": "amounts",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "stateMutability": "payable",
     "type": "receive"
   }
@@ -1509,10 +1203,40 @@ export const PAIR_ABI = [
     outputs: [{ name: '', type: 'uint256' }],
   },
   {
+    name: 'allowance',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    name: 'approve',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
     name: 'mint',
     type: 'function',
     stateMutability: 'nonpayable',
     inputs: [{ name: 'to', type: 'address' }],
     outputs: [{ name: 'liquidity', type: 'uint256' }],
+  },
+  {
+    name: 'burn',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'to', type: 'address' }],
+    outputs: [
+      { name: 'amount0', type: 'uint256' },
+      { name: 'amount1', type: 'uint256' },
+    ],
   },
 ] as const satisfies Abi
