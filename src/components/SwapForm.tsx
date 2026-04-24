@@ -31,6 +31,12 @@ export default function SwapForm() {
   const [receiveToken, setReceiveToken] = useState<Token | undefined>()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
+  useEffect(() => {
+    if (payToken || tokenList.length === 0) return
+    const wqf = tokenList.find(token => token.symbol === 'WQF')
+    if (wqf) setPayToken(wqf)
+  }, [payToken, tokenList])
+
   const { quote, isQuoting, isCheckingAllowance, isApproving, isSwapping, txHash, error, evmAddress, fetchQuote, swap, clearError } = useSwap()
 
   const balances = useTokenBalances(

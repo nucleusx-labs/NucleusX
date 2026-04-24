@@ -39,6 +39,7 @@ const INITIAL_TOKEN_LIST: Token[] = [
   { symbol: 'OTU',    name: 'OTU Token',     address: TOKENS.OTU,    decimals: 18 },
   { symbol: 'QDPT',   name: 'QDPT Token',    address: TOKENS.QDPT,   decimals: 18 },
   { symbol: 'Avatar', name: 'Avatar Token',  address: TOKENS.Avatar, decimals: 18 },
+  { symbol: 'GGG',    name: 'GGG',           address: TOKENS.GGG,    decimals: 18 },
 ]
 
 export const dexStore = createStore({

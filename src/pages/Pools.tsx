@@ -2,7 +2,7 @@ import { Search, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSelector } from '@xstate/store/react'
 import { dexStore, selectTokenList } from '../store/dexStore'
-import { useUserPools } from '../hooks/useUserPools'
+import { usePools } from '../hooks/usePools'
 
 function TokenIcon({ symbol }: { symbol: string }) {
   const tokenList = useSelector(dexStore, selectTokenList)
@@ -18,7 +18,7 @@ function TokenIcon({ symbol }: { symbol: string }) {
 }
 
 export default function Pools() {
-  const { pools, isLoading } = useUserPools()
+  const { pools, isLoading } = usePools()
 
   return (
     <div className="max-w-6xl mx-auto w-full py-8 space-y-10">

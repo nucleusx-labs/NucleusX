@@ -2,13 +2,43 @@ import { useAtom, useSelector } from '@xstate/store/react'
 import { Loader2, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { parseUnits } from 'viem'
 import { selectedAccount } from '../hooks/useConnect'
+import { usePairDetails } from '../hooks/usePairDetails'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useAddLiquidity } from '../hooks/useAddLiquidity'
 import { dexStore, selectTokenList, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import { TOKENS } from '../utils/contracts'
 import TokenSelector from './TokenSelector'
 import type { Token } from '../store/dexStore'
+
+const NATIVE_GAS_RESERVE = 10_000_000_000_000_000n // 0.01 QF
+
+function formatAmount(raw: bigint, decimals: number): string {
+  if (raw <= 0n) return ''
+  const divisor = 10n ** BigInt(decimals)
+  const whole = raw / divisor
+  const frac = (raw % divisor).toString().padStart(decimals, '0').slice(0, 6).replace(/0+$/, '')
+  return frac ? `${whole}.${frac}` : whole.toString()
+}
+
+function formatRatio(
+  numerator: bigint,
+  denominator: bigint,
+  numeratorDecimals: number,
+  denominatorDecimals: number,
+): string {
+  if (numerator === 0n || denominator === 0n) return '0'
+  const precision = 6n
+  const scaled = numerator
+    * (10n ** BigInt(denominatorDecimals))
+    * (10n ** precision)
+    / (denominator * (10n ** BigInt(numeratorDecimals)))
+
+  const whole = scaled / (10n ** precision)
+  const fraction = (scaled % (10n ** precision)).toString().padStart(Number(precision), '0').replace(/0+$/, '')
+  return fraction ? `${whole}.${fraction}` : whole.toString()
+}
 
 export default function AddLiquidityForm() {
   const account = useAtom(selectedAccount)
@@ -19,6 +49,7 @@ export default function AddLiquidityForm() {
   const [amountA, setAmountA] = useState('')
   const [amountB, setAmountB] = useState('')
 
+  const pair = usePairDetails(tokenA, tokenB)
   const { step, txHash, error, evmAddress, supply, reset } = useAddLiquidity()
 
   const [searchParams] = useSearchParams()
@@ -49,6 +80,58 @@ export default function AddLiquidityForm() {
 
   const isProcessing = step === 'approving-a' || step === 'approving-b' || step === 'creating-pair' || step === 'adding'
   const canSupply = !!account && !!tokenA && !!tokenB && !!amountA && !!amountB && !isProcessing && step !== 'success'
+  const addrA = tokenA?.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenA?.address
+  const isToken0A = !!tokenA && !!pair.token0 && addrA?.toLowerCase() === pair.token0.toLowerCase()
+  const reserveA = isToken0A ? pair.reserve0 : pair.reserve1
+  const reserveB = isToken0A ? pair.reserve1 : pair.reserve0
+  const isInitialLiquidity = !pair.exists || (pair.reserve0 === 0n && pair.reserve1 === 0n)
+
+  function handleAmountAChange(value: string) {
+    setAmountA(value)
+    if (!value) {
+      setAmountB('')
+      return
+    }
+    if (!tokenA || !tokenB || isInitialLiquidity || reserveA === 0n) return
+
+    try {
+      const rawAmountA = parseUnits(value, tokenA.decimals)
+      const rawAmountB = (rawAmountA * reserveB) / reserveA
+      setAmountB(formatAmount(rawAmountB, tokenB.decimals))
+    }
+    catch {
+      // Ignore partial/in-progress numeric input.
+    }
+  }
+
+  function handleAmountBChange(value: string) {
+    setAmountB(value)
+    if (!value) {
+      setAmountA('')
+      return
+    }
+    if (!tokenA || !tokenB || isInitialLiquidity || reserveB === 0n) return
+
+    try {
+      const rawAmountB = parseUnits(value, tokenB.decimals)
+      const rawAmountA = (rawAmountB * reserveA) / reserveB
+      setAmountA(formatAmount(rawAmountA, tokenA.decimals))
+    }
+    catch {
+      // Ignore partial/in-progress numeric input.
+    }
+  }
+
+  const setPercent = (token: Token | undefined, setAmount: (value: string) => void, pct: number) => {
+    if (!token) return
+    const balance = balances.get(token.address.toLowerCase())
+    if (!balance) return
+    let raw = (balance.balance * BigInt(pct)) / 100n
+    if (pct === 100 && token.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()) {
+      raw = raw > NATIVE_GAS_RESERVE ? raw - NATIVE_GAS_RESERVE : 0n
+    }
+    setAmount(formatAmount(raw, token.decimals))
+  }
 
   function getButtonLabel(): string {
     if (!account) return 'Connect Wallet'
@@ -58,15 +141,21 @@ export default function AddLiquidityForm() {
     if (step === 'adding') return 'Adding Liquidity...'
     if (!tokenA || !tokenB) return 'Select Tokens'
     if (!amountA || !amountB) return 'Enter Amounts'
+    if (isInitialLiquidity) return 'Create & Supply'
     return 'Supply'
   }
 
   async function handleSupply() {
     if (!tokenA || !tokenB || !amountA || !amountB) return
-    const bigAmountA = BigInt(Math.floor(Number(amountA) * 10 ** tokenA.decimals))
-    const bigAmountB = BigInt(Math.floor(Number(amountB) * 10 ** tokenB.decimals))
-    if (bigAmountA === 0n || bigAmountB === 0n) return
-    await supply(tokenA, tokenB, bigAmountA, bigAmountB)
+    try {
+      const bigAmountA = parseUnits(amountA, tokenA.decimals)
+      const bigAmountB = parseUnits(amountB, tokenB.decimals)
+      if (bigAmountA === 0n || bigAmountB === 0n) return
+      await supply(tokenA, tokenB, bigAmountA, bigAmountB)
+    }
+    catch {
+      // Ignore invalid numeric input.
+    }
   }
 
   return (
@@ -87,12 +176,26 @@ export default function AddLiquidityForm() {
             placeholder="0.0"
             className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
             value={amountA}
-            onChange={e => setAmountA(e.target.value)}
+            onChange={e => handleAmountAChange(e.target.value)}
           />
           <div className="shrink-0">
             <TokenSelector selectedToken={tokenA} onSelectToken={setTokenA} balances={balances} disabledAddresses={getDisabledAddresses(tokenB)} />
           </div>
         </div>
+        {tokenA && (balances.get(tokenA.address.toLowerCase())?.balance ?? 0n) > 0n && (
+          <div className="flex gap-2 mt-3">
+            {[25, 50, 75, 100].map(pct => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => setPercent(tokenA, handleAmountAChange, pct)}
+                className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
+              >
+                {pct === 100 ? 'Max' : `${pct}%`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-center -my-2 relative z-10">
@@ -117,13 +220,58 @@ export default function AddLiquidityForm() {
             placeholder="0.0"
             className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
             value={amountB}
-            onChange={e => setAmountB(e.target.value)}
+            onChange={e => handleAmountBChange(e.target.value)}
           />
           <div className="shrink-0">
             <TokenSelector selectedToken={tokenB} onSelectToken={setTokenB} balances={balances} disabledAddresses={getDisabledAddresses(tokenA)} />
           </div>
         </div>
+        {tokenB && (balances.get(tokenB.address.toLowerCase())?.balance ?? 0n) > 0n && (
+          <div className="flex gap-2 mt-3">
+            {[25, 50, 75, 100].map(pct => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => setPercent(tokenB, handleAmountBChange, pct)}
+                className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
+              >
+                {pct === 100 ? 'Max' : `${pct}%`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {tokenA && tokenB && (
+        <div className="border border-[#2D0A5B] p-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">
+              {isInitialLiquidity ? 'Initial Liquidity' : 'Pool Rate'}
+            </span>
+            {pair.isLoading && <Loader2 className="w-4 h-4 text-[#7B3FE4] animate-spin" />}
+          </div>
+          {isInitialLiquidity ? (
+            <p className="text-[#A1A1A1] text-xs leading-relaxed">
+              This pair has no liquidity yet. The ratio you provide will set the initial pool price.
+            </p>
+          ) : (
+            <div className="space-y-2 text-xs font-bold uppercase tracking-wider text-[#A1A1A1]">
+              <div className="flex justify-between gap-4">
+                <span>1 {tokenA.symbol}</span>
+                <span className="text-[#F2F2F2]">
+                  {formatRatio(reserveB, reserveA, tokenB.decimals, tokenA.decimals)} {tokenB.symbol}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span>1 {tokenB.symbol}</span>
+                <span className="text-[#F2F2F2]">
+                  {formatRatio(reserveA, reserveB, tokenA.decimals, tokenB.decimals)} {tokenA.symbol}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Supply button */}
       <div className="pt-4">

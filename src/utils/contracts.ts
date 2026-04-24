@@ -26,6 +26,7 @@ export const TOKENS = {
   OTU: '0x8Cd90E173bbB33F6d88c43B9Fc6199ffdED24e9B',
   QDPT: '0x2390250C31f88dC1D48E895d2B8dEC68D590B0D6',
   Avatar: '0xb39cCA71828a89E07aD473721281A24A9B3A5D84',
+  GGG: '0x772aaDBa91D67d04E8Efc466E9d1b9DB897B2d10',
 } as const satisfies Record<string, `0x${string}`>
 
 export type ContractAddress = typeof CONTRACTS[keyof typeof CONTRACTS]
