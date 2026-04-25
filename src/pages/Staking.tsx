@@ -7,49 +7,52 @@ export default function Staking() {
   ]
 
   return (
-    <div className="max-w-6xl mx-auto w-full py-8 space-y-10">
-      <div>
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-2">Earn</p>
-        <h1 className="text-5xl font-bold tracking-tighter text-[#F2F2F2]">Staking</h1>
-        <p className="text-[#A1A1A1] mt-2 text-sm font-bold uppercase tracking-[0.15em]">Stake your Nucleus tokens to earn more</p>
-      </div>
+    <div className="max-w-6xl mx-auto w-full py-6 sm:py-10 space-y-8">
+      <header>
+        <p className="ncx-num text-[10px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-3">Earn</p>
+        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-ncx-text">Staking</h1>
+        <p className="text-ncx-text-muted mt-2 max-w-xl">
+          Stake your NCL tokens to earn protocol revenue and participate in on-chain governance.
+        </p>
+      </header>
 
-      <div className="border-2 border-[#2D0A5B]">
-        <div className="p-5 border-b border-[#2D0A5B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h2 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Staking Pools</h2>
+      <div className="ncx-card overflow-hidden">
+        <div className="p-5 border-b border-ncx-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-ncx-text">Staking pools</h2>
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ncx-text-subtle" />
             <input
               type="text"
               placeholder="Search pools"
-              className="w-full bg-transparent border border-[#2D0A5B] py-2 pl-9 pr-4 text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] text-sm uppercase tracking-wider placeholder:text-[#A1A1A1]/50 transition-colors duration-150"
+              className="ncx-input pl-10 py-2.5 text-sm"
             />
           </div>
         </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[600px]">
+          <table className="w-full text-left min-w-[640px]">
             <thead>
-              <tr className="border-b border-[#2D0A5B]">
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">Staked Token</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">Reward Token</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">TVL</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] text-right">APY</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] text-right">Action</th>
+              <tr className="border-b border-ncx-border" style={{ background: 'var(--ncx-surface-2)' }}>
+                <th className="px-6 py-3.5 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-subtle">Staked</th>
+                <th className="px-6 py-3.5 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-subtle">Reward</th>
+                <th className="px-6 py-3.5 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-subtle">TVL</th>
+                <th className="px-6 py-3.5 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-subtle text-right">APY</th>
+                <th className="px-6 py-3.5 text-right" />
               </tr>
             </thead>
             <tbody>
               {mockStakingPools.map((pool, i) => (
-                <tr key={i} className="border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150 group">
-                  <td className="px-6 py-5">
-                    <span className="font-bold uppercase text-[#F2F2F2] tracking-wider">{pool.stakedToken}</span>
+                <tr key={i} className="border-b border-ncx-border/50 last:border-b-0 transition-colors duration-150 group hover:bg-ncx-wash">
+                  <td className="px-6 py-4">
+                    <span className="font-semibold text-ncx-text text-sm">{pool.stakedToken}</span>
                   </td>
-                  <td className="px-6 py-5 font-bold text-[#A1A1A1]">{pool.rewardToken}</td>
-                  <td className="px-6 py-5 font-bold text-[#F2F2F2]">{pool.tvl}</td>
-                  <td className="px-6 py-5 font-bold text-[#00D084] text-right">{pool.apy}</td>
-                  <td className="px-6 py-5 text-right">
+                  <td className="px-6 py-4 ncx-num text-sm text-ncx-text-muted">{pool.rewardToken}</td>
+                  <td className="px-6 py-4 ncx-num text-sm text-ncx-text">{pool.tvl}</td>
+                  <td className="px-6 py-4 ncx-num text-sm text-ncx-gain text-right font-medium">{pool.apy}</td>
+                  <td className="px-6 py-4 text-right">
                     <Link
                       to={`/staking/${pool.stakedToken}`}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-xs font-bold uppercase tracking-widest border border-[#7B3FE4] text-[#7B3FE4] px-4 py-2 inline-block hover:bg-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150"
+                      className="ncx-num text-[10px] uppercase tracking-[0.1em] px-3 py-1.5 rounded-full border border-ncx-border bg-ncx-surface-2 text-ncx-text-muted hover:border-ncx-purple-500 hover:text-ncx-text hover:bg-ncx-wash transition-all duration-200 inline-block"
                     >
                       Stake
                     </Link>

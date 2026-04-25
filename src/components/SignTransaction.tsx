@@ -16,33 +16,46 @@ export default function SignTransaction({ chainKey }: SignTransactionProps) {
     await signRemarkTransaction(chainKey, 'Hello from create-dot-app')
   }
 
+  const isError = result?.includes('Error')
+
   return (
-    <div>
+    <div className="space-y-3">
       {isProcessing && (
-        <div className="mb-4 p-3 border border-[#7B3FE4] bg-[#7B3FE4]/10 flex items-center gap-2">
-          <span className="icon-[mdi--loading] animate-spin text-[#7B3FE4]" />
-          <span className="text-sm font-bold uppercase text-[#A1A1A1]">Processing transaction...</span>
+        <div
+          className="p-3 rounded-2xl flex items-center gap-2 text-sm"
+          style={{ background: 'var(--ncx-wash)', border: '1px solid color-mix(in srgb, var(--ncx-purple-500) 25%, transparent)', color: 'var(--ncx-text-muted)' }}
+        >
+          <span className="icon-[mdi--loading] animate-spin text-ncx-purple-300" />
+          Processing transaction…
         </div>
       )}
 
       {result && (
-        <div className={`mb-4 p-3 border flex items-center gap-2 ${result.includes('Error') ? 'border-[#FF4040] bg-[#FF4040]/10' : 'border-[#00D084] bg-[#00D084]/10'}`}>
-          {result.includes('Error')
-            ? <span className="icon-[mdi--alert-circle] text-[#FF4040]" />
-            : <span className="icon-[mdi--check-circle] text-[#00D084]" />
-          }
-          <span className={`text-sm font-bold ${result.includes('Error') ? 'text-[#FF4040]' : 'text-[#00D084]'}`}>{result}</span>
+        <div
+          className="p-3 rounded-2xl flex items-center gap-2 text-sm font-medium"
+          style={{
+            background: isError ? 'var(--ncx-loss-bg)' : 'var(--ncx-gain-bg)',
+            border: `1px solid color-mix(in srgb, ${isError ? 'var(--ncx-loss)' : 'var(--ncx-gain)'} 30%, transparent)`,
+            color: isError ? 'var(--ncx-loss)' : 'var(--ncx-gain)',
+          }}
+        >
+          <span className={isError ? 'icon-[mdi--alert-circle]' : 'icon-[mdi--check-circle]'} />
+          {result}
         </div>
       )}
 
       {txHash && (
-        <div className="mb-4 p-3 border border-[#2D0A5B]">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-2">Transaction Hash</p>
-          <p className="text-sm text-[#F2F2F2] font-bold break-all mb-2 truncate">{txHash}</p>
+        <div
+          className="p-3 rounded-2xl"
+          style={{ background: 'var(--ncx-surface-2)', border: '1px solid var(--ncx-border)' }}
+        >
+          <p className="ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-muted mb-1">Transaction hash</p>
+          <p className="ncx-num text-xs text-ncx-text break-all mb-2">{txHash}</p>
           <a
             href={explorerDetail(chainKey, txHash)}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs text-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 font-bold uppercase tracking-widest underline"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-purple-300 hover:text-ncx-text transition-colors duration-150"
           >
             View on Subscan <span className="icon-[mdi--open-in-new]" />
           </a>
@@ -53,16 +66,16 @@ export default function SignTransaction({ chainKey }: SignTransactionProps) {
         <button
           type="button"
           disabled={isProcessing}
-          className="w-full py-3 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           onClick={signTransaction}
+          className="btn-ncx btn-ncx-primary w-full"
         >
           {isProcessing && <span className="icon-[mdi--loading] animate-spin" />}
-          {isProcessing ? 'Processing...' : 'Sign Transaction'}
+          {isProcessing ? 'Processing…' : 'Sign transaction'}
         </button>
       ) : (
-        <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
+        <div className="flex items-center justify-center gap-2 ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-muted py-2">
           <span className="icon-[mdi--wallet-outline]" />
-          Connect wallet to sign transactions
+          Connect wallet to sign
         </div>
       )}
     </div>

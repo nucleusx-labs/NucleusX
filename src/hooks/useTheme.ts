@@ -1,22 +1,33 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 type Theme = 'dark' | 'light'
 
+const STORAGE_KEY = 'ncx-theme'
+
+function readInitial(): Theme {
+  if (typeof document !== 'undefined') {
+    const attr = document.documentElement.getAttribute('data-theme')
+    if (attr === 'light' || attr === 'dark') return attr
+  }
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {}
+  return 'dark'
+}
+
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('nucleusx-theme')
-    return (stored === 'light' || stored === 'dark') ? stored : 'dark'
-  })
+  const [theme, setTheme] = useState<Theme>(readInitial)
 
   useEffect(() => {
     const root = document.documentElement
     root.setAttribute('data-theme', theme)
     root.classList.remove('dark', 'light')
     root.classList.add(theme)
-    localStorage.setItem('nucleusx-theme', theme)
+    try { localStorage.setItem(STORAGE_KEY, theme) } catch {}
   }, [theme])
 
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark')
+  const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
 
-  return { theme, toggleTheme }
+  return { theme, toggleTheme, setTheme }
 }

@@ -13,30 +13,43 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
-      <div className="relative w-full max-w-md border-2 border-[#2D0A5B] bg-[#0A0A0A] overflow-hidden">
-        <div className="p-5 border-b border-[#2D0A5B] flex items-center justify-between">
-          <h3 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Settings</h3>
-          <button onClick={onClose} className="p-1 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150">
-            <X className="w-5 h-5" />
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'color-mix(in srgb, var(--ncx-ink-0) 72%, transparent)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        onClick={onClose}
+      />
+      <div
+        className="relative w-full sm:max-w-md ncx-modal rounded-t-2xl sm:rounded-3xl"
+        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)' }}
+      >
+        <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-ncx-border">
+          <h3 className="text-base font-semibold text-ncx-text">Settings</h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full text-ncx-text-subtle hover:text-ncx-text hover:bg-ncx-wash transition-all duration-150"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-6 space-y-6">
+
+        <div className="p-5 space-y-6">
           <div className="space-y-3">
-            <label className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
-              Slippage Tolerance
+            <label className="ncx-num block text-[10px] uppercase tracking-[0.14em] text-ncx-text-muted">
+              Slippage tolerance
             </label>
             <div className="flex items-center gap-2">
               {['0.1', '0.5', '1.0'].map(val => (
                 <button
                   key={val}
                   onClick={() => swapSettings.set({ ...swapSettings.get(), slippage: val })}
-                  className={`flex-1 py-2 text-sm font-bold uppercase tracking-widest transition-colors duration-150 ${
+                  className={`flex-1 py-2 rounded-full text-sm font-medium transition-all duration-150 ${
                     slippage === val
-                      ? 'bg-[#7B3FE4] text-[#F2F2F2]'
-                      : 'border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:bg-[#2D0A5B] hover:text-[#F2F2F2]'
+                      ? 'bg-ncx-purple-500 text-white'
+                      : 'border border-ncx-border text-ncx-text-muted hover:border-ncx-purple-500 hover:text-ncx-text hover:bg-ncx-wash'
                   }`}
+                  style={slippage !== val ? { background: 'var(--ncx-surface-2)' } : undefined}
                 >
                   {val}%
                 </button>
@@ -46,16 +59,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   type="text"
                   value={slippage}
                   onChange={e => swapSettings.set({ ...swapSettings.get(), slippage: e.target.value })}
-                  className="w-full bg-transparent border border-[#2D0A5B] py-2 px-3 pr-6 text-right text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] font-bold text-sm transition-colors duration-150"
+                  className="ncx-input pr-7 text-right"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A1A1] font-bold text-sm">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-ncx-text-muted text-sm">%</span>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3 border-t border-[#2D0A5B] pt-6">
-            <label className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
-              Transaction Deadline
+          <div className="space-y-3 border-t border-ncx-border pt-5">
+            <label className="ncx-num block text-[10px] uppercase tracking-[0.14em] text-ncx-text-muted">
+              Transaction deadline
             </label>
             <div className="flex items-center gap-3">
               <div className="relative">
@@ -63,9 +76,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   type="text"
                   value={deadline}
                   onChange={e => swapSettings.set({ ...swapSettings.get(), deadline: e.target.value })}
-                  className="w-24 bg-transparent border border-[#2D0A5B] py-2 px-3 pr-8 text-right text-[#F2F2F2] focus:outline-none focus:border-[#7B3FE4] font-bold text-sm transition-colors duration-150"
+                  className="ncx-input w-28 pr-9 text-right"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A1A1A1] text-xs font-bold uppercase">m</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-ncx-text-muted ncx-num text-xs uppercase">min</span>
               </div>
             </div>
           </div>

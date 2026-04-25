@@ -2,134 +2,417 @@
 @plugin "@iconify/tailwind4";
 @plugin "daisyui";
 
+/* ───────────────────────────────────────────────────────────────
+   NUCLEUSX DESIGN TOKENS
+   v1 — Organic, cozy, cryptonative. Dark-primary, light supported.
+─────────────────────────────────────────────────────────────── */
+
 @theme {
-  --color-brutalist-bg: var(--brutalist-bg);
-  --color-brutalist-surface: var(--brutalist-surface);
-  --color-brutalist-text: var(--brutalist-text);
-  --color-brutalist-text-muted: var(--brutalist-text-muted);
-  --color-brutalist-accent: var(--brutalist-accent);
-  --color-brutalist-teal: #00BFB2;
-  --color-brutalist-orange: #EE8434;
-  --color-brutalist-hover: var(--brutalist-hover);
-  --color-brutalist-panel: var(--brutalist-panel);
-  --color-brutalist-panel-text: var(--brutalist-panel-text);
-  --color-brutalist-input-bg: var(--brutalist-input-bg);
+  --color-ncx-purple-50:  #F3EBFF;
+  --color-ncx-purple-100: #E4D4FF;
+  --color-ncx-purple-200: #C9A9FF;
+  --color-ncx-purple-300: #A97CFA;
+  --color-ncx-purple-400: #8F55F0;
+  --color-ncx-purple-500: #7B3FE4;
+  --color-ncx-purple-600: #6A2FD1;
+  --color-ncx-purple-700: #4E1FA8;
+  --color-ncx-purple-800: #2D0A5B;
+  --color-ncx-purple-900: #1A0538;
+  --color-ncx-purple-950: #0E0121;
+
+  --color-ncx-bg:        var(--ncx-bg);
+  --color-ncx-surface:   var(--ncx-surface);
+  --color-ncx-surface-2: var(--ncx-surface-2);
+  --color-ncx-surface-3: var(--ncx-surface-3);
+  --color-ncx-text:      var(--ncx-text);
+  --color-ncx-text-muted:var(--ncx-text-muted);
+  --color-ncx-text-subtle:var(--ncx-text-subtle);
+  --color-ncx-border:    var(--ncx-border);
+  --color-ncx-border-strong: var(--ncx-border-strong);
+  --color-ncx-wash:      var(--ncx-wash);
+  --color-ncx-wash-strong: var(--ncx-wash-strong);
+
+  --color-ncx-gain: #34D399;
+  --color-ncx-loss: #F87171;
+  --color-ncx-warn: #F59E0B;
+  --color-ncx-info: #60A5FA;
+
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-pill: 999px;
+  --radius-blob: 62% 38% 47% 53% / 55% 45% 55% 45%;
 }
 
-/* Dark mode (default) */
-:root, .dark {
-  --brutalist-bg: #1c1c1e;
-  --brutalist-surface: #252528;
-  --brutalist-text: #e8e8e4;
-  --brutalist-text-muted: #8c8c8c;
-  --brutalist-accent: #A855F7;
-  --brutalist-hover: #2e2a3a;
-  --brutalist-panel: #e8e8e4;
-  --brutalist-panel-text: #121212;
-  --brutalist-input-bg: #e8e8e4;
-  --brutalist-shadow-accent: rgba(168, 85, 247, 0.8);
-  --brutalist-accent-10: rgba(168, 85, 247, 0.1);
-  --brutalist-teal-10: rgba(0, 191, 178, 0.1);
-  --brutalist-orange-10: rgba(238, 132, 52, 0.1);
-  --bento-border: 4px solid #000;
+/* ── Theme: dark (default) ── */
+:root, [data-theme="dark"] {
+  --ncx-purple-50:  #F3EBFF;
+  --ncx-purple-100: #E4D4FF;
+  --ncx-purple-200: #C9A9FF;
+  --ncx-purple-300: #A97CFA;
+  --ncx-purple-400: #8F55F0;
+  --ncx-purple-500: #7B3FE4;
+  --ncx-purple-600: #6A2FD1;
+  --ncx-purple-700: #4E1FA8;
+  --ncx-purple-800: #2D0A5B;
+  --ncx-purple-900: #1A0538;
+  --ncx-purple-950: #0E0121;
+
+  --ncx-ink-0:   #07060B;
+  --ncx-ink-50:  #0D0B14;
+  --ncx-ink-100: #13101C;
+  --ncx-ink-200: #1B1726;
+  --ncx-ink-300: #251F34;
+  --ncx-ink-400: #342C46;
+  --ncx-ink-500: #4D4361;
+  --ncx-ink-600: #6B6181;
+  --ncx-ink-700: #8F86A6;
+  --ncx-ink-800: #BFB7D1;
+  --ncx-ink-900: #E8E4F0;
+  --ncx-ink-1000:#FAF8FF;
+
+  --ncx-gain:    #34D399;
+  --ncx-gain-bg: rgba(52, 211, 153, 0.12);
+  --ncx-loss:    #F87171;
+  --ncx-loss-bg: rgba(248, 113, 113, 0.12);
+  --ncx-warn:    #F59E0B;
+  --ncx-warn-bg: rgba(245, 158, 11, 0.12);
+  --ncx-info:    #60A5FA;
+  --ncx-info-bg: rgba(96, 165, 250, 0.12);
+
+  --ncx-bg:           var(--ncx-ink-50);
+  --ncx-surface:      var(--ncx-ink-100);
+  --ncx-surface-2:    var(--ncx-ink-200);
+  --ncx-surface-3:    var(--ncx-ink-300);
+  --ncx-border:       rgba(255, 255, 255, 0.06);
+  --ncx-border-strong:rgba(255, 255, 255, 0.12);
+  --ncx-text:         var(--ncx-ink-900);
+  --ncx-text-muted:   var(--ncx-ink-700);
+  --ncx-text-subtle:  var(--ncx-ink-600);
+
+  --ncx-wash:         rgba(123, 63, 228, 0.06);
+  --ncx-wash-strong:  rgba(123, 63, 228, 0.12);
+
+  --ncx-r-xs:  6px;
+  --ncx-r-sm:  10px;
+  --ncx-r-md:  16px;
+  --ncx-r-lg:  22px;
+  --ncx-r-xl:  32px;
+  --ncx-r-2xl: 44px;
+  --ncx-r-pill: 999px;
+  --ncx-r-blob-a: 62% 38% 47% 53% / 55% 45% 55% 45%;
+  --ncx-r-blob-b: 38% 62% 53% 47% / 45% 55% 45% 55%;
+  --ncx-r-blob-c: 52% 48% 38% 62% / 60% 40% 60% 40%;
+
+  --ncx-shadow-xs: 0 1px 2px rgba(14, 1, 33, 0.4);
+  --ncx-shadow-sm: 0 2px 8px rgba(14, 1, 33, 0.35);
+  --ncx-shadow-md: 0 8px 24px rgba(14, 1, 33, 0.45), 0 2px 4px rgba(14, 1, 33, 0.3);
+  --ncx-shadow-lg: 0 20px 48px rgba(14, 1, 33, 0.55), 0 4px 12px rgba(14, 1, 33, 0.35);
+  --ncx-shadow-xl: 0 32px 80px rgba(14, 1, 33, 0.6), 0 8px 20px rgba(14, 1, 33, 0.4);
+  --ncx-glow-sm:   0 0 0 1px rgba(169, 124, 250, 0.25), 0 8px 24px rgba(123, 63, 228, 0.25);
+  --ncx-glow-md:   0 0 0 1px rgba(169, 124, 250, 0.3),  0 16px 48px rgba(123, 63, 228, 0.35);
+
+  --ncx-ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ncx-ease-in:    cubic-bezier(0.7, 0, 0.84, 0);
+  --ncx-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --ncx-ease-bounce:cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ncx-dur-fast:   120ms;
+  --ncx-dur-base:   200ms;
+  --ncx-dur-slow:   420ms;
+
+  color-scheme: dark;
 }
 
-/* Light mode */
-.light {
-  --brutalist-bg: #e8e8e4;
-  --brutalist-surface: #f5f0eb;
-  --brutalist-text: #121212;
-  --brutalist-text-muted: #6b6b6b;
-  --brutalist-accent: #A855F7;
-  --brutalist-hover: #f0e8ff;
-  --brutalist-panel: #ffffff;
-  --brutalist-panel-text: #121212;
-  --brutalist-input-bg: #ffffff;
-  --brutalist-shadow-accent: rgba(168, 85, 247, 0.5);
-  --brutalist-accent-10: rgba(168, 85, 247, 0.08);
-  --brutalist-teal-10: rgba(0, 191, 178, 0.08);
-  --brutalist-orange-10: rgba(238, 132, 52, 0.08);
-  --bento-border: 4px solid #000;
+/* ── Theme: light ── */
+[data-theme="light"] {
+  --ncx-bg:           #FAF8FF;
+  --ncx-surface:      #FFFFFF;
+  --ncx-surface-2:    #F3EEFA;
+  --ncx-surface-3:    #E8DFF5;
+  --ncx-border:       rgba(45, 10, 91, 0.08);
+  --ncx-border-strong:rgba(45, 10, 91, 0.16);
+  --ncx-text:         #1A0538;
+  --ncx-text-muted:   #6A5E85;
+  --ncx-text-subtle:  #9488AF;
+  --ncx-wash:         rgba(123, 63, 228, 0.08);
+  --ncx-wash-strong:  rgba(123, 63, 228, 0.15);
+
+  --ncx-ink-0:   #FFFFFF;
+  --ncx-ink-50:  #FAF8FF;
+  --ncx-ink-100: #FFFFFF;
+  --ncx-ink-200: #F3EEFA;
+  --ncx-ink-300: #E8DFF5;
+  --ncx-ink-400: #D6C9EC;
+  --ncx-ink-500: #B7A5D6;
+  --ncx-ink-600: #9488AF;
+  --ncx-ink-700: #6A5E85;
+  --ncx-ink-800: #3D2E66;
+  --ncx-ink-900: #1A0538;
+  --ncx-ink-1000:#0E0121;
+
+  --ncx-shadow-xs: 0 1px 2px rgba(45, 10, 91, 0.06);
+  --ncx-shadow-sm: 0 2px 8px rgba(45, 10, 91, 0.08);
+  --ncx-shadow-md: 0 8px 24px rgba(45, 10, 91, 0.10), 0 2px 4px rgba(45, 10, 91, 0.04);
+  --ncx-shadow-lg: 0 20px 48px rgba(45, 10, 91, 0.14), 0 4px 12px rgba(45, 10, 91, 0.06);
+  --ncx-shadow-xl: 0 32px 80px rgba(45, 10, 91, 0.18), 0 8px 20px rgba(45, 10, 91, 0.08);
+  --ncx-glow-sm:   0 0 0 1px rgba(123, 63, 228, 0.20), 0 8px 24px rgba(123, 63, 228, 0.15);
+  --ncx-glow-md:   0 0 0 1px rgba(123, 63, 228, 0.25), 0 16px 48px rgba(123, 63, 228, 0.20);
+
+  color-scheme: light;
 }
 
 @plugin "daisyui" {
   themes: dark --default, light;
 }
 
-.container {
-  max-width: 1400px;
+/* ── Base ── */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--ncx-bg);
+  color: var(--ncx-text);
+  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color 320ms var(--ncx-ease-out), color 320ms var(--ncx-ease-out);
 }
 
-/* --- SURREAL BRUTALIST UTILITIES --- */
+.container { max-width: 1400px; }
 
-@utility bento-box {
-  @apply border-[3px] border-black bg-brutalist-panel text-brutalist-panel-text overflow-hidden relative rounded-xl shadow-[6px_6px_0px_#000];
+/* Tabular numerics helper */
+.ncx-num {
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
-@utility bento-box-dark {
-  @apply border-[3px] border-black bg-brutalist-surface text-brutalist-text overflow-hidden relative rounded-xl shadow-[8px_8px_0px_var(--brutalist-shadow-accent)];
+/* Subtle grid pattern (ambient, not loud) */
+.ncx-grid-bg {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ncx-purple-300) 10%, transparent) 1px, transparent 0);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at top, black 20%, transparent 75%);
 }
 
-@utility btn-brutal {
-  @apply border-[3px] border-black bg-brutalist-accent text-black font-black uppercase px-6 py-3 transition-all duration-75 relative rounded-none hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] active:translate-x-0 active:translate-y-0 active:shadow-none;
+/* ── Buttons ── */
+@utility btn-ncx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--ncx-r-pill);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+  letter-spacing: -0.005em;
+  transition: all var(--ncx-dur-base) var(--ncx-ease-out);
 }
 
-@utility hover-jitter {
-  transition: transform 0.1s step-end 0.1s;
-}
-.hover-jitter:hover {
-  transform: translate(2px, -3px) rotate(-1deg);
-}
-
-@utility font-brutal {
-  font-family: ui-monospaced, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  letter-spacing: -0.05em;
-  font-weight: 900;
+@utility btn-ncx-primary {
+  background: var(--ncx-purple-500);
+  color: #fff;
+  box-shadow: var(--ncx-glow-sm);
 }
 
-@utility noise-overlay {
-  @apply absolute inset-0 pointer-events-none mix-blend-overlay opacity-40 z-0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+@utility btn-ncx-secondary {
+  background: var(--ncx-surface-2);
+  color: var(--ncx-text);
+  border: 1px solid var(--ncx-border-strong);
 }
 
-@utility input-brutal {
-  @apply w-full bg-transparent text-3xl font-black text-brutalist-panel-text focus:outline-none placeholder:text-brutalist-text-muted/50 font-mono;
+@utility btn-ncx-ghost {
+  background: transparent;
+  color: var(--ncx-text-muted);
 }
 
-@utility input-container-brutal {
-  @apply bg-brutalist-input-bg border-2 border-black p-4 relative;
+@utility btn-ncx-danger {
+  background: var(--ncx-loss-bg);
+  color: var(--ncx-loss);
+  border: 1px solid color-mix(in srgb, var(--ncx-loss) 30%, transparent);
 }
 
-@utility input-container-brutal-dark {
-  @apply bg-brutalist-bg border-2 border-brutalist-text-muted p-4 relative;
+.btn-ncx-primary:hover:not(:disabled) {
+  background: var(--ncx-purple-400);
+  box-shadow: var(--ncx-glow-md);
+  transform: translateY(-1px);
+}
+.btn-ncx-secondary:hover:not(:disabled) {
+  background: var(--ncx-surface-3);
+  border-color: var(--ncx-purple-600);
+}
+.btn-ncx-ghost:hover:not(:disabled) {
+  background: var(--ncx-wash);
+  color: var(--ncx-text);
+}
+.btn-ncx:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-@utility panel-brutal {
-  @apply border-[3px] border-black bg-brutalist-panel text-brutalist-panel-text overflow-hidden relative shadow-[6px_6px_0px_#000];
+/* ── Surface / card ── */
+@utility ncx-card {
+  background: var(--ncx-surface);
+  border: 1px solid var(--ncx-border);
+  border-radius: var(--ncx-r-lg);
 }
 
-@utility panel-brutal-dark {
-  @apply border-[3px] border-black bg-brutalist-surface text-brutalist-text overflow-hidden relative shadow-[6px_6px_0px_var(--brutalist-shadow-accent)];
+@utility ncx-card-soft {
+  background: var(--ncx-surface);
+  border: 1px solid var(--ncx-border);
+  border-radius: var(--ncx-r-xl);
+  box-shadow: var(--ncx-shadow-sm);
 }
 
-@utility th-brutal {
-  @apply p-4 font-black uppercase text-xs tracking-widest text-brutalist-text-muted border-b-[3px] border-black;
+/* ── Chip / pill ── */
+@utility ncx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--ncx-r-pill);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  background: var(--ncx-wash);
+  color: var(--ncx-purple-300);
+  border: 1px solid color-mix(in srgb, var(--ncx-purple-500) 25%, transparent);
 }
 
-@utility td-brutal {
-  @apply p-4 font-bold text-sm border-b-2 border-black/20;
+/* ── Input ── */
+@utility ncx-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--ncx-r-md);
+  background: var(--ncx-surface-2);
+  border: 1px solid var(--ncx-border);
+  color: var(--ncx-text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9375rem;
+  transition: all var(--ncx-dur-base) var(--ncx-ease-out);
+}
+.ncx-input:focus {
+  outline: none;
+  border-color: var(--ncx-purple-400);
+  box-shadow: var(--ncx-glow-sm);
+}
+.ncx-input::placeholder { color: var(--ncx-text-subtle); }
+
+/* ── Backdrop / modal ── */
+@utility ncx-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ncx-ink-0) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
 }
 
-@utility backdrop-brutal {
-  @apply fixed inset-0 bg-black/80 z-100;
+@utility ncx-modal {
+  background: var(--ncx-surface);
+  border: 1px solid var(--ncx-border-strong);
+  border-radius: var(--ncx-r-lg);
+  box-shadow: var(--ncx-shadow-xl);
+  overflow: hidden;
 }
 
-@keyframes flash-highlight {
-  0% { background-color: rgba(0, 191, 178, 0.3); transform: scale(1.05); }
-  100% { background-color: transparent; transform: scale(1); }
+/* ── Animations ── */
+@keyframes ncx-shimmer {
+  to { background-position: -200% 0; }
+}
+@keyframes ncx-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.8); }
+}
+@keyframes ncx-ring-pulse {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.3; transform: translate(-50%, -50%) scale(1.05); }
+}
+@keyframes ncx-ring-pulse-2 {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.2; transform: translate(-50%, -50%) scale(1.04); }
+}
+@keyframes ncx-blob-drift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); border-radius: var(--ncx-r-blob-a); }
+  33%      { transform: translate(20px, -30px) rotate(8deg); border-radius: var(--ncx-r-blob-b); }
+  66%      { transform: translate(-20px, 20px) rotate(-6deg); border-radius: var(--ncx-r-blob-c); }
+}
+@keyframes ncx-spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes ncx-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.block-highlight {
-  animation: flash-highlight 1s ease-out;
+.ncx-shimmer {
+  background: linear-gradient(105deg, var(--ncx-purple-300) 0%, var(--ncx-ink-1000) 60%, var(--ncx-purple-300) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ncx-shimmer 8s linear infinite;
+}
+
+.ncx-blob-loader {
   display: inline-block;
+  background: var(--ncx-purple-500);
+  border-radius: var(--ncx-r-blob-a);
+  animation: ncx-blob-drift 1.4s ease-in-out infinite, ncx-spin-slow 3s linear infinite;
+}
+
+/* ── Scroll-driven reveal (native, falls back to still-visible) ── */
+.ncx-reveal { opacity: 1; transform: none; }
+
+@supports (animation-timeline: view()) {
+  .ncx-reveal {
+    animation: ncx-reveal-kf linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 28%;
+  }
+  .ncx-reveal-sm {
+    animation: ncx-reveal-sm-kf linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 30%;
+  }
+  .ncx-fade-edges {
+    animation: ncx-fade-edges-kf linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
+  @keyframes ncx-reveal-kf {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ncx-reveal-sm-kf {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes ncx-fade-edges-kf {
+    0%, 100% { opacity: 0.2; }
+    20%, 80% { opacity: 1; }
+  }
+}
+
+/* Full-bleed helper — breaks out of any max-width parent. Parent needs overflow-x:hidden. */
+@utility full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

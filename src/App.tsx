@@ -24,10 +24,11 @@ function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F2F2F2] flex flex-col" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="min-h-screen bg-ncx-bg text-ncx-text flex flex-col font-sans relative overflow-x-hidden">
+      <div className="ncx-grid-bg" aria-hidden="true" />
       <Header />
       <Toaster />
-      <main className="grow w-full max-w-360 mx-auto px-4 sm:px-6 py-8">
+      <main className="grow w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-8 relative z-[1]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/swap" element={<Swap />} />

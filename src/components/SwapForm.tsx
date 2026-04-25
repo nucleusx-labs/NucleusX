@@ -45,7 +45,6 @@ export default function SwapForm() {
     account?.address,
   )
 
-  // Debounced quote fetch
   const quoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (quoteTimerRef.current) clearTimeout(quoteTimerRef.current)
@@ -68,7 +67,6 @@ export default function SwapForm() {
     }
   }, [payAmount, payToken?.address, receiveToken?.address])
 
-  // Sync quote result to receive input
   useEffect(() => {
     if (quote) {
       setReceiveAmount(quote.amountOutFormatted)
@@ -126,10 +124,10 @@ export default function SwapForm() {
 
   function getButtonLabel() {
     if (!account) return 'Connect Wallet'
-    if (isCheckingAllowance) return 'Checking Allowance...'
-    if (isApproving) return 'Approving...'
-    if (isSwapping) return 'Swapping...'
-    if (isQuoting) return 'Fetching Quote...'
+    if (isCheckingAllowance) return 'Checking Allowance…'
+    if (isApproving) return 'Approving…'
+    if (isSwapping) return 'Swapping…'
+    if (isQuoting) return 'Fetching Quote…'
     if (!payToken || !receiveToken) return 'Select Tokens'
     if (!payAmount) return 'Enter Amount'
     if (hasInsufficientBalance) return `Insufficient ${payToken.symbol}`
@@ -143,130 +141,159 @@ export default function SwapForm() {
   }
 
   return (
-    <div className="w-full max-w-md border-2 border-[#2D0A5B] p-6 bg-[#0A0A0A]">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Swap</h2>
+    <div
+      className="w-full max-w-md ncx-card-soft p-5 relative overflow-visible"
+      style={{ boxShadow: 'var(--ncx-shadow-md)' }}
+    >
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-lg font-semibold text-ncx-text">Swap</h2>
         <button
           onClick={() => setIsSettingsOpen(true)}
-          className="p-2 text-[#A1A1A1] hover:text-[#F2F2F2] transition-colors duration-150"
+          className="p-2 rounded-full text-ncx-text-subtle hover:text-ncx-text hover:bg-ncx-wash transition-all duration-200"
+          aria-label="Swap settings"
         >
-          <Settings className="w-5 h-5" />
+          <Settings className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="space-y-2">
-        {/* Pay Input */}
-        <div className="border border-[#2D0A5B] p-4">
-          <div className="flex justify-between mb-3">
-            <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">You Pay</span>
-            {payToken && (
-              <span className="text-[#A1A1A1] text-xs font-bold">
-                Balance: {balances.get(payToken.address.toLowerCase())?.formatted ?? '—'}
-              </span>
-            )}
+      {/* ── Pay box ── */}
+      <div
+        className="rounded-2xl p-4 border transition-colors duration-200 focus-within:border-ncx-purple-400"
+        style={{ background: 'var(--ncx-surface-2)', borderColor: 'var(--ncx-border)' }}
+      >
+        <div className="flex justify-between mb-2 ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-muted">
+          <span>You pay</span>
+          {payToken && (
+            <span>Balance: {balances.get(payToken.address.toLowerCase())?.formatted ?? '—'}</span>
+          )}
+        </div>
+        <div className="flex justify-between items-center gap-3">
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0.0"
+            className="bg-transparent ncx-num text-3xl font-medium text-ncx-text focus:outline-none placeholder:text-ncx-text-subtle/50 w-full min-w-0 tracking-tight"
+            value={payAmount}
+            onChange={e => setPayAmount(e.target.value)}
+          />
+          <div className="shrink-0">
+            <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} balances={balances} />
           </div>
-          <div className="flex justify-between items-center gap-4">
+        </div>
+        {payToken && payBalance && payBalance.balance > 0n && (
+          <div className="flex gap-1.5 mt-3">
+            {[10, 25, 50, 100].map(pct => (
+              <button
+                key={pct}
+                type="button"
+                onClick={() => setPercent(pct)}
+                className="flex-1 py-1.5 rounded-full ncx-num text-[10px] uppercase tracking-[0.1em] text-ncx-text-muted border transition-all duration-200 hover:text-ncx-purple-300 hover:bg-ncx-wash"
+                style={{ background: 'var(--ncx-surface-3)', borderColor: 'var(--ncx-border)' }}
+              >
+                {pct === 100 ? 'Max' : `${pct}%`}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Flip ── */}
+      <div className="flex justify-center -my-2.5 relative z-10">
+        <button
+          onClick={handleSwapTokens}
+          aria-label="Flip tokens"
+          className="w-10 h-10 rounded-full grid place-items-center transition-all duration-200 group"
+          style={{
+            background: 'var(--ncx-surface-3)',
+            border: '3px solid var(--ncx-surface)',
+            color: 'var(--ncx-purple-300)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--ncx-purple-500)'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--ncx-surface-3)'
+            e.currentTarget.style.color = 'var(--ncx-purple-300)'
+          }}
+        >
+          <ArrowDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
+        </button>
+      </div>
+
+      {/* ── Receive box ── */}
+      <div
+        className="rounded-2xl p-4 border"
+        style={{ background: 'var(--ncx-surface-2)', borderColor: 'var(--ncx-border)' }}
+      >
+        <div className="flex justify-between mb-2 ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-muted">
+          <span>You receive</span>
+          {receiveToken && (
+            <span>Balance: {balances.get(receiveToken.address.toLowerCase())?.formatted ?? '—'}</span>
+          )}
+        </div>
+        <div className="flex justify-between items-center gap-3">
+          <div className="relative w-full min-w-0">
             <input
               type="text"
               placeholder="0.0"
-              className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
-              value={payAmount}
-              onChange={e => setPayAmount(e.target.value)}
+              className="bg-transparent ncx-num text-3xl font-medium text-ncx-text focus:outline-none placeholder:text-ncx-text-subtle/50 w-full tracking-tight"
+              value={receiveAmount}
+              readOnly
             />
-            <div className="shrink-0">
-              <TokenSelector selectedToken={payToken} onSelectToken={setPayToken} balances={balances} />
-            </div>
-          </div>
-          {payToken && payBalance && payBalance.balance > 0n && (
-            <div className="flex gap-2 mt-3">
-              {[10, 25, 50, 100].map(pct => (
-                <button
-                  key={pct}
-                  type="button"
-                  onClick={() => setPercent(pct)}
-                  className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
-                >
-                  {pct === 100 ? 'Max' : `${pct}%`}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Swap Arrow Button */}
-        <div className="flex justify-center -my-1 relative z-10">
-          <button
-            onClick={handleSwapTokens}
-            className="p-2 bg-[#2D0A5B] text-[#7B3FE4] hover:bg-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 group"
-          >
-            <ArrowDown className="w-5 h-5 group-hover:rotate-180 transition-transform duration-150" />
-          </button>
-        </div>
-
-        {/* Receive Input */}
-        <div className="border border-[#2D0A5B] p-4">
-          <div className="flex justify-between mb-3">
-            <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">You Receive</span>
-            {receiveToken && (
-              <span className="text-[#A1A1A1] text-xs font-bold">
-                Balance: {balances.get(receiveToken.address.toLowerCase())?.formatted ?? '—'}
-              </span>
+            {isQuoting && (
+              <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-ncx-purple-300 animate-spin" />
             )}
           </div>
-          <div className="flex justify-between items-center gap-4">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="0.0"
-                className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
-                value={receiveAmount}
-                readOnly
-              />
-              {isQuoting && (
-                <Loader2 className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7B3FE4] animate-spin" />
-              )}
-            </div>
-            <div className="shrink-0">
-              <TokenSelector selectedToken={receiveToken} onSelectToken={setReceiveToken} balances={balances} />
-            </div>
+          <div className="shrink-0">
+            <TokenSelector selectedToken={receiveToken} onSelectToken={setReceiveToken} balances={balances} />
           </div>
         </div>
       </div>
 
-      {/* Quote info */}
+      {/* ── Quote info footer ── */}
       {quote && payToken && receiveToken && (
-        <div className="mt-3 px-1 flex justify-between text-xs text-[#A1A1A1] font-bold uppercase tracking-wider">
-          <span>Min. Received</span>
-          <span>
-            {(Number(quote.amountOutMin) / 10 ** receiveToken.decimals).toFixed(6)}
-            {' '}
-            {receiveToken.symbol}
-          </span>
+        <div
+          className="mt-3 p-3 rounded-2xl text-[12px] leading-relaxed text-ncx-text-muted"
+          style={{ background: 'var(--ncx-wash)' }}
+        >
+          <div className="flex justify-between py-0.5">
+            <span>Min received · slippage</span>
+            <span className="ncx-num text-ncx-text">
+              {(Number(quote.amountOutMin) / 10 ** receiveToken.decimals).toFixed(6)} {receiveToken.symbol}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Swap Button */}
-      <div className="mt-4">
-        <button
-          onClick={handleSwap}
-          disabled={!canSwap}
-          className="w-full py-4 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
-          {getButtonLabel()}
-        </button>
-      </div>
+      {/* ── CTA ── */}
+      <button
+        onClick={handleSwap}
+        disabled={!canSwap}
+        className="btn-ncx btn-ncx-primary w-full mt-3.5"
+        style={{ padding: '0.95rem 1.25rem', fontSize: '0.9375rem' }}
+      >
+        {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+        {getButtonLabel()}
+      </button>
 
-      {/* Error */}
+      {/* ── Error ── */}
       {error && (
-        <div className="mt-3 p-3 border border-red-800 bg-red-950/30 text-red-400 text-xs font-bold uppercase tracking-wider">
+        <div
+          className="mt-3 p-3 rounded-2xl text-xs"
+          style={{ background: 'var(--ncx-loss-bg)', color: 'var(--ncx-loss)', border: '1px solid color-mix(in srgb, var(--ncx-loss) 30%, transparent)' }}
+        >
           {error}
         </div>
       )}
 
-      {/* Success */}
+      {/* ── Success ── */}
       {txHash && !isProcessing && (
-        <div className="mt-3 p-3 border border-[#2D0A5B] bg-[#2D0A5B]/20 text-[#7B3FE4] text-xs font-bold uppercase tracking-wider break-all">
+        <div
+          className="mt-3 p-3 rounded-2xl ncx-num text-[11px] break-all"
+          style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', border: '1px solid color-mix(in srgb, var(--ncx-gain) 30%, transparent)' }}
+        >
           Tx: {txHash}
         </div>
       )}

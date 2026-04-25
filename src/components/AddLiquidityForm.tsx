@@ -159,22 +159,24 @@ export default function AddLiquidityForm() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Token A input */}
-      <div className="border border-[#2D0A5B] p-4">
-        <div className="flex justify-between mb-3">
-          <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
+      <div
+        className="rounded-2xl p-4 border transition-colors duration-200 focus-within:border-ncx-purple-400"
+        style={{ background: 'var(--ncx-surface-2)', borderColor: 'var(--ncx-border)' }}
+      >
+        <div className="flex justify-between mb-2 ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-muted">
+          <span>Deposit</span>
           {tokenA && (
-            <span className="text-[#A1A1A1] text-xs font-bold">
-              Balance: {balances.get(tokenA.address.toLowerCase())?.formatted ?? '—'}
-            </span>
+            <span>Balance: {balances.get(tokenA.address.toLowerCase())?.formatted ?? '—'}</span>
           )}
         </div>
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex justify-between items-center gap-3">
           <input
             type="text"
+            inputMode="decimal"
             placeholder="0.0"
-            className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
+            className="bg-transparent ncx-num text-2xl font-medium text-ncx-text focus:outline-none placeholder:text-ncx-text-subtle/50 w-full min-w-0 tracking-tight"
             value={amountA}
             onChange={e => handleAmountAChange(e.target.value)}
           />
@@ -183,13 +185,14 @@ export default function AddLiquidityForm() {
           </div>
         </div>
         {tokenA && (balances.get(tokenA.address.toLowerCase())?.balance ?? 0n) > 0n && (
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-1.5 mt-3">
             {[25, 50, 75, 100].map(pct => (
               <button
                 key={pct}
                 type="button"
                 onClick={() => setPercent(tokenA, handleAmountAChange, pct)}
-                className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
+                className="flex-1 py-1.5 rounded-full ncx-num text-[10px] uppercase tracking-[0.1em] text-ncx-text-muted border transition-all duration-200 hover:text-ncx-purple-300 hover:bg-ncx-wash"
+                style={{ background: 'var(--ncx-surface-3)', borderColor: 'var(--ncx-border)' }}
               >
                 {pct === 100 ? 'Max' : `${pct}%`}
               </button>
@@ -198,27 +201,32 @@ export default function AddLiquidityForm() {
         )}
       </div>
 
-      <div className="flex justify-center -my-2 relative z-10">
-        <div className="bg-[#2D0A5B] p-2 text-[#7B3FE4]">
+      <div className="flex justify-center -my-1.5 relative z-10">
+        <div
+          className="w-9 h-9 rounded-full grid place-items-center text-ncx-purple-300"
+          style={{ background: 'var(--ncx-surface-3)', border: '3px solid var(--ncx-surface)' }}
+        >
           <Plus className="w-4 h-4" />
         </div>
       </div>
 
       {/* Token B input */}
-      <div className="border border-[#2D0A5B] p-4">
-        <div className="flex justify-between mb-3">
-          <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">Deposit Amount</span>
+      <div
+        className="rounded-2xl p-4 border transition-colors duration-200 focus-within:border-ncx-purple-400"
+        style={{ background: 'var(--ncx-surface-2)', borderColor: 'var(--ncx-border)' }}
+      >
+        <div className="flex justify-between mb-2 ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-muted">
+          <span>Deposit</span>
           {tokenB && (
-            <span className="text-[#A1A1A1] text-xs font-bold">
-              Balance: {balances.get(tokenB.address.toLowerCase())?.formatted ?? '—'}
-            </span>
+            <span>Balance: {balances.get(tokenB.address.toLowerCase())?.formatted ?? '—'}</span>
           )}
         </div>
-        <div className="flex justify-between items-center gap-4">
+        <div className="flex justify-between items-center gap-3">
           <input
             type="text"
+            inputMode="decimal"
             placeholder="0.0"
-            className="bg-transparent text-2xl font-bold text-[#F2F2F2] focus:outline-none placeholder:text-[#A1A1A1]/30 w-full"
+            className="bg-transparent ncx-num text-2xl font-medium text-ncx-text focus:outline-none placeholder:text-ncx-text-subtle/50 w-full min-w-0 tracking-tight"
             value={amountB}
             onChange={e => handleAmountBChange(e.target.value)}
           />
@@ -227,13 +235,14 @@ export default function AddLiquidityForm() {
           </div>
         </div>
         {tokenB && (balances.get(tokenB.address.toLowerCase())?.balance ?? 0n) > 0n && (
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-1.5 mt-3">
             {[25, 50, 75, 100].map(pct => (
               <button
                 key={pct}
                 type="button"
                 onClick={() => setPercent(tokenB, handleAmountBChange, pct)}
-                className="flex-1 py-1.5 border border-[#2D0A5B] text-[#A1A1A1] text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#2D0A5B] hover:text-[#F2F2F2] transition-colors duration-150"
+                className="flex-1 py-1.5 rounded-full ncx-num text-[10px] uppercase tracking-[0.1em] text-ncx-text-muted border transition-all duration-200 hover:text-ncx-purple-300 hover:bg-ncx-wash"
+                style={{ background: 'var(--ncx-surface-3)', borderColor: 'var(--ncx-border)' }}
               >
                 {pct === 100 ? 'Max' : `${pct}%`}
               </button>
@@ -243,28 +252,31 @@ export default function AddLiquidityForm() {
       </div>
 
       {tokenA && tokenB && (
-        <div className="border border-[#2D0A5B] p-3">
+        <div
+          className="rounded-2xl p-3.5 border"
+          style={{ background: 'var(--ncx-wash)', borderColor: 'color-mix(in srgb, var(--ncx-purple-500) 20%, transparent)' }}
+        >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[#A1A1A1] text-xs font-bold uppercase tracking-[0.2em]">
-              {isInitialLiquidity ? 'Initial Liquidity' : 'Pool Rate'}
+            <span className="ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-muted">
+              {isInitialLiquidity ? 'Initial liquidity' : 'Pool rate'}
             </span>
-            {pair.isLoading && <Loader2 className="w-4 h-4 text-[#7B3FE4] animate-spin" />}
+            {pair.isLoading && <Loader2 className="w-3.5 h-3.5 text-ncx-purple-300 animate-spin" />}
           </div>
           {isInitialLiquidity ? (
-            <p className="text-[#A1A1A1] text-xs leading-relaxed">
+            <p className="text-ncx-text-muted text-xs leading-relaxed">
               This pair has no liquidity yet. The ratio you provide will set the initial pool price.
             </p>
           ) : (
-            <div className="space-y-2 text-xs font-bold uppercase tracking-wider text-[#A1A1A1]">
+            <div className="space-y-1.5 text-xs">
               <div className="flex justify-between gap-4">
-                <span>1 {tokenA.symbol}</span>
-                <span className="text-[#F2F2F2]">
+                <span className="text-ncx-text-muted">1 {tokenA.symbol}</span>
+                <span className="ncx-num text-ncx-text">
                   {formatRatio(reserveB, reserveA, tokenB.decimals, tokenA.decimals)} {tokenB.symbol}
                 </span>
               </div>
               <div className="flex justify-between gap-4">
-                <span>1 {tokenB.symbol}</span>
-                <span className="text-[#F2F2F2]">
+                <span className="text-ncx-text-muted">1 {tokenB.symbol}</span>
+                <span className="ncx-num text-ncx-text">
                   {formatRatio(reserveA, reserveB, tokenA.decimals, tokenB.decimals)} {tokenA.symbol}
                 </span>
               </div>
@@ -274,20 +286,22 @@ export default function AddLiquidityForm() {
       )}
 
       {/* Supply button */}
-      <div className="pt-4">
-        <button
-          onClick={handleSupply}
-          disabled={!canSupply}
-          className="w-full py-4 bg-[#7B3FE4] text-[#F2F2F2] text-sm font-bold uppercase tracking-widest hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
-          {getButtonLabel()}
-        </button>
-      </div>
+      <button
+        onClick={handleSupply}
+        disabled={!canSupply}
+        className="btn-ncx btn-ncx-primary w-full mt-2"
+        style={{ padding: '0.95rem 1.25rem', fontSize: '0.9375rem' }}
+      >
+        {isProcessing && <Loader2 className="w-4 h-4 animate-spin" />}
+        {getButtonLabel()}
+      </button>
 
       {/* Error */}
       {error && (
-        <div className="p-3 border border-red-800 bg-red-950/30 text-red-400 text-xs font-bold uppercase tracking-wider flex items-start justify-between gap-2">
+        <div
+          className="p-3 rounded-2xl text-xs flex items-start justify-between gap-2"
+          style={{ background: 'var(--ncx-loss-bg)', color: 'var(--ncx-loss)', border: '1px solid color-mix(in srgb, var(--ncx-loss) 30%, transparent)' }}
+        >
           <span>{error}</span>
           <button onClick={reset} className="shrink-0 underline hover:no-underline">Dismiss</button>
         </div>
@@ -295,9 +309,12 @@ export default function AddLiquidityForm() {
 
       {/* Success */}
       {step === 'success' && txHash && (
-        <div className="p-3 border border-[#2D0A5B] bg-[#2D0A5B]/20 text-[#7B3FE4] text-xs font-bold uppercase tracking-wider break-all">
-          <div className="mb-1">Liquidity added</div>
-          <div className="font-mono">{txHash}</div>
+        <div
+          className="p-3 rounded-2xl ncx-num text-[11px] break-all"
+          style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', border: '1px solid color-mix(in srgb, var(--ncx-gain) 30%, transparent)' }}
+        >
+          <div className="font-semibold mb-1">Liquidity added</div>
+          <div>{txHash}</div>
           <button onClick={() => { reset(); setAmountA(''); setAmountB('') }} className="mt-2 underline hover:no-underline">
             Add more
           </button>

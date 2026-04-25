@@ -13,55 +13,51 @@ export default function AccountCard({ chainKey, address }: AccountCardProps) {
   const { name, currentBlock, isConnected } = useCurrentBlock(chainKey)
 
   return (
-    <div className="border-2 border-[#2D0A5B] p-6 hover:bg-[#2D0A5B] transition-colors duration-150">
+    <div className="ncx-card p-6 transition-all duration-300 hover:border-ncx-purple-500/50">
       <div className="flex items-center justify-between mb-5">
-        <h3 className="font-bold uppercase tracking-wider text-[#F2F2F2] text-sm">
-          {name || '---'}
-        </h3>
+        <h3 className="font-semibold text-ncx-text text-sm">{name || '---'}</h3>
         {isConnected && (
-          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#00D084]">
-            <div className="w-2 h-2 rounded-full bg-[#00D084]" />
+          <span className="ncx-chip" style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', borderColor: 'color-mix(in srgb, var(--ncx-gain) 25%, transparent)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-ncx-gain" style={{ animation: 'ncx-pulse-dot 2s ease-in-out infinite' }} />
             Live
-          </div>
+          </span>
         )}
       </div>
 
       <div className="mb-5">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1] mb-1">Current Block</p>
-        <div key={currentBlock} className="font-bold text-[#F2F2F2] font-mono text-lg">
+        <p className="ncx-num text-[10px] uppercase tracking-[0.14em] text-ncx-text-subtle mb-1">Current block</p>
+        <div key={currentBlock} className="ncx-num text-lg text-ncx-text">
           #{currentBlock ? currentBlock.toLocaleString() : '---'}
         </div>
       </div>
 
-      <div className="border-t border-[#2D0A5B] pt-5">
+      <div className="border-t border-ncx-border pt-4">
         {address ? (
           <Balance key={address} address={address} chainKey={chainKey} />
         ) : (
-          <div className="flex flex-col items-center py-3">
-            <span className="icon-[mdi--wallet-plus] text-2xl text-[#A1A1A1] mb-2" />
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
-              Connect wallet for balance
-            </p>
+          <div className="flex flex-col items-center py-3 text-center">
+            <span className="icon-[mdi--wallet-plus] text-2xl text-ncx-text-subtle mb-2" />
+            <p className="text-xs text-ncx-text-muted">Connect a wallet to see balances</p>
           </div>
         )}
       </div>
 
       {address && (
-        <div className="mt-5 border-t border-[#2D0A5B] pt-5 space-y-4">
+        <div className="mt-5 border-t border-ncx-border pt-4 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <a
               href={buyTokenUrl(chainKey, address)}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-2 text-xs font-bold uppercase tracking-widest border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 text-center"
+              className="ncx-num text-[10px] uppercase tracking-[0.12em] px-3 py-2 rounded-full border border-ncx-border bg-ncx-surface-2 text-ncx-text-muted hover:border-ncx-purple-500 hover:text-ncx-text hover:bg-ncx-wash transition-all duration-200 text-center"
             >
-              Get Tokens
+              Get tokens
             </a>
             <a
               href={explorerAccount(chainKey, address)}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3 py-2 text-xs font-bold uppercase tracking-widest border border-[#2D0A5B] text-[#A1A1A1] hover:border-[#7B3FE4] hover:text-[#F2F2F2] transition-colors duration-150 text-center flex items-center justify-center gap-1"
+              className="ncx-num text-[10px] uppercase tracking-[0.12em] px-3 py-2 rounded-full border border-ncx-border bg-ncx-surface-2 text-ncx-text-muted hover:border-ncx-purple-500 hover:text-ncx-text hover:bg-ncx-wash transition-all duration-200 text-center flex items-center justify-center gap-1"
             >
               <span className="icon-[mdi--open-in-new]" />
               Explorer
@@ -70,7 +66,7 @@ export default function AccountCard({ chainKey, address }: AccountCardProps) {
           {isConnected ? (
             <SignTransaction chainKey={chainKey} />
           ) : (
-            <div className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#A1A1A1]">
+            <div className="flex items-center justify-center gap-2 ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-subtle">
               <span className="icon-[mdi--link-off]" />
               Chain not connected
             </div>

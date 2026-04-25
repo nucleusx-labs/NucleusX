@@ -28,72 +28,79 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
   )
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div
+        className="absolute inset-0"
+        style={{ background: 'color-mix(in srgb, var(--ncx-ink-0) 72%, transparent)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        onClick={onClose}
+      />
 
-      <div className="relative w-full max-w-md border-2 border-[#2D0A5B] bg-[#0A0A0A] overflow-hidden flex flex-col max-h-[85vh]">
-        <div className="p-5 border-b border-[#2D0A5B] flex items-center justify-between">
-          <h3 className="text-base font-bold uppercase tracking-widest text-[#F2F2F2]">Select Token</h3>
+      <div
+        className="relative w-full sm:max-w-md ncx-modal flex flex-col max-h-[85vh] sm:max-h-[80vh] rounded-t-2xl sm:rounded-3xl"
+        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)' }}
+      >
+        <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-ncx-border">
+          <h3 className="text-base font-semibold text-ncx-text">Select token</h3>
           <button
             onClick={onClose}
-            className="p-1 text-[#A1A1A2] hover:text-[#F2F2F2] transition-colors duration-150"
+            className="p-1.5 rounded-full text-ncx-text-subtle hover:text-ncx-text hover:bg-ncx-wash transition-all duration-150"
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-4 border-b border-[#2D0A5B]">
+        <div className="px-4 py-3 border-b border-ncx-border">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A1A1A1]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ncx-text-subtle" />
             <input
               type="text"
-              placeholder="Search name or paste address"
-              className="w-full bg-transparent border border-[#2D0A5B] py-3 pl-10 pr-4 text-[#F2F2F2] placeholder:text-[#A1A1A1]/50 focus:outline-none focus:border-[#7B3FE4] text-sm uppercase tracking-wider transition-colors duration-150"
+              placeholder="Name or address"
+              className="ncx-input pl-11"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              autoFocus
             />
           </div>
         </div>
 
-        <div className="overflow-y-auto flex-1">
-          {filteredTokens.length > 0
-            ? (
-                filteredTokens.map((token) => {
-                  const bal = balances?.get(token.address.toLowerCase())
-                  return (
-                    <button
-                      key={token.address}
-                      onClick={() => onSelectToken(token)}
-                      disabled={!!disabledAddresses?.some(a => a.toLowerCase() === token.address.toLowerCase())}
-                      className="w-full flex items-center justify-between px-5 py-4 border-b border-[#2D0A5B]/50 last:border-b-0 hover:bg-[#2D0A5B] transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+        <div className="overflow-y-auto flex-1 p-2">
+          {filteredTokens.length > 0 ? (
+            filteredTokens.map((token) => {
+              const bal = balances?.get(token.address.toLowerCase())
+              const disabled = !!disabledAddresses?.some(a => a.toLowerCase() === token.address.toLowerCase())
+              return (
+                <button
+                  key={token.address}
+                  onClick={() => !disabled && onSelectToken(token)}
+                  disabled={disabled}
+                  className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-ncx-wash transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {token.iconClass ? (
+                    <span className={`${token.iconClass} w-9 h-9 rounded-full shrink-0`} />
+                  ) : (
+                    <span
+                      className="w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold text-white shrink-0"
+                      style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
                     >
-                      <div className="flex items-center gap-4">
-                        {token.iconClass
-                          ? (
-                              <div className={`${token.iconClass} w-9 h-9 rounded-full`} />
-                            )
-                          : (
-                              <div className="w-9 h-9 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-sm">
-                                {token.symbol[0]}
-                              </div>
-                            )}
-                        <div className="text-left">
-                          <div className="font-bold uppercase text-[#F2F2F2] text-sm">{token.symbol}</div>
-                          <div className="text-xs text-[#A1A1A1]">{token.name}</div>
-                        </div>
-                      </div>
-                      <div className="font-bold text-[#F2F2F2] text-sm">
-                        {bal ? bal.formatted : '—'}
-                      </div>
-                    </button>
-                  )
-                })
+                      {token.symbol[0]}
+                    </span>
+                  )}
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="font-semibold text-ncx-text text-sm truncate">{token.symbol}</div>
+                    <div className="text-xs text-ncx-text-muted truncate">{token.name}</div>
+                  </div>
+                  <div className="ncx-num text-sm text-ncx-text shrink-0">
+                    {bal ? bal.formatted : '—'}
+                  </div>
+                </button>
               )
-            : (
-                <div className="py-12 text-center text-[#A1A1A1] font-bold uppercase tracking-[0.2em] text-sm">
-                  No tokens found.
-                </div>
-              )}
+            })
+          ) : (
+            <div className="py-12 text-center text-ncx-text-muted text-sm">
+              No tokens found.
+            </div>
+          )}
         </div>
       </div>
     </div>

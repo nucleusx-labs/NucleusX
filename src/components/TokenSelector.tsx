@@ -22,27 +22,31 @@ export default function TokenSelector({ selectedToken, onSelectToken, balances, 
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 border border-[#2D0A5B] px-3 py-2 hover:border-[#7B3FE4] transition-colors duration-150 group"
+        className="flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full border transition-all duration-200 group hover:border-ncx-purple-500"
+        style={{
+          background: 'var(--ncx-surface-3)',
+          borderColor: 'var(--ncx-border)',
+          fontWeight: 600,
+        }}
       >
-        {selectedToken
-          ? (
-              <>
-                {selectedToken.iconClass
-                  ? (
-                      <div className={`${selectedToken.iconClass} w-5 h-5 rounded-full`} />
-                    )
-                  : (
-                      <div className="w-5 h-5 bg-[#2D0A5B] flex items-center justify-center text-[#7B3FE4] font-bold text-xs">
-                        {selectedToken.symbol[0]}
-                      </div>
-                    )}
-                <span className="font-bold uppercase text-[#F2F2F2] text-sm">{selectedToken.symbol}</span>
-              </>
-            )
-          : (
-              <span className="font-bold uppercase text-[#A1A1A1] text-sm px-1">Select</span>
+        {selectedToken ? (
+          <>
+            {selectedToken.iconClass ? (
+              <span className={`${selectedToken.iconClass} w-6 h-6 rounded-full`} />
+            ) : (
+              <span
+                className="w-6 h-6 rounded-full grid place-items-center text-[10px] font-bold text-white"
+                style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
+              >
+                {selectedToken.symbol[0]}
+              </span>
             )}
-        <ChevronDown className="w-4 h-4 text-[#A1A1A1] group-hover:text-[#7B3FE4] transition-colors duration-150" />
+            <span className="text-sm text-ncx-text">{selectedToken.symbol}</span>
+          </>
+        ) : (
+          <span className="text-sm text-ncx-text-muted px-2">Select</span>
+        )}
+        <ChevronDown className="w-3.5 h-3.5 text-ncx-text-subtle group-hover:text-ncx-purple-300 transition-colors duration-200" />
       </button>
 
       <TokenModal
