@@ -368,6 +368,215 @@ html, body {
   animation: ncx-blob-drift 1.4s ease-in-out infinite, ncx-spin-slow 3s linear infinite;
 }
 
+/* ── Nucleus orbit + blob shapes ── */
+@keyframes ncx-orbit-cw    { to { transform: rotate(360deg); } }
+@keyframes ncx-orbit-ccw   { to { transform: rotate(-360deg); } }
+@keyframes ncx-counter-cw  { to { transform: rotate(-360deg); } }
+@keyframes ncx-counter-ccw { to { transform: rotate(360deg); } }
+
+@keyframes ncx-caret-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes ncx-blob-morph {
+  0%, 100% { border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%; }
+  33%      { border-radius: 45% 55% 60% 40% / 55% 45% 55% 45%; }
+  66%      { border-radius: 55% 45% 40% 60% / 45% 55% 50% 50%; }
+}
+@keyframes ncx-core-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); filter: brightness(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.06); filter: brightness(1.18); }
+}
+
+@keyframes ncx-liquid-morph {
+  0%, 100% {
+    border-radius: 62% 38% 58% 42% / 46% 62% 38% 54%;
+    transform: scaleX(1.03) scaleY(0.97) translateY(0);
+    filter: saturate(1) brightness(1);
+  }
+  25% {
+    border-radius: 39% 61% 46% 54% / 62% 37% 63% 38%;
+    transform: scaleX(0.95) scaleY(1.06) translateY(1.5%);
+    filter: saturate(1.04) brightness(1.02);
+  }
+  50% {
+    border-radius: 57% 43% 34% 66% / 40% 60% 40% 60%;
+    transform: scaleX(1.08) scaleY(0.93) translateY(-1.5%);
+    filter: saturate(1.08) brightness(1.04);
+  }
+  75% {
+    border-radius: 42% 58% 66% 34% / 57% 38% 62% 43%;
+    transform: scaleX(0.94) scaleY(1.08) translateY(1%);
+    filter: saturate(1.03) brightness(1.01);
+  }
+}
+
+@keyframes ncx-liquid-skin-drift {
+  0%, 100% { transform: translate3d(-5%, -3%, 0) scale(1.02, 0.98) rotate(0deg); }
+  33%      { transform: translate3d(8%, -7%, 0) scale(1.14, 0.9) rotate(14deg); }
+  66%      { transform: translate3d(-7%, 8%, 0) scale(0.9, 1.14) rotate(-12deg); }
+}
+
+@keyframes ncx-liquid-flow {
+  0% {
+    transform: translate3d(-10%, -7%, 0) scale(1.06, 0.96) rotate(0deg);
+    background-position: 0 0, 0 0, 0 0;
+  }
+  50% {
+    transform: translate3d(11%, 9%, 0) scale(1.18, 0.9) rotate(180deg);
+    background-position: 18px -12px, -14px 16px, 96px 58px;
+  }
+  100% {
+    transform: translate3d(-10%, -7%, 0) scale(1.06, 0.96) rotate(360deg);
+    background-position: 0 0, 0 0, 192px 116px;
+  }
+}
+
+@keyframes ncx-liquid-depth-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1, 1); }
+  50% { transform: translate3d(4%, -3%, 0) scale(1.08, 0.94); }
+}
+
+@keyframes ncx-liquid-undercurrent {
+  0%, 100% {
+    transform: translate3d(-6%, 4%, 0) scale(1.02, 0.98) rotate(0deg);
+    opacity: 0.46;
+  }
+  50% {
+    transform: translate3d(7%, -6%, 0) scale(1.14, 0.88) rotate(180deg);
+    opacity: 0.62;
+  }
+}
+
+.ncx-liquid-blob {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: var(--ncx-r-blob-a);
+  will-change: transform, border-radius, filter;
+  transform-origin: 48% 54%;
+  background: var(--ncx-blob-fill);
+  box-shadow:
+    0 34px 90px -28px var(--ncx-blob-shadow),
+    inset 0 -24px 44px rgba(12, 3, 30, 0.34),
+    inset 0 0 44px rgba(255, 255, 255, 0.06);
+  animation: ncx-liquid-morph var(--ncx-blob-morph-duration, 15s) cubic-bezier(0.37, 0, 0.23, 1) infinite;
+  filter: url(#ncx-hero-blob-distort);
+}
+
+.ncx-liquid-blob::before {
+  content: '';
+  position: absolute;
+  inset: -16%;
+  border-radius: 47% 53% 44% 56% / 60% 40% 60% 40%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 34%, rgba(255, 255, 255, 0.18) 0%, transparent 18%),
+    radial-gradient(circle at 68% 60%, rgba(255, 255, 255, 0.1) 0%, transparent 24%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), transparent 32%, rgba(18, 4, 43, 0.22) 100%);
+  mix-blend-mode: screen;
+  filter: blur(14px);
+  opacity: 0.52;
+  animation: ncx-liquid-undercurrent 8.8s ease-in-out infinite;
+}
+
+.ncx-liquid-blob::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 22%, transparent 74%, rgba(10, 2, 24, 0.18));
+  mix-blend-mode: screen;
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.ncx-liquid-blob-core {
+  box-shadow:
+    0 0 60px rgba(169, 124, 250, 0.48),
+    0 22px 54px -24px rgba(169, 124, 250, 0.34),
+    inset 0 -16px 30px rgba(12, 3, 30, 0.22),
+    inset 0 0 32px rgba(255, 255, 255, 0.12);
+}
+
+.ncx-liquid-depth {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 62% 74%, rgba(30, 8, 70, 0.22) 0%, transparent 42%),
+    radial-gradient(ellipse at 34% 42%, rgba(255, 255, 255, 0.12) 0%, transparent 24%);
+  mix-blend-mode: multiply;
+  opacity: 0.68;
+  animation: ncx-liquid-depth-drift 6.8s ease-in-out infinite;
+}
+
+.ncx-liquid-skin {
+  position: absolute;
+  inset: -18%;
+  border-radius: 46% 54% 48% 52% / 56% 44% 56% 44%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.22) 0%, transparent 18%),
+    radial-gradient(circle at 70% 65%, rgba(255, 255, 255, 0.14) 0%, transparent 22%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.14), transparent 38%, rgba(23, 8, 58, 0.28) 100%);
+  mix-blend-mode: soft-light;
+  filter: blur(10px);
+  opacity: 0.96;
+  animation: ncx-liquid-skin-drift 7.4s ease-in-out infinite;
+}
+
+.ncx-liquid-flow {
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse at 36% 30%, rgba(255, 255, 255, 0.26) 0%, transparent 22%),
+    radial-gradient(ellipse at 70% 64%, rgba(255, 255, 255, 0.14) 0%, transparent 20%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 -0.2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.9'/></svg>");
+  background-size: auto, auto, 180px 180px;
+  mix-blend-mode: screen;
+  opacity: 0.36;
+  filter: blur(6px) saturate(136%);
+  animation: ncx-liquid-flow 11.4s linear infinite;
+}
+
+.ncx-liquid-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -10px 18px rgba(11, 3, 28, 0.18);
+}
+
+/* Pixelated "glitter" texture (echoes hero PixelBlast) — 64×64 SVG noise tile */
+.ncx-glitter {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.4 -0.6'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+  background-size: 64px 64px;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+
+/* Inner highlight on each blob — soft top-left bloom */
+.ncx-blob-shine {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse 60% 50% at 28% 22%, rgba(255, 255, 255, 0.35), transparent 55%);
+  mix-blend-mode: overlay;
+}
+
 /* ── Scroll-driven reveal (native, falls back to still-visible) ── */
 .ncx-reveal { opacity: 1; transform: none; }
 

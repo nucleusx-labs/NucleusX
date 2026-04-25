@@ -8,6 +8,8 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import PixelBlast from '../components/ui/PixelBlast'
+import NucleusOrbit from '../components/ui/NucleusOrbit'
+import Typewriter from '../components/ui/Typewriter'
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
@@ -169,9 +171,9 @@ export default function Home() {
       `}</style>
 
       {/* ═══════════════════════════════════════════════════════════════
-          HERO — full-bleed
+          HERO — full-bleed; nucleus left, text right (desktop)
       ════════════════════════════════════════════════════════════════ */}
-      <section className="relative flex flex-col items-center justify-center min-h-[88vh] overflow-hidden px-4 text-center">
+      <section className="relative flex flex-col justify-center min-h-[88vh] overflow-hidden px-4 sm:px-6">
         {/* Ambient — subtle pixel field, no ripple */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <PixelBlast
@@ -187,26 +189,13 @@ export default function Home() {
             className="absolute inset-0 opacity-[0.55]"
           />
 
-          {/* Radial wash */}
+          {/* Radial wash, no rings */}
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[760px]"
             style={{ background: 'radial-gradient(ellipse at 50% 5%, rgba(123,63,228,.20) 0%, transparent 62%)', filter: 'blur(2px)' }}
           />
-          {/* Orbital rings */}
-          <div
-            className="absolute top-1/2 left-1/2 w-[360px] h-[360px] rounded-full border"
-            style={{ borderColor: 'var(--ncx-purple-800)', animation: 'ncxRingPulseHero 4.5s ease-in-out infinite' }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 w-[600px] h-[600px] rounded-full border"
-            style={{ borderColor: 'color-mix(in srgb, var(--ncx-purple-800) 60%, transparent)', animation: 'ncxRingPulseHero2 6s ease-in-out infinite .8s' }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 w-[820px] h-[820px] rounded-full border"
-            style={{ borderColor: 'color-mix(in srgb, var(--ncx-purple-800) 25%, transparent)', animation: 'ncxRingPulseHero2 7.5s ease-in-out infinite 1.6s' }}
-          />
 
-          {/* Soft blob floaters — subtle parallax via --ncx-scroll */}
+          {/* Soft ambient floaters with subtle parallax */}
           <div
             className="absolute -left-24 top-24 w-[420px] h-[420px] opacity-[0.18]"
             style={{
@@ -225,87 +214,123 @@ export default function Home() {
               transform: 'translateY(calc(var(--ncx-scroll, 0) * -0.08px))',
             }}
           />
-          <div
-            className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[380px] h-[380px] opacity-[0.10]"
-            style={{
-              background: 'radial-gradient(circle, #C9A9FF 0%, transparent 60%)',
-              filter: 'blur(100px)',
-              animation: 'ncxBlobFloat 32s ease-in-out infinite',
-            }}
-          />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-3xl mx-auto py-14 md:py-20">
-          {/* Brand lockup */}
-          <div
-            className="hidden md:inline-flex items-center gap-3 px-3.5 py-1.5 mb-10 rounded-full border ncx-num text-[10px] uppercase tracking-[0.18em]"
-            style={{
-              animation: a(0.05),
-              opacity: o(),
-              background: 'var(--ncx-wash)',
-              borderColor: 'color-mix(in srgb, var(--ncx-purple-500) 25%, transparent)',
-              color: 'var(--ncx-purple-300)',
-              backdropFilter: 'blur(12px)',
-            }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-ncx-gain" style={{ animation: 'ncx-pulse-dot 2s ease-in-out infinite' }} />
-            Now Live · QF Network
+        {/* Content — 2-col grid on desktop; text left, nucleus right */}
+        <div className="relative z-10 max-w-[1200px] w-full mx-auto py-14 md:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-10 items-center">
+          {/* Left: text, left-aligned */}
+          <div className="order-1 lg:order-1 text-center lg:text-left">
+            <h1
+              className="mb-7 font-bold tracking-tight leading-[0.92]"
+              style={{ fontSize: 'clamp(3rem, 7.5vw, 6rem)' }}
+            >
+              <span className="block text-ncx-text" style={{ animation: a(0.18, 'slideLeft'), opacity: o() }}>
+                A liquidity layer
+              </span>
+              <span className="block" style={{ animation: a(0.32, 'slideRight'), opacity: o() }}>
+                that feels{' '}
+                <Typewriter
+                  className="ncx-shimmer"
+                  words={['soft', 'fluid', 'alive', 'fast']}
+                  typeMs={205}
+                  deleteMs={135}
+                  holdMs={2900}
+                  gapMs={820}
+                />.
+              </span>
+            </h1>
+
+            <div className="hidden lg:block">
+              <p
+                className="text-lg md:text-xl text-ncx-text-muted max-w-xl mx-auto lg:mx-0 leading-relaxed mb-10"
+                style={{ animation: a(0.5), opacity: o() }}
+              >
+                The primary DEX on QF Network. Trade, provide liquidity, and earn yield.
+              </p>
+
+              <div
+                className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-4"
+                style={{ animation: a(0.66), opacity: o() }}
+              >
+                <Link to="/swap" className="btn-ncx btn-ncx-primary group" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
+                  Launch app
+                  <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+                </Link>
+                <Link to="/pools" className="btn-ncx btn-ncx-secondary" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
+                  Explore pools
+                </Link>
+              </div>
+
+              <div
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-2 mt-8"
+                style={{ animation: a(0.78), opacity: o() }}
+              >
+                <span className="ncx-chip">QF-Native</span>
+                <span
+                  className="ncx-chip"
+                  style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', borderColor: 'color-mix(in srgb, var(--ncx-gain) 25%, transparent)' }}
+                >
+                  Sub-second finality
+                </span>
+                <span
+                  className="ncx-chip"
+                  style={{ background: 'var(--ncx-info-bg)', color: 'var(--ncx-info)', borderColor: 'color-mix(in srgb, var(--ncx-info) 25%, transparent)' }}
+                >
+                  Substrate-native
+                </span>
+              </div>
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1
-            className="mb-7 font-bold tracking-tight leading-[0.92]"
-            style={{ fontSize: 'clamp(3rem, 9vw, 6.5rem)' }}
-          >
-            <span className="block text-ncx-text" style={{ animation: a(0.18, 'slideLeft'), opacity: o() }}>
-              A liquidity layer
-            </span>
-            <span className="block" style={{ animation: a(0.32, 'slideRight'), opacity: o() }}>
-              that feels <span className="ncx-shimmer">soft</span>.
-            </span>
-          </h1>
-
-          {/* Sub-heading */}
-          <p
-            className="text-lg md:text-xl text-ncx-text-muted max-w-xl mx-auto leading-relaxed mb-10"
-            style={{ animation: a(0.5), opacity: o() }}
-          >
-            The primary DEX on QF Network. Trade, provide liquidity, and earn yield.
-          </p>
-
-          {/* CTA row */}
+          {/* Right: nucleus animation */}
           <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4"
-            style={{ animation: a(0.66), opacity: o() }}
+            className="order-2 lg:order-2 flex justify-center lg:justify-end"
+            style={{ animation: a(0.05, 'fadeUp'), opacity: o() }}
           >
-            <Link to="/swap" className="btn-ncx btn-ncx-primary group" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
-              Launch app
-              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-            </Link>
-            <Link to="/pools" className="btn-ncx btn-ncx-secondary" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
-              Explore pools
-            </Link>
+            <div className="w-[74vw] max-w-[300px] sm:w-[82vw] sm:max-w-[400px] lg:w-full lg:max-w-[520px]">
+              <NucleusOrbit />
+            </div>
           </div>
 
-          {/* Hero meta — non-duplicate values */}
-          <div
-            className="flex flex-wrap items-center justify-center gap-2 mt-8"
-            style={{ animation: a(0.78), opacity: o() }}
-          >
-            <span className="ncx-chip">Chain · 3426</span>
-            <span
-              className="ncx-chip"
-              style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', borderColor: 'color-mix(in srgb, var(--ncx-gain) 25%, transparent)' }}
+          <div className="order-3 text-center lg:hidden">
+            <p
+              className="text-lg text-ncx-text-muted max-w-xl mx-auto leading-relaxed mb-8"
+              style={{ animation: a(0.5), opacity: o() }}
             >
-              Sub-second finality
-            </span>
-            <span
-              className="ncx-chip"
-              style={{ background: 'var(--ncx-info-bg)', color: 'var(--ncx-info)', borderColor: 'color-mix(in srgb, var(--ncx-info) 25%, transparent)' }}
+              The primary DEX on QF Network. Trade, provide liquidity, and earn yield.
+            </p>
+
+            <div
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4"
+              style={{ animation: a(0.66), opacity: o() }}
             >
-              Substrate-native
-            </span>
+              <Link to="/swap" className="btn-ncx btn-ncx-primary group" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
+                Launch app
+                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+              <Link to="/pools" className="btn-ncx btn-ncx-secondary" style={{ padding: '0.9rem 1.6rem', fontSize: '0.9375rem' }}>
+                Explore pools
+              </Link>
+            </div>
+
+            <div
+              className="flex flex-wrap items-center justify-center gap-2 mt-8"
+              style={{ animation: a(0.78), opacity: o() }}
+            >
+              <span className="ncx-chip">QF-Native</span>
+              <span
+                className="ncx-chip"
+                style={{ background: 'var(--ncx-gain-bg)', color: 'var(--ncx-gain)', borderColor: 'color-mix(in srgb, var(--ncx-gain) 25%, transparent)' }}
+              >
+                Sub-second finality
+              </span>
+              <span
+                className="ncx-chip"
+                style={{ background: 'var(--ncx-info-bg)', color: 'var(--ncx-info)', borderColor: 'color-mix(in srgb, var(--ncx-info) 25%, transparent)' }}
+              >
+                Substrate-native
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -383,33 +408,68 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          HOW IT WORKS
+          HOW IT WORKS — copy wrapped inside morphing blobs
       ════════════════════════════════════════════════════════════════ */}
-      <section aria-labelledby="how-heading" className="border-y border-ncx-border py-24 lg:py-32">
+      <section aria-labelledby="how-heading" className="py-10 lg:py-14">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-          <div className="mb-12 ncx-reveal">
+          <div className="mb-8 ncx-reveal">
             <p className="ncx-num text-[11px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-3">How it works</p>
             <h2 id="how-heading" className="text-4xl lg:text-5xl font-bold tracking-tight text-ncx-text">
               Three steps to DeFi.
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {STEPS.map((s, i) => (
-              <div
-                key={s.n}
-                className="ncx-card relative overflow-hidden p-7 transition-all duration-300 hover:-translate-y-1 hover:border-ncx-purple-500/50 ncx-reveal"
-                style={{ animationDelay: `${i * 0.06}s` }}
-              >
-                <div className="ncx-num text-[10px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-4">Step {s.n}</div>
-                <h3 className="text-xl font-semibold text-ncx-text mb-2 tracking-tight">{s.title}</h3>
-                <p className="text-ncx-text-muted leading-relaxed text-[0.95rem]">{s.desc}</p>
+          {/*
+            Each blob lives in a generously-sized cell with its own padding so
+            the morphing border-radius never gets clipped by neighbouring cells
+            or by overflow-hidden. Blobs are solid (no gradient/glitter), each
+            in a distinct lighter purple shade.
+          */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 lg:gap-16 max-w-6xl mx-auto">
+            {STEPS.map((s, i) => {
+              const variants = [
+                { color: '#C9A9FF', shape: '60% 40% 55% 45% / 50% 60% 40% 50%', delay: '0s' },
+                { color: '#D9C2FF', shape: '45% 55% 60% 40% / 55% 45% 55% 45%', delay: '-6s' },
+                { color: '#A97CFA', shape: '55% 45% 40% 60% / 45% 55% 50% 50%', delay: '-12s' },
+              ][i]
+              return (
                 <div
-                  className="absolute -bottom-12 -right-12 w-32 h-32 opacity-50"
-                  style={{ background: 'var(--ncx-wash)', borderRadius: 'var(--ncx-r-blob-b)' }}
-                />
-              </div>
-            ))}
+                  key={s.n}
+                  className="relative aspect-square w-full max-w-[380px] mx-auto flex flex-col justify-center text-center p-[16%] ncx-reveal"
+                  style={{ animationDelay: `${i * 0.06}s` }}
+                >
+                  {/* Solid-color blob background */}
+                  <div
+                    className="absolute inset-0 -z-10"
+                    style={{
+                      background: variants.color,
+                      borderRadius: variants.shape,
+                      boxShadow: '0 28px 70px -18px rgba(78, 31, 168, 0.42)',
+                      animation: `ncx-blob-morph 18s ease-in-out infinite ${variants.delay}`,
+                    }}
+                  />
+
+                  <div
+                    className="ncx-num text-[10px] uppercase tracking-[0.22em] mb-2"
+                    style={{ color: 'rgba(45, 10, 91, 0.6)' }}
+                  >
+                    Step {s.n}
+                  </div>
+                  <h3
+                    className="text-xl font-bold tracking-tight mb-2"
+                    style={{ color: '#1A0538' }}
+                  >
+                    {s.title}
+                  </h3>
+                  <p
+                    className="leading-snug text-[0.875rem]"
+                    style={{ color: 'rgba(26, 5, 56, 0.78)' }}
+                  >
+                    {s.desc}
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -417,7 +477,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════════
           WHY NUCLEUSX
       ════════════════════════════════════════════════════════════════ */}
-      <section aria-labelledby="why-heading" className="py-24 lg:py-32 px-4 sm:px-6">
+      <section aria-labelledby="why-heading" className="pt-10 pb-24 lg:pt-14 lg:pb-32 px-4 sm:px-6">
         <div className="max-w-[1400px] mx-auto">
           <div className="mb-12 ncx-reveal">
             <p className="ncx-num text-[11px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-3">Why NucleusX</p>
@@ -443,22 +503,26 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
-          FINAL CTA
+          FINAL CTA — open, no hard frame
       ════════════════════════════════════════════════════════════════ */}
-      <section ref={ctaRef.ref} className="border-t border-ncx-border relative overflow-hidden">
+      <section ref={ctaRef.ref} className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div
             className="absolute inset-0"
-            style={{ background: 'radial-gradient(ellipse at 50% 110%, rgba(123,63,228,.18) 0%, transparent 55%)' }}
+            style={{ background: 'radial-gradient(ellipse at 50% 90%, rgba(123,63,228,.16) 0%, transparent 60%)' }}
           />
           <div
-            className="absolute -bottom-32 left-1/2 -translate-x-1/2 w-[600px] h-[600px] opacity-[0.12]"
-            style={{ background: 'radial-gradient(circle, #7B3FE4 0%, transparent 65%)', filter: 'blur(80px)', animation: 'ncxBlobFloat 24s ease-in-out infinite' }}
+            className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[680px] h-[680px] opacity-[0.14]"
+            style={{ background: 'radial-gradient(circle, #7B3FE4 0%, transparent 65%)', filter: 'blur(90px)', animation: 'ncxBlobFloat 24s ease-in-out infinite' }}
+          />
+          <div
+            className="absolute -bottom-24 right-[8%] w-[280px] h-[280px] opacity-[0.10]"
+            style={{ background: 'radial-gradient(circle, #A97CFA 0%, transparent 65%)', filter: 'blur(72px)', animation: 'ncxBlobFloat 30s ease-in-out infinite reverse' }}
           />
         </div>
 
         <div
-          className="relative max-w-[1400px] mx-auto px-4 sm:px-6 py-24 lg:py-32 text-center ncx-reveal"
+          className="relative max-w-[820px] mx-auto px-4 sm:px-6 py-24 lg:py-36 text-center ncx-reveal"
           style={{ animation: ctaRef.visible ? 'fadeUp .65s ease both' : undefined, opacity: ctaRef.visible ? undefined : 0 }}
         >
           <p className="ncx-num text-[11px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-5">Get started today</p>
