@@ -37,8 +37,8 @@
   --color-ncx-warn: #F59E0B;
   --color-ncx-info: #60A5FA;
 
-  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: 'Baloo 2', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Baloo 2', ui-sans-serif, system-ui, sans-serif;
 
   --radius-pill: 999px;
   --radius-blob: 62% 38% 47% 53% / 55% 45% 55% 45%;
@@ -171,7 +171,7 @@ html, body {
   margin: 0; padding: 0;
   background: var(--ncx-bg);
   color: var(--ncx-text);
-  font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  font-family: 'Baloo 2', ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -182,7 +182,7 @@ html, body {
 
 /* Tabular numerics helper */
 .ncx-num {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: 'Baloo 2', ui-sans-serif, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
 }
@@ -204,7 +204,7 @@ html, body {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border-radius: var(--ncx-r-pill);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Baloo 2', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
   border: 0;
@@ -278,7 +278,7 @@ html, body {
   gap: 0.375rem;
   padding: 0.25rem 0.625rem;
   border-radius: var(--ncx-r-pill);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Baloo 2', sans-serif;
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
   background: var(--ncx-wash);
@@ -294,7 +294,7 @@ html, body {
   background: var(--ncx-surface-2);
   border: 1px solid var(--ncx-border);
   color: var(--ncx-text);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Baloo 2', sans-serif;
   font-size: 0.9375rem;
   transition: all var(--ncx-dur-base) var(--ncx-ease-out);
 }

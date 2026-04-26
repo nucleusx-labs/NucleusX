@@ -53,8 +53,33 @@ function FooterExternalLink({ href, children }: { href?: string, children: React
 export default function Footer() {
   return (
     <footer className="w-full border-t border-ncx-border relative z-[1] mt-8">
-      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-12 sm:py-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] gap-10 lg:gap-12">
+      <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
+        <div className="sm:hidden">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl border border-ncx-border-strong bg-ncx-wash text-ncx-purple-300 font-semibold tracking-tight">
+              N
+            </span>
+            <div>
+              <div className="text-lg font-semibold tracking-tight text-ncx-text">Nuclx</div>
+              <div className="text-xs text-ncx-text-muted">Fast swaps on QF Network.</div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            {productLinks.map(link => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-ncx-text-muted hover:text-ncx-text transition-colors duration-200"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <FooterExternalLink href={TELEGRAM_URL}>Support</FooterExternalLink>
+          </div>
+        </div>
+
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] gap-10 lg:gap-12">
           <div className="max-w-sm">
             <div className="flex items-center gap-3 mb-4">
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl border border-ncx-border-strong bg-ncx-wash text-ncx-purple-300 font-semibold tracking-tight">
@@ -109,27 +134,13 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-5 border-t border-ncx-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="mt-6 sm:mt-10 pt-5 border-t border-ncx-border flex items-center justify-between gap-3">
           <p className="text-ncx-text-subtle text-[11px] font-mono uppercase tracking-[0.18em] flex items-center gap-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-ncx-gain" style={{ animation: 'ncx-pulse-dot 2s ease-in-out infinite' }} />
             Live on QF
             <span className="text-ncx-border-strong">·</span>
             NucleusX © {new Date().getFullYear()}
           </p>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {communityLinks.map(link => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-full border border-ncx-border text-xs text-ncx-text-muted hover:text-ncx-text hover:border-ncx-purple-500 hover:bg-ncx-wash transition-all duration-200"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
         </div>
       </div>
     </footer>
