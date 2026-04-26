@@ -363,7 +363,6 @@ function BlobVisual({
       <div className="ncx-liquid-depth" />
       <div className="ncx-liquid-skin" />
       <div className="ncx-liquid-flow" />
-      <div className="ncx-glitter" style={{ opacity: isCore ? 0.22 : 0.3 }} />
       <div className="ncx-blob-shine" />
       <div className="ncx-liquid-rim" />
     </div>
