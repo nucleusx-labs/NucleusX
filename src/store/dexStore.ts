@@ -1,7 +1,7 @@
 import { createStore } from '@xstate/store'
 import type { SnapshotFromStore } from '@xstate/store'
 import { TOKENS } from '../utils/contracts'
-import qpadTokenSrc from '../assets/qpad-token.svg'
+import fiftyTwoFTokenSrc from '../assets/52F logo.png'
 
 export interface Token {
   symbol: string
@@ -28,19 +28,24 @@ export interface PairReserve {
 
 export const NATIVE_TOKEN_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as const satisfies `0x${string}`
 
+// Preloaded in index.html via `<link rel="preload" as="image">`, so the
+// browser fetches it during page load and serves all later <img> requests
+// straight from cache — no flash of un-loaded icon when the swap form opens.
+export const QF_TOKEN_ICON_SRC = 'https://coin-images.coingecko.com/coins/images/38823/large/qfnlogo.jpg?1729797482'
+
 export const NATIVE_TOKEN: Token = {
   symbol: 'QF',
   name: 'QF Network',
   address: NATIVE_TOKEN_ADDRESS,
   decimals: 18,
-  iconSrc: 'https://coin-images.coingecko.com/coins/images/38823/large/qfnlogo.jpg?1729797482',
+  iconSrc: QF_TOKEN_ICON_SRC,
 }
 
 const INITIAL_TOKEN_LIST: Token[] = [
   NATIVE_TOKEN,
-  { symbol: 'WQF',  name: 'Wrapped QF', address: TOKENS.WQF,  decimals: 18, iconSrc: NATIVE_TOKEN.iconSrc },
+  { symbol: 'WQF',  name: 'Wrapped QF', address: TOKENS.WQF,  decimals: 18, iconSrc: QF_TOKEN_ICON_SRC },
   { symbol: 'QDPT', name: 'QDPT Token', address: TOKENS.QDPT, decimals: 18 },
-  { symbol: 'QPAD', name: 'QPAD', address: TOKENS.QPAD, decimals: 18, iconSrc: qpadTokenSrc },
+  { symbol: '$52f', name: '$52f', address: TOKENS.$52F, decimals: 18, iconSrc: fiftyTwoFTokenSrc },
 ]
 
 export const dexStore = createStore({
