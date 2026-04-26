@@ -3,6 +3,7 @@ import {
   ArrowRight,
   BarChart3,
   Droplets,
+  Plus,
   Users,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -110,6 +111,21 @@ const FEATURES = [
   { title: 'QF-native', desc: 'Substrate accounts, EVM contracts via Revive.' },
 ]
 
+const FAQS = [
+  {
+    question: 'What is NucleusX?',
+    answer: 'NucleusX is a QF-native decentralized exchange built for fast token swaps and on-chain liquidity.',
+  },
+  {
+    question: 'How does it work?',
+    answer: 'You connect a wallet, choose the assets you want to trade, and execute swaps against liquidity pools directly on QF Network.',
+  },
+  {
+    question: 'Is it safe?',
+    answer: 'NucleusX is non-custodial, so you keep control of your assets. As with any DeFi app, you should still verify pairs and manage risk carefully.',
+  },
+]
+
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 function StatItem({ stat, active }: { stat: typeof STATS[0]; active: boolean }) {
@@ -137,6 +153,7 @@ const accentTone = {
 
 export default function Home() {
   const [ready, setReady] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const statsRef = useInView(0.2)
   const ctaRef = useInView(0.2)
   useScrollVar()
@@ -501,6 +518,62 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════
+          FAQ
+      ════════════════════════════════════════════════════════════════ */}
+      <section aria-labelledby="faq-heading" className="pb-24 lg:pb-32 px-4 sm:px-6">
+        <div className="max-w-[920px] mx-auto">
+          <div className="mb-10 ncx-reveal text-center">
+            <p className="ncx-num text-[11px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-3">FAQ</p>
+            <h2 id="faq-heading" className="text-4xl lg:text-5xl font-bold tracking-tight text-ncx-text mb-3">
+              Frequently asked questions
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {FAQS.map((faq, index) => {
+              const isOpen = openFaq === index
+              return (
+                <div
+                  key={faq.question}
+                  className="ncx-card p-0 overflow-hidden ncx-reveal-sm"
+                  style={{
+                    animationDelay: `${index * 0.04}s`,
+                    borderColor: isOpen ? 'color-mix(in srgb, var(--ncx-purple-500) 40%, var(--ncx-border))' : undefined,
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-between gap-4 px-5 py-5 text-left"
+                    onClick={() => setOpenFaq(current => (current === index ? null : index))}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-panel-${index}`}
+                  >
+                    <div>
+                      <div className="text-lg font-semibold tracking-tight text-ncx-text">{faq.question}</div>
+                    </div>
+                    <Plus
+                      className={`w-5 h-5 shrink-0 text-ncx-purple-300 transition-transform duration-300 ${isOpen ? 'rotate-45' : ''}`}
+                    />
+                  </button>
+
+                  <div
+                    id={`faq-panel-${index}`}
+                    className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+                  >
+                    <div className="overflow-hidden">
+                      <p className="px-5 pb-5 text-sm leading-relaxed text-ncx-text-muted max-w-3xl">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
           FINAL CTA — open, no hard frame
       ════════════════════════════════════════════════════════════════ */}
       <section ref={ctaRef.ref} className="relative overflow-hidden">
@@ -520,7 +593,7 @@ export default function Home() {
         </div>
 
         <div
-          className="relative max-w-[820px] mx-auto px-4 sm:px-6 py-24 lg:py-36 text-center ncx-reveal"
+          className="relative max-w-[820px] mx-auto px-4 sm:px-6 pt-16 pb-24 lg:pt-24 lg:pb-36 text-center ncx-reveal"
           style={{ animation: ctaRef.visible ? 'fadeUp .65s ease both' : undefined, opacity: ctaRef.visible ? undefined : 0 }}
         >
           <h2
