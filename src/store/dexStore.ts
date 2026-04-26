@@ -1,12 +1,14 @@
 import { createStore } from '@xstate/store'
 import type { SnapshotFromStore } from '@xstate/store'
 import { TOKENS } from '../utils/contracts'
+import qpadTokenSrc from '../assets/qpad-token.svg'
 
 export interface Token {
   symbol: string
   name: string
   address: `0x${string}`
   decimals: number
+  iconSrc?: string
   iconClass?: string
 }
 
@@ -31,15 +33,14 @@ export const NATIVE_TOKEN: Token = {
   name: 'QF Network',
   address: NATIVE_TOKEN_ADDRESS,
   decimals: 18,
+  iconSrc: 'https://coin-images.coingecko.com/coins/images/38823/large/qfnlogo.jpg?1729797482',
 }
 
 const INITIAL_TOKEN_LIST: Token[] = [
   NATIVE_TOKEN,
-  { symbol: 'WQF',    name: 'Wrapped QF',   address: TOKENS.WQF,    decimals: 18 },
-  { symbol: 'OTU',    name: 'OTU Token',     address: TOKENS.OTU,    decimals: 18 },
-  { symbol: 'QDPT',   name: 'QDPT Token',    address: TOKENS.QDPT,   decimals: 18 },
-  { symbol: 'Avatar', name: 'Avatar Token',  address: TOKENS.Avatar, decimals: 18 },
-  { symbol: 'GGG',    name: 'GGG',           address: TOKENS.GGG,    decimals: 18 },
+  { symbol: 'WQF',  name: 'Wrapped QF', address: TOKENS.WQF,  decimals: 18, iconSrc: NATIVE_TOKEN.iconSrc },
+  { symbol: 'QDPT', name: 'QDPT Token', address: TOKENS.QDPT, decimals: 18 },
+  { symbol: 'QPAD', name: 'QPAD', address: TOKENS.QPAD, decimals: 18, iconSrc: qpadTokenSrc },
 ]
 
 export const dexStore = createStore({

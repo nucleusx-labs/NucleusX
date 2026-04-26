@@ -2,6 +2,7 @@ import { useAtom, useSelector } from '@xstate/store/react'
 import { AlertTriangle, ArrowUpRight, History, Minus, Plus, Target, Wallet, TrendingUp } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import TokenIcon from '../components/TokenIcon'
 import { selectedAccount } from '../hooks/useConnect'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import { dexStore, selectTokenList } from '../store/dexStore'
@@ -105,6 +106,7 @@ export default function UserDashboard() {
   // Build asset rows: native first, then ERC20 tokens with non-zero or all
   const nativeSymbol = nativeBalance?.symbol ?? 'QF'
   const nativeFormatted = nativeBalance?.balance ?? null
+  const nativeToken = tokenList.find(token => token.symbol === nativeSymbol)
 
   const erc20Rows = tokenList.map((token, i) => ({
     ...token,
@@ -359,12 +361,7 @@ export default function UserDashboard() {
             {/* Native token row */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-ncx-border/40 hover:bg-ncx-wash transition-colors duration-150 cursor-pointer">
               <div className="flex items-center gap-3">
-                <span
-                  className="w-9 h-9 rounded-full grid place-items-center text-white font-bold text-sm"
-                  style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-                >
-                  {nativeSymbol[0]}
-                </span>
+                <TokenIcon token={nativeToken ?? { symbol: nativeSymbol }} className="w-9 h-9 rounded-full" fallbackClassName="text-sm" />
                 <div>
                   <div className="font-semibold text-ncx-text text-sm">{nativeSymbol}</div>
                   <div className="ncx-num text-[10px] uppercase tracking-[0.12em] text-ncx-text-subtle">Native</div>
@@ -384,16 +381,7 @@ export default function UserDashboard() {
                 className="flex items-center justify-between px-5 py-3.5 border-b border-ncx-border/40 last:border-b-0 hover:bg-ncx-wash transition-colors duration-150 cursor-pointer"
               >
                 <div className="flex items-center gap-3">
-                  {token.iconClass ? (
-                    <span className={`${token.iconClass} w-9 h-9 rounded-full`} />
-                  ) : (
-                    <span
-                      className="w-9 h-9 rounded-full grid place-items-center text-white font-bold text-sm"
-                      style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-                    >
-                      {token.symbol[0]}
-                    </span>
-                  )}
+                  <TokenIcon token={token} className="w-9 h-9 rounded-full" fallbackClassName="text-sm" />
                   <div className="min-w-0">
                     <div className="font-semibold text-ncx-text text-sm truncate">{token.symbol}</div>
                     <div className="text-xs text-ncx-text-muted truncate">{token.name}</div>

@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { useAtom } from '@xstate/store/react'
 import { X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { swapSettings } from '../store/swapSettings'
 
 interface SettingsModalProps {
@@ -10,18 +12,35 @@ interface SettingsModalProps {
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { slippage, deadline } = useAtom(swapSettings)
 
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[140] isolate overscroll-contain flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="absolute inset-0"
-        style={{ background: 'color-mix(in srgb, var(--ncx-ink-0) 72%, transparent)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        style={{
+          background: 'color-mix(in srgb, var(--ncx-ink-0) 94%, var(--ncx-bg))',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
         onClick={onClose}
       />
       <div
         className="relative w-full sm:max-w-md ncx-modal rounded-t-2xl sm:rounded-3xl"
-        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)' }}
+        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)', background: 'var(--ncx-surface-1)' }}
       >
         <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-ncx-border">
           <h3 className="text-base font-semibold text-ncx-text">Settings</h3>
@@ -84,6 +103,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

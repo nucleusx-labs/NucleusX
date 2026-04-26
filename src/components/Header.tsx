@@ -76,7 +76,7 @@ export default function Header() {
                         }`
                       }
                     >
-                      Exchange
+                      Swap
                     </NavLink>
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export default function Header() {
                   }`
                 }
               >
-                Exchange
+                Swap
               </NavLink>
             )}
             {navItems.map((item) => (

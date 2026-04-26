@@ -1,9 +1,11 @@
 import { X, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSelector } from '@xstate/store/react'
 import { dexStore, selectTokenList } from '../store/dexStore'
 import type { Token } from '../store/dexStore'
 import type { TokenBalance } from '../hooks/useTokenBalances'
+import TokenIcon from './TokenIcon'
 
 export type { Token }
 
@@ -19,6 +21,17 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
   const [searchQuery, setSearchQuery] = useState('')
   const tokenList = useSelector(dexStore, selectTokenList)
 
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   const filteredTokens = tokenList.filter(t =>
@@ -27,17 +40,23 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
     || t.address.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div className="fixed inset-0 z-[140] isolate overscroll-contain flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="absolute inset-0"
-        style={{ background: 'color-mix(in srgb, var(--ncx-ink-0) 72%, transparent)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+        style={{
+          background: 'color-mix(in srgb, var(--ncx-ink-0) 94%, var(--ncx-bg))',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
         onClick={onClose}
       />
 
       <div
         className="relative w-full sm:max-w-md ncx-modal flex flex-col max-h-[85vh] sm:max-h-[80vh] rounded-t-2xl sm:rounded-3xl"
-        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)' }}
+        style={{ animation: 'fadeUp 0.32s var(--ncx-ease-out)', background: 'var(--ncx-surface-1)' }}
       >
         <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-ncx-border">
           <h3 className="text-base font-semibold text-ncx-text">Select token</h3>
@@ -76,16 +95,7 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
                   disabled={disabled}
                   className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-ncx-wash transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  {token.iconClass ? (
-                    <span className={`${token.iconClass} w-9 h-9 rounded-full shrink-0`} />
-                  ) : (
-                    <span
-                      className="w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold text-white shrink-0"
-                      style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-                    >
-                      {token.symbol[0]}
-                    </span>
-                  )}
+                  <TokenIcon token={token} className="w-9 h-9 rounded-full" fallbackClassName="text-[13px]" />
                   <div className="flex-1 text-left min-w-0">
                     <div className="font-semibold text-ncx-text text-sm truncate">{token.symbol}</div>
                     <div className="text-xs text-ncx-text-muted truncate">{token.name}</div>
@@ -103,6 +113,7 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

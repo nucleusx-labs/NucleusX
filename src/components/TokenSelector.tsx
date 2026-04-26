@@ -2,6 +2,7 @@ import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import type { TokenBalance } from '../hooks/useTokenBalances'
 import TokenModal, { type Token } from './TokenModal'
+import TokenIcon from './TokenIcon'
 
 interface TokenSelectorProps {
   selectedToken?: Token
@@ -28,19 +29,10 @@ export default function TokenSelector({ selectedToken, onSelectToken, balances, 
           borderColor: 'var(--ncx-border)',
           fontWeight: 600,
         }}
-      >
+        >
         {selectedToken ? (
           <>
-            {selectedToken.iconClass ? (
-              <span className={`${selectedToken.iconClass} w-6 h-6 rounded-full`} />
-            ) : (
-              <span
-                className="w-6 h-6 rounded-full grid place-items-center text-[10px] font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-              >
-                {selectedToken.symbol[0]}
-              </span>
-            )}
+            <TokenIcon token={selectedToken} className="w-6 h-6 rounded-full" fallbackClassName="text-[10px]" />
             <span className="text-sm text-ncx-text">{selectedToken.symbol}</span>
           </>
         ) : (

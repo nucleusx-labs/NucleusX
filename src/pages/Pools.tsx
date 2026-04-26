@@ -1,23 +1,14 @@
 import { Search, Loader2, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSelector } from '@xstate/store/react'
+import TokenIcon from '../components/TokenIcon'
 import { dexStore, selectTokenList } from '../store/dexStore'
 import { usePools } from '../hooks/usePools'
 
-function TokenIcon({ symbol }: { symbol: string }) {
+function PoolTokenIcon({ symbol }: { symbol: string }) {
   const tokenList = useSelector(dexStore, selectTokenList)
   const token = tokenList.find(t => t.symbol === symbol)
-  if (token?.iconClass) {
-    return <span className={`${token.iconClass} w-7 h-7 rounded-full ring-2 ring-ncx-surface`} />
-  }
-  return (
-    <span
-      className="w-7 h-7 rounded-full grid place-items-center text-white font-bold text-[10px] ring-2 ring-ncx-surface"
-      style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-    >
-      {symbol[0]}
-    </span>
-  )
+  return <TokenIcon token={token ?? { symbol }} className="w-7 h-7 rounded-full" ringClassName="ring-2 ring-ncx-surface" fallbackClassName="text-[10px]" />
 }
 
 export default function Pools() {
@@ -85,8 +76,8 @@ export default function Pools() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex -space-x-2.5">
-                        <TokenIcon symbol={pool.tokenA.symbol} />
-                        <TokenIcon symbol={pool.tokenB.symbol} />
+                        <PoolTokenIcon symbol={pool.tokenA.symbol} />
+                        <PoolTokenIcon symbol={pool.tokenB.symbol} />
                       </div>
                       <div>
                         <div className="font-semibold text-ncx-text text-sm">

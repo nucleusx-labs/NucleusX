@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useSelector } from '@xstate/store/react'
+import TokenIcon from '../components/TokenIcon'
 import { dexStore, selectTokenList } from '../store/dexStore'
 
 export default function Farms() {
@@ -53,16 +54,7 @@ export default function Farms() {
                   <tr key={i} className="border-b border-ncx-border/50 last:border-b-0 transition-colors duration-150 group hover:bg-ncx-wash">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        {token?.iconClass ? (
-                          <span className={`${token.iconClass} w-8 h-8 rounded-full`} />
-                        ) : (
-                          <span
-                            className="w-8 h-8 rounded-full grid place-items-center text-white font-bold text-xs"
-                            style={{ background: 'linear-gradient(135deg, var(--ncx-purple-300), var(--ncx-purple-700))' }}
-                          >
-                            {farm.stakedToken[0]}
-                          </span>
-                        )}
+                        <TokenIcon token={token ?? { symbol: farm.stakedToken }} className="w-8 h-8 rounded-full" fallbackClassName="text-xs" />
                         <span className="font-semibold text-ncx-text text-sm">{farm.stakedToken}</span>
                       </div>
                     </td>

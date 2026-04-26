@@ -60,7 +60,7 @@ export default function Footer() {
               N
             </span>
             <div>
-              <div className="text-lg font-semibold tracking-tight text-ncx-text">Nuclx</div>
+              <div className="text-lg font-semibold tracking-tight text-ncx-text">NucleusX</div>
               <div className="text-xs text-ncx-text-muted">Fast swaps on QF Network.</div>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function Footer() {
                 N
               </span>
               <div>
-                <div className="text-xl font-semibold tracking-tight text-ncx-text">Nuclx</div>
+                <div className="text-xl font-semibold tracking-tight text-ncx-text">NucleusX</div>
                 <div className="text-sm text-ncx-text-muted">Fast swaps and liquidity on QF Network.</div>
               </div>
             </div>
