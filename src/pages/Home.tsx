@@ -106,11 +106,8 @@ const STEPS = [
 
 const FEATURES = [
   { title: 'Lightning execution', desc: 'Sub-second finality on QF consensus.' },
-  { title: 'Audited & immutable', desc: 'Third-party audits, live risk monitoring.' },
   { title: 'Concentrated liquidity', desc: 'Capital-efficient AMM — more fees, less capital.' },
   { title: 'QF-native', desc: 'Substrate accounts, EVM contracts via Revive.' },
-  { title: 'Advanced analytics', desc: 'Charts, portfolio, and positions in one view.' },
-  { title: 'Permissionless markets', desc: '24/7 on-chain price discovery across all pairs.' },
 ]
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -435,34 +432,35 @@ export default function Home() {
               return (
                 <div
                   key={s.n}
-                  className="relative aspect-square w-full max-w-[380px] mx-auto flex flex-col justify-center text-center p-[16%] ncx-reveal"
+                  className="group relative aspect-square w-full max-w-[380px] mx-auto flex flex-col justify-center text-center p-[16%] ncx-reveal"
                   style={{ animationDelay: `${i * 0.06}s` }}
                 >
                   {/* Solid-color blob background */}
                   <div
-                    className="absolute inset-0 -z-10"
+                    className="absolute inset-0 -z-10 transition-transform duration-500 ease-out group-hover:scale-[1.04] group-hover:-translate-y-1"
                     style={{
                       background: variants.color,
                       borderRadius: variants.shape,
                       boxShadow: '0 28px 70px -18px rgba(78, 31, 168, 0.42)',
                       animation: `ncx-blob-morph 18s ease-in-out infinite ${variants.delay}`,
+                      filter: 'saturate(1)',
                     }}
                   />
 
                   <div
-                    className="ncx-num text-[10px] uppercase tracking-[0.22em] mb-2"
+                    className="ncx-num text-[10px] uppercase tracking-[0.22em] mb-2 transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
                     style={{ color: 'rgba(45, 10, 91, 0.6)' }}
                   >
                     Step {s.n}
                   </div>
                   <h3
-                    className="text-xl font-bold tracking-tight mb-2"
+                    className="text-xl font-bold tracking-tight mb-2 transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
                     style={{ color: '#1A0538' }}
                   >
                     {s.title}
                   </h3>
                   <p
-                    className="leading-snug text-[0.875rem]"
+                    className="leading-snug text-[0.875rem] transition-transform duration-500 ease-out group-hover:-translate-y-0.5"
                     style={{ color: 'rgba(26, 5, 56, 0.78)' }}
                   >
                     {s.desc}
@@ -525,24 +523,20 @@ export default function Home() {
           className="relative max-w-[820px] mx-auto px-4 sm:px-6 py-24 lg:py-36 text-center ncx-reveal"
           style={{ animation: ctaRef.visible ? 'fadeUp .65s ease both' : undefined, opacity: ctaRef.visible ? undefined : 0 }}
         >
-          <p className="ncx-num text-[11px] uppercase tracking-[0.22em] text-ncx-purple-300 mb-5">Get started today</p>
           <h2
             className="font-bold tracking-tight text-ncx-text mb-6 mx-auto"
-            style={{ fontSize: 'clamp(2.4rem, 6vw, 4.8rem)', maxWidth: '18ch', lineHeight: 1.02 }}
+            style={{ fontSize: 'clamp(2.2rem, 5.6vw, 4.4rem)', maxWidth: '14ch', lineHeight: 1.02 }}
           >
-            Your capital. <span className="ncx-shimmer">Fully deployed.</span>
+            Ready to trade?
           </h2>
-          <p className="text-ncx-text-muted text-lg max-w-md mx-auto mb-10">
-            Join thousands of traders and liquidity providers already earning on NucleusX.
+          <p className="text-ncx-text-muted text-lg max-w-xl mx-auto mb-10">
+            Join hundreds of traders already using NucleusX for fast, secure, and low-cost swaps.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex items-center justify-center">
             <Link to="/swap" className="btn-ncx btn-ncx-primary group" style={{ padding: '1rem 1.8rem', fontSize: '0.9375rem' }}>
-              Start trading
+              Get Started
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-            </Link>
-            <Link to="/pools" className="btn-ncx btn-ncx-secondary" style={{ padding: '1rem 1.8rem', fontSize: '0.9375rem' }}>
-              Provide liquidity
             </Link>
           </div>
         </div>
