@@ -22,16 +22,17 @@ type TransformKeyframe = {
   transform: string
 }
 
-const LOOP_DURATION_MS = 16500
-// Sample a deterministic path sparsely and let the browser interpolate it.
-const LOOP_FPS = 24
+// Slower, more graceful orbit; denser keyframe sampling so the browser's
+// linear interpolation is imperceptible between samples.
+const LOOP_DURATION_MS = 26000
+const LOOP_FPS = 32
 const LOOP_FRAMES = Math.round((LOOP_DURATION_MS / 1000) * LOOP_FPS)
 const CENTER_SIZE_RATIO = 0.16
 const ORBITERS: readonly OrbiterConfig[] = [
   {
     driftPhase: 0.5,
-    radiusXPulse: 0.022,
-    radiusYPulse: 0.017,
+    radiusXPulse: 0.014,
+    radiusYPulse: 0.011,
     radiusYRatio: 0.31,
     radiusXRatio: 0.39,
     scalePhase: 0.35,
@@ -40,8 +41,8 @@ const ORBITERS: readonly OrbiterConfig[] = [
   },
   {
     driftPhase: 2.1,
-    radiusXPulse: 0.019,
-    radiusYPulse: 0.015,
+    radiusXPulse: 0.012,
+    radiusYPulse: 0.010,
     radiusYRatio: 0.28,
     radiusXRatio: 0.35,
     scalePhase: 2.2,
@@ -70,8 +71,9 @@ function positionOrbiter(
       + Math.cos(loopAngle * 3 + config.driftPhase * 0.75) * systemSize * config.radiusYPulse * orbitScale
 
   return {
-    x: Math.cos(orbitPhase) * radiusX + Math.cos(loopAngle * 3 + config.driftPhase) * systemSize * 0.014 * driftScale,
-    y: Math.sin(orbitPhase) * radiusY + Math.sin(loopAngle * 2 + config.driftPhase * 1.2) * systemSize * 0.018 * driftScale,
+    // Drop drift frequency from 3× → 2× and amplitude ~50% — fewer/softer micro-movements.
+    x: Math.cos(orbitPhase) * radiusX + Math.cos(loopAngle * 2 + config.driftPhase) * systemSize * 0.007 * driftScale,
+    y: Math.sin(orbitPhase) * radiusY + Math.sin(loopAngle * 1.5 + config.driftPhase * 1.2) * systemSize * 0.009 * driftScale,
   }
 }
 
@@ -110,9 +112,9 @@ function enforceMinimumRadius(point: Point, minRadius: number) {
 }
 
 function centerTransform(loopAngle: number, systemSize: number) {
-  const x = Math.sin(loopAngle + 0.35) * systemSize * 0.008
-  const y = Math.cos(loopAngle * 2 - 0.18) * systemSize * 0.0065
-  const scale = 1 + Math.sin(loopAngle * 2 + 0.2) * 0.025
+  const x = Math.sin(loopAngle + 0.35) * systemSize * 0.005
+  const y = Math.cos(loopAngle * 2 - 0.18) * systemSize * 0.0042
+  const scale = 1 + Math.sin(loopAngle * 2 + 0.2) * 0.016
   return `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`
 }
 
@@ -123,13 +125,15 @@ function orbiterTransform(
   closeness: number,
   index: number,
 ) {
+  // Lower-frequency, lower-amplitude tilt + pulse so motion reads as a slow
+  // breath instead of fast wobble.
   const tilt
-    = Math.sin(loopAngle * (2 + index) + config.tiltPhase) * 6.5
-      + Math.cos(loopAngle * 3 + config.tiltPhase * 0.85) * 1.8
+    = Math.sin(loopAngle * (1.5 + index * 0.5) + config.tiltPhase) * 3.2
+      + Math.cos(loopAngle * 2 + config.tiltPhase * 0.85) * 0.8
   const fluidPulse
-    = Math.sin(loopAngle * 3 + config.scalePhase) * 0.052
-      + Math.cos(loopAngle * 5 + config.scalePhase * 1.15) * 0.018
-  const proximityStretch = closeness * 0.035
+    = Math.sin(loopAngle * 2 + config.scalePhase) * 0.022
+      + Math.cos(loopAngle * 3 + config.scalePhase * 1.15) * 0.006
+  const proximityStretch = closeness * 0.018
   const scaleX = 1 + fluidPulse + proximityStretch
   const scaleY = 1 - fluidPulse * 0.7 - proximityStretch * 0.26
 
@@ -154,15 +158,16 @@ function buildLoopKeyframes(systemSize: number) {
   for (let frame = 0; frame <= LOOP_FRAMES; frame += 1) {
     const offset = frame / LOOP_FRAMES
     const loopAngle = offset * Math.PI * 2
+    // Halve the harmonic wobbles and drop the highest-frequency term — the
+    // orbit traces a near-clean ellipse with only gentle organic drift.
     const primaryPhase
       = -Math.PI * 0.72
         + loopAngle
-        + Math.sin(loopAngle * 2 + 0.4) * 0.08
-        + Math.sin(loopAngle * 3 - 0.3) * 0.018
+        + Math.sin(loopAngle * 2 + 0.4) * 0.04
     const oppositeOffset
       = Math.PI
-        + Math.sin(loopAngle * 1.7 - 0.85) * (isCompact ? 0.06 : 0.1)
-        + Math.cos(loopAngle * 2.3 + 0.2) * (isCompact ? 0.02 : 0.035)
+        + Math.sin(loopAngle * 1.5 - 0.85) * (isCompact ? 0.035 : 0.055)
+        + Math.cos(loopAngle * 2 + 0.2) * (isCompact ? 0.012 : 0.020)
     const secondaryPhase = primaryPhase + oppositeOffset
 
     const rawPointA = positionOrbiter(ORBITERS[0], primaryPhase, loopAngle, systemSize, orbitScale, driftScale)
@@ -303,7 +308,7 @@ export default function NucleusOrbit() {
           style={{
             '--ncx-blob-fill': '#C9A9FF',
             '--ncx-blob-shadow': 'rgba(169, 124, 250, 0.32)',
-            '--ncx-blob-morph-duration': '10.5s',
+            '--ncx-blob-morph-duration': '16s',
           } as CSSProperties}
         />
       </div>
@@ -318,7 +323,7 @@ export default function NucleusOrbit() {
           style={{
             '--ncx-blob-fill': '#A97CFA',
             '--ncx-blob-shadow': 'rgba(78, 31, 168, 0.54)',
-            '--ncx-blob-morph-duration': '15.5s',
+            '--ncx-blob-morph-duration': '24s',
           } as CSSProperties}
         />
       </div>
@@ -333,7 +338,7 @@ export default function NucleusOrbit() {
           style={{
             '--ncx-blob-fill': '#8F55F0',
             '--ncx-blob-shadow': 'rgba(45, 10, 91, 0.58)',
-            '--ncx-blob-morph-duration': '13.4s',
+            '--ncx-blob-morph-duration': '21s',
           } as CSSProperties}
         />
       </div>
