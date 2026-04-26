@@ -2,50 +2,194 @@ import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 
 type OrbiterConfig = {
-  sizeRatio: number
-  angle: number
-  baseSpeed: number
-  radiusXRatio: number
+  driftPhase: number
+  radiusXPulse: number
+  radiusYPulse: number
   radiusYRatio: number
-  wobbleSeed: number
+  radiusXRatio: number
+  scalePhase: number
+  sizeRatio: number
+  tiltPhase: number
 }
 
-type OrbiterState = OrbiterConfig & {
+type Point = {
   x: number
   y: number
-  recoil: number
-  speedBoost: number
 }
 
-const ORBITERS: OrbiterConfig[] = [
+type TransformKeyframe = {
+  offset: number
+  transform: string
+}
+
+const LOOP_DURATION_MS = 16500
+// Sample a deterministic path sparsely and let the browser interpolate it.
+const LOOP_FPS = 24
+const LOOP_FRAMES = Math.round((LOOP_DURATION_MS / 1000) * LOOP_FPS)
+const CENTER_SIZE_RATIO = 0.16
+const ORBITERS: readonly OrbiterConfig[] = [
   {
-    sizeRatio: 0.38,
-    angle: -Math.PI * 0.68,
-    baseSpeed: 0.54,
-    radiusXRatio: 0.38,
+    driftPhase: 0.5,
+    radiusXPulse: 0.022,
+    radiusYPulse: 0.017,
     radiusYRatio: 0.31,
-    wobbleSeed: 0.4,
+    radiusXRatio: 0.39,
+    scalePhase: 0.35,
+    sizeRatio: 0.38,
+    tiltPhase: 0.4,
   },
   {
+    driftPhase: 2.1,
+    radiusXPulse: 0.019,
+    radiusYPulse: 0.015,
+    radiusYRatio: 0.28,
+    radiusXRatio: 0.35,
+    scalePhase: 2.2,
     sizeRatio: 0.33,
-    angle: Math.PI * 0.52,
-    baseSpeed: 0.33,
-    radiusXRatio: 0.39,
-    radiusYRatio: 0.29,
-    wobbleSeed: 2.1,
+    tiltPhase: 2.05,
   },
 ]
 
-function normalizeAngle(angle: number) {
-  let value = angle
-  while (value > Math.PI) value -= Math.PI * 2
-  while (value < -Math.PI) value += Math.PI * 2
-  return value
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
 }
 
-function smoothstep(edge0: number, edge1: number, value: number) {
-  const t = Math.min(Math.max((value - edge0) / (edge1 - edge0), 0), 1)
-  return t * t * (3 - 2 * t)
+function positionOrbiter(
+  config: OrbiterConfig,
+  orbitPhase: number,
+  loopAngle: number,
+  systemSize: number,
+  orbitScale: number,
+  driftScale: number,
+): Point {
+  const radiusX
+    = systemSize * config.radiusXRatio * orbitScale
+      + Math.sin(loopAngle * 2 + config.driftPhase) * systemSize * config.radiusXPulse * orbitScale
+  const radiusY
+    = systemSize * config.radiusYRatio * orbitScale
+      + Math.cos(loopAngle * 3 + config.driftPhase * 0.75) * systemSize * config.radiusYPulse * orbitScale
+
+  return {
+    x: Math.cos(orbitPhase) * radiusX + Math.cos(loopAngle * 3 + config.driftPhase) * systemSize * 0.014 * driftScale,
+    y: Math.sin(orbitPhase) * radiusY + Math.sin(loopAngle * 2 + config.driftPhase * 1.2) * systemSize * 0.018 * driftScale,
+  }
+}
+
+function enforceMinimumSeparation(pointA: Point, pointB: Point, minDistance: number) {
+  const dx = pointB.x - pointA.x
+  const dy = pointB.y - pointA.y
+  const distance = Math.hypot(dx, dy) || 1
+
+  if (distance >= minDistance) {
+    return { pointA, pointB, distance }
+  }
+
+  const push = (minDistance - distance) / 2
+  const nx = dx / distance
+  const ny = dy / distance
+
+  return {
+    pointA: { x: pointA.x - nx * push, y: pointA.y - ny * push },
+    pointB: { x: pointB.x + nx * push, y: pointB.y + ny * push },
+    distance: minDistance,
+  }
+}
+
+function enforceMinimumRadius(point: Point, minRadius: number) {
+  const distance = Math.hypot(point.x, point.y) || 1
+
+  if (distance >= minRadius) {
+    return point
+  }
+
+  const scale = minRadius / distance
+  return {
+    x: point.x * scale,
+    y: point.y * scale,
+  }
+}
+
+function centerTransform(loopAngle: number, systemSize: number) {
+  const x = Math.sin(loopAngle + 0.35) * systemSize * 0.008
+  const y = Math.cos(loopAngle * 2 - 0.18) * systemSize * 0.0065
+  const scale = 1 + Math.sin(loopAngle * 2 + 0.2) * 0.025
+  return `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`
+}
+
+function orbiterTransform(
+  point: Point,
+  config: OrbiterConfig,
+  loopAngle: number,
+  closeness: number,
+  index: number,
+) {
+  const tilt
+    = Math.sin(loopAngle * (2 + index) + config.tiltPhase) * 6.5
+      + Math.cos(loopAngle * 3 + config.tiltPhase * 0.85) * 1.8
+  const fluidPulse
+    = Math.sin(loopAngle * 3 + config.scalePhase) * 0.052
+      + Math.cos(loopAngle * 5 + config.scalePhase * 1.15) * 0.018
+  const proximityStretch = closeness * 0.035
+  const scaleX = 1 + fluidPulse + proximityStretch
+  const scaleY = 1 - fluidPulse * 0.7 - proximityStretch * 0.26
+
+  return `translate(-50%, -50%) translate(${point.x}px, ${point.y}px) rotate(${tilt}deg) scaleX(${scaleX}) scaleY(${scaleY})`
+}
+
+function buildLoopKeyframes(systemSize: number) {
+  const center: TransformKeyframe[] = []
+  const orbiters: TransformKeyframe[][] = [[], []]
+  const isCompact = systemSize < 340
+  const orbitScale = isCompact ? 0.94 : 1.02
+  const driftScale = isCompact ? 0.78 : 0.9
+  const combinedRadii = (ORBITERS[0].sizeRatio + ORBITERS[1].sizeRatio) / 2
+  const minVisibleGap = systemSize * Math.min(ORBITERS[0].sizeRatio, ORBITERS[1].sizeRatio) * (isCompact ? 0.44 : 0.4)
+  const minDistance = systemSize * combinedRadii + minVisibleGap
+  const softDistance = minDistance + systemSize * (isCompact ? 0.14 : 0.11)
+  const centerGapMultiplier = isCompact ? 0.2 : 0.17
+  const minCenterDistances = ORBITERS.map(orbiter =>
+    systemSize * (((CENTER_SIZE_RATIO + orbiter.sizeRatio) / 2) + orbiter.sizeRatio * centerGapMultiplier),
+  )
+
+  for (let frame = 0; frame <= LOOP_FRAMES; frame += 1) {
+    const offset = frame / LOOP_FRAMES
+    const loopAngle = offset * Math.PI * 2
+    const primaryPhase
+      = -Math.PI * 0.72
+        + loopAngle
+        + Math.sin(loopAngle * 2 + 0.4) * 0.08
+        + Math.sin(loopAngle * 3 - 0.3) * 0.018
+    const oppositeOffset
+      = Math.PI
+        + Math.sin(loopAngle * 1.7 - 0.85) * (isCompact ? 0.06 : 0.1)
+        + Math.cos(loopAngle * 2.3 + 0.2) * (isCompact ? 0.02 : 0.035)
+    const secondaryPhase = primaryPhase + oppositeOffset
+
+    const rawPointA = positionOrbiter(ORBITERS[0], primaryPhase, loopAngle, systemSize, orbitScale, driftScale)
+    const rawPointB = positionOrbiter(ORBITERS[1], secondaryPhase, loopAngle, systemSize, orbitScale, driftScale)
+    const clearedPointA = enforceMinimumRadius(rawPointA, minCenterDistances[0])
+    const clearedPointB = enforceMinimumRadius(rawPointB, minCenterDistances[1])
+    const separated = enforceMinimumSeparation(clearedPointA, clearedPointB, minDistance)
+    const pointA = enforceMinimumRadius(separated.pointA, minCenterDistances[0])
+    const pointB = enforceMinimumRadius(separated.pointB, minCenterDistances[1])
+    const distance = Math.hypot(pointB.x - pointA.x, pointB.y - pointA.y)
+    const closeness = clamp((softDistance - distance) / (softDistance - minDistance), 0, 1)
+
+    center.push({
+      offset,
+      transform: centerTransform(loopAngle, systemSize),
+    })
+    orbiters[0].push({
+      offset,
+      transform: orbiterTransform(pointA, ORBITERS[0], loopAngle, closeness, 0),
+    })
+    orbiters[1].push({
+      offset,
+      transform: orbiterTransform(pointB, ORBITERS[1], loopAngle, closeness, 1),
+    })
+  }
+
+  return { center, orbiters }
 }
 
 export default function NucleusOrbit() {
@@ -59,147 +203,93 @@ export default function NucleusOrbit() {
     if (!container) return
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const orbiters: OrbiterState[] = ORBITERS.map(orbiter => ({
-      ...orbiter,
-      x: 0,
-      y: 0,
-      recoil: 0,
-      speedBoost: 0,
-    }))
+    const animations: Animation[] = []
+    let resizeRaf = 0
+
+    const setStaticTransforms = () => {
+      const { center, orbiters } = buildLoopKeyframes(sizeRef.current)
+
+      if (centerRef.current) centerRef.current.style.transform = center[0].transform
+      orbiterRefs.current.forEach((node, index) => {
+        if (node) node.style.transform = orbiters[index][0].transform
+      })
+    }
+
+    const startLoop = () => {
+      animations.splice(0).forEach(animation => animation.cancel())
+
+      if (reduceMotion) {
+        setStaticTransforms()
+        return
+      }
+
+      const { center, orbiters } = buildLoopKeyframes(sizeRef.current)
+      const nextAnimations: Animation[] = []
+
+      if (centerRef.current) {
+        nextAnimations.push(centerRef.current.animate(center, {
+          duration: LOOP_DURATION_MS,
+          easing: 'linear',
+          iterations: Infinity,
+          fill: 'both',
+        }))
+      }
+
+      orbiterRefs.current.forEach((node, index) => {
+        if (!node) return
+
+        nextAnimations.push(node.animate(orbiters[index], {
+          duration: LOOP_DURATION_MS,
+          easing: 'linear',
+          iterations: Infinity,
+          fill: 'both',
+        }))
+      })
+
+      const startTime = document.timeline.currentTime ?? 0
+      nextAnimations.forEach((animation) => {
+        animation.startTime = startTime
+        animations.push(animation)
+      })
+    }
 
     const resizeObserver = new ResizeObserver((entries) => {
       const nextSize = entries[0]?.contentRect.width
-      if (nextSize) sizeRef.current = nextSize
+      if (!nextSize) return
+
+      const quantizedSize = Math.round(nextSize / 8) * 8
+      if (quantizedSize === sizeRef.current) return
+
+      sizeRef.current = quantizedSize
+      cancelAnimationFrame(resizeRaf)
+      resizeRaf = requestAnimationFrame(startLoop)
     })
     resizeObserver.observe(container)
-    sizeRef.current = container.getBoundingClientRect().width || 520
-
-    const applyTransforms = (elapsed: number) => {
-      const systemSize = sizeRef.current
-      const centerDriftX = Math.sin(elapsed * 0.42) * systemSize * 0.008
-      const centerDriftY = Math.cos(elapsed * 0.36) * systemSize * 0.007
-      const centerScale = 1 + Math.sin(elapsed * 1.05) * 0.028
-
-      if (centerRef.current) {
-        centerRef.current.style.transform = `translate(-50%, -50%) translate(${centerDriftX}px, ${centerDriftY}px) scale(${centerScale})`
-      }
-
-      orbiters.forEach((orbiter, index) => {
-        const node = orbiterRefs.current[index]
-        if (!node) return
-
-        const tilt = Math.sin(elapsed * (0.95 + index * 0.14) + orbiter.wobbleSeed) * 7
-        const fluidPulse = Math.sin(elapsed * (1.18 + index * 0.17) + orbiter.wobbleSeed) * 0.05
-        const proximityStretch = Math.max(orbiter.recoil, 0) / systemSize * 0.22
-        const scaleX = 1 + fluidPulse + proximityStretch
-        const scaleY = 1 - fluidPulse * 0.72 - proximityStretch * 0.45
-        node.style.transform = `translate(-50%, -50%) translate(${orbiter.x}px, ${orbiter.y}px) rotate(${tilt}deg) scaleX(${scaleX}) scaleY(${scaleY})`
-      })
-    }
-
-    if (reduceMotion) {
-      const systemSize = sizeRef.current
-      orbiters[0].x = Math.cos(orbiters[0].angle) * (systemSize * orbiters[0].radiusXRatio)
-      orbiters[0].y = Math.sin(orbiters[0].angle) * (systemSize * orbiters[0].radiusYRatio)
-      orbiters[1].x = Math.cos(orbiters[1].angle) * (systemSize * orbiters[1].radiusXRatio)
-      orbiters[1].y = Math.sin(orbiters[1].angle) * (systemSize * orbiters[1].radiusYRatio)
-      applyTransforms(0)
-      return () => resizeObserver.disconnect()
-    }
-
-    let raf = 0
-    let last = performance.now()
-    let elapsed = 0
-
-    const tick = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 0.034)
-      last = now
-      elapsed += dt
-
-      const systemSize = sizeRef.current
-
-      orbiters.forEach((orbiter, index) => {
-        const speedVariance
-          = 1
-            + Math.sin(elapsed * (0.72 + index * 0.11) + orbiter.wobbleSeed) * 0.2
-            + Math.cos(elapsed * (1.55 + index * 0.06) + orbiter.wobbleSeed * 1.7) * 0.07
-
-        const easing = 1 - Math.exp(-4.8 * dt)
-        orbiter.speedBoost += (0 - orbiter.speedBoost) * easing
-        orbiter.recoil += (0 - orbiter.recoil) * (1 - Math.exp(-5.6 * dt))
-        const angularVelocity = Math.max(0.14, orbiter.baseSpeed * speedVariance + orbiter.speedBoost)
-        orbiter.angle += angularVelocity * dt
-
-        const orbitRadiusX
-          = systemSize * orbiter.radiusXRatio
-            + Math.sin(elapsed * 0.88 + orbiter.wobbleSeed) * systemSize * 0.024
-            + orbiter.recoil
-        const orbitRadiusY
-          = systemSize * orbiter.radiusYRatio
-            + Math.cos(elapsed * 0.63 + orbiter.wobbleSeed * 1.4) * systemSize * 0.02
-            + orbiter.recoil * 0.72
-
-        const innerDriftX = Math.cos(elapsed * (0.78 + index * 0.1) + orbiter.wobbleSeed) * systemSize * 0.016
-        const innerDriftY = Math.sin(elapsed * (0.94 + index * 0.12) + orbiter.wobbleSeed * 1.2) * systemSize * 0.021
-
-        orbiter.x = Math.cos(orbiter.angle) * orbitRadiusX + innerDriftX
-        orbiter.y = Math.sin(orbiter.angle) * orbitRadiusY + innerDriftY
-      })
-
-      const [blobA, blobB] = orbiters
-      const dx = blobB.x - blobA.x
-      const dy = blobB.y - blobA.y
-      const distance = Math.hypot(dx, dy) || 1
-      const nearDistance = systemSize * ((blobA.sizeRatio + blobB.sizeRatio) * 0.58)
-      const approachDistance = systemSize * ((blobA.sizeRatio + blobB.sizeRatio) * 0.76)
-
-      if (distance < approachDistance) {
-        const closeness = 1 - smoothstep(nearDistance, approachDistance, distance)
-        const delta = normalizeAngle(blobB.angle - blobA.angle)
-        const leading = delta >= 0 ? blobB : blobA
-        const trailing = delta >= 0 ? blobA : blobB
-        const steerBlend = 1 - Math.exp(-10 * dt)
-
-        trailing.speedBoost += ((-0.12 * closeness) - trailing.speedBoost) * steerBlend
-        leading.speedBoost += ((0.07 * closeness) - leading.speedBoost) * steerBlend
-        trailing.recoil += ((systemSize * (0.006 + closeness * 0.010)) - trailing.recoil) * steerBlend
-        leading.recoil += ((systemSize * (0.004 + closeness * 0.007)) - leading.recoil) * steerBlend
-      }
-
-      applyTransforms(elapsed)
-      raf = requestAnimationFrame(tick)
-    }
-
-    raf = requestAnimationFrame(tick)
+    sizeRef.current = Math.round((container.getBoundingClientRect().width || 520) / 8) * 8
+    startLoop()
 
     return () => {
-      cancelAnimationFrame(raf)
+      cancelAnimationFrame(resizeRaf)
+      animations.forEach(animation => animation.cancel())
       resizeObserver.disconnect()
     }
   }, [])
 
   return (
     <div ref={containerRef} className="relative w-full max-w-[520px] aspect-square mx-auto" aria-hidden="true">
-      <svg className="absolute w-0 h-0 pointer-events-none" aria-hidden="true">
-        <filter id="ncx-hero-blob-distort">
-          <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" />
-        </filter>
-      </svg>
-
       <div
         className="absolute inset-[2%] rounded-full pointer-events-none opacity-90"
         style={{
-          background: 'radial-gradient(circle at 50% 48%, rgba(123, 63, 228, 0.24) 0%, rgba(123, 63, 228, 0.12) 26%, transparent 70%)',
-          filter: 'blur(30px)',
+          background: 'radial-gradient(circle at 50% 48%, rgba(123, 63, 228, 0.18) 0%, rgba(123, 63, 228, 0.08) 24%, transparent 68%)',
+          filter: 'blur(28px)',
         }}
       />
 
       <div
         className="absolute inset-[18%] rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(169, 124, 250, 0.18) 0%, transparent 72%)',
-          filter: 'blur(28px)',
+          background: 'radial-gradient(circle, rgba(169, 124, 250, 0.12) 0%, transparent 70%)',
+          filter: 'blur(24px)',
         }}
       />
 
@@ -211,8 +301,8 @@ export default function NucleusOrbit() {
         <BlobVisual
           variant="core"
           style={{
-            '--ncx-blob-fill': '#d7bcff',
-            '--ncx-blob-shadow': 'rgba(169, 124, 250, 0.48)',
+            '--ncx-blob-fill': '#C9A9FF',
+            '--ncx-blob-shadow': 'rgba(169, 124, 250, 0.32)',
             '--ncx-blob-morph-duration': '10.5s',
           } as CSSProperties}
         />
@@ -226,7 +316,7 @@ export default function NucleusOrbit() {
         <BlobVisual
           variant="primary"
           style={{
-            '--ncx-blob-fill': '#c9a9ff',
+            '--ncx-blob-fill': '#A97CFA',
             '--ncx-blob-shadow': 'rgba(78, 31, 168, 0.54)',
             '--ncx-blob-morph-duration': '15.5s',
           } as CSSProperties}
@@ -241,7 +331,7 @@ export default function NucleusOrbit() {
         <BlobVisual
           variant="secondary"
           style={{
-            '--ncx-blob-fill': '#b993ff',
+            '--ncx-blob-fill': '#8F55F0',
             '--ncx-blob-shadow': 'rgba(45, 10, 91, 0.58)',
             '--ncx-blob-morph-duration': '13.4s',
           } as CSSProperties}

@@ -455,7 +455,7 @@ html, body {
   overflow: hidden;
   isolation: isolate;
   border-radius: var(--ncx-r-blob-a);
-  will-change: transform, border-radius, filter;
+  will-change: transform, border-radius;
   transform-origin: 48% 54%;
   background: var(--ncx-blob-fill);
   box-shadow:
@@ -463,7 +463,7 @@ html, body {
     inset 0 -24px 44px rgba(12, 3, 30, 0.34),
     inset 0 0 44px rgba(255, 255, 255, 0.06);
   animation: ncx-liquid-morph var(--ncx-blob-morph-duration, 15s) cubic-bezier(0.37, 0, 0.23, 1) infinite;
-  filter: url(#ncx-hero-blob-distort);
+  backface-visibility: hidden;
 }
 
 .ncx-liquid-blob::before {
