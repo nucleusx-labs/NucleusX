@@ -15,13 +15,9 @@ export interface Pool {
   actualTokenA: `0x${string}`
   actualTokenB: `0x${string}`
   pairAddress: `0x${string}`
-  tvl: string
-  volume24h: string
-  fee: string
   userLiquidity: bigint
   userLiquidityFormatted: string
   userSharePercent: string
-  hasPosition: boolean
 }
 
 function formatSharePercent(liquidity: bigint, totalSupply: bigint): string {
@@ -97,25 +93,21 @@ export function usePools() {
           if (snapshot.status !== 'fulfilled') return []
 
           const pool = snapshot.value
+          if (pool.userLiquidity <= 0n) return []
+
           return [{
             tokenA: pool.token0,
             tokenB: pool.token1,
             actualTokenA: pool.actualToken0,
             actualTokenB: pool.actualToken1,
             pairAddress: pool.pairAddress,
-            tvl: '-',
-            volume24h: '-',
-            fee: '0.3%',
             userLiquidity: pool.userLiquidity,
             userLiquidityFormatted: formatTokenAmount(pool.userLiquidity, 18),
             userSharePercent: formatSharePercent(pool.userLiquidity, pool.totalSupply),
-            hasPosition: pool.userLiquidity > 0n,
           }]
         })
 
         foundPools.sort((a, b) => {
-          if (a.hasPosition !== b.hasPosition) return a.hasPosition ? -1 : 1
-
           const pairA = `${a.tokenA.symbol}/${a.tokenB.symbol}`
           const pairB = `${b.tokenA.symbol}/${b.tokenB.symbol}`
           return pairA.localeCompare(pairB)
