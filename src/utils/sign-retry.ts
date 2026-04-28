@@ -57,7 +57,15 @@ export function isRetryableSigningError(err: unknown): boolean {
     || text.includes('invalidtxerror')
     || text.includes('badmetadatahash')
     || text.includes('badspecversion')
+    || text.includes('ancientbirthblock')
+    || text.includes('transaction is outdated')
   )
+}
+
+function getResolvedDispatchError(result: unknown): unknown {
+  if (!result || typeof result !== 'object') return null
+  const maybeResult = result as { ok?: unknown; dispatchError?: unknown }
+  return maybeResult.ok === false ? maybeResult.dispatchError : null
 }
 
 /**
@@ -78,7 +86,17 @@ export async function signAndSubmitWithRetry<T>(
   let lastError: unknown
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await build()
+      const result = await build()
+      const dispatchError = getResolvedDispatchError(result)
+      if (dispatchError && attempt < maxAttempts && isRetryableSigningError(dispatchError)) {
+        lastError = dispatchError
+        console.warn(
+          `[papi] transient submission failure on attempt ${attempt}/${maxAttempts}; retrying with a fresh payload`,
+          dispatchError,
+        )
+        continue
+      }
+      return result
     }
     catch (err) {
       lastError = err

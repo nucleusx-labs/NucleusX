@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { selectedAccount } from '../hooks/useConnect'
 import { useEvmAddress } from '../hooks/useEvmAddress'
 import type { Token } from '../store/dexStore'
-import { dexStore, selectTokenList } from '../store/dexStore'
+import { dexStore, selectLiquidityVersion, selectTokenList } from '../store/dexStore'
 import { CONTRACTS, FACTORY_ABI } from '../utils/contracts'
 import { fetchPoolSnapshot, formatTokenAmount, isZeroAddress, ZERO_SS58 } from '../utils/liquidity'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
@@ -33,6 +33,7 @@ export function usePools() {
   const account = useAtom(selectedAccount)
   const evmAddress = useEvmAddress(account?.address)
   const tokenList = useSelector(dexStore, selectTokenList)
+  const liquidityVersion = useSelector(dexStore, selectLiquidityVersion)
 
   const [pools, setPools] = useState<Pool[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -127,7 +128,7 @@ export function usePools() {
     fetchPools()
 
     return () => { cancelled = true }
-  }, [account?.address, evmAddress, tokenList])
+  }, [account?.address, evmAddress, liquidityVersion, tokenList])
 
   return { pools, isLoading }
 }

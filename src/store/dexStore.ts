@@ -144,6 +144,7 @@ export const dexStore = createStore({
     tokenList: INITIAL_CONTEXT_TOKEN_LIST as Token[],
     balances: {} as Record<string, TokenBalance>,
     balancesVersion: 0,
+    liquidityVersion: 0,
     pairReserves: {} as Record<string, PairReserve>,
     blockNumber: 0,
   },
@@ -161,6 +162,11 @@ export const dexStore = createStore({
     'balances.invalidate': ctx => ({
       ...ctx,
       balancesVersion: ctx.balancesVersion + 1,
+    }),
+
+    'liquidity.invalidate': ctx => ({
+      ...ctx,
+      liquidityVersion: ctx.liquidityVersion + 1,
     }),
 
     'balance.update': (ctx, event: { tokenAddress: string; balance: TokenBalance }) => ({
@@ -213,6 +219,7 @@ export const selectTokenList    = (s: Snapshot): Token[]                        
 export const selectNativeToken  = (s: Snapshot): Token                          => s.context.nativeToken
 export const selectBalances     = (s: Snapshot): Record<string, TokenBalance>   => s.context.balances
 export const selectBalancesVersion = (s: Snapshot): number                      => s.context.balancesVersion
+export const selectLiquidityVersion = (s: Snapshot): number                     => s.context.liquidityVersion
 export const selectPairReserves = (s: Snapshot): Record<string, PairReserve>   => s.context.pairReserves
 export const selectBlockNumber  = (s: Snapshot): number                         => s.context.blockNumber
 

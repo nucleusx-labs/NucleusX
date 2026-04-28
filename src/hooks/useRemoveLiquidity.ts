@@ -2,7 +2,7 @@ import { useAtom, useSelector } from '@xstate/store/react'
 import { useEffect, useState } from 'react'
 import { selectedAccount } from './useConnect'
 import { useEvmAddress } from './useEvmAddress'
-import { dexStore, selectTokenList } from '../store/dexStore'
+import { dexStore, selectLiquidityVersion, selectTokenList } from '../store/dexStore'
 import type { Token } from '../store/dexStore'
 import { contractWrite } from '../utils/contract-write'
 import { CONTRACTS, PAIR_ABI, ROUTER_ABI } from '../utils/contracts'
@@ -53,6 +53,7 @@ export function useRemoveLiquidity(pairAddress: string | null) {
   const account = useAtom(selectedAccount)
   const evmAddress = useEvmAddress(account?.address)
   const tokenList = useSelector(dexStore, selectTokenList)
+  const liquidityVersion = useSelector(dexStore, selectLiquidityVersion)
 
   const [position, setPosition] = useState<LiquidityPosition>(EMPTY_POSITION)
   const [step, setStep] = useState<RemoveLiquidityStep>('idle')
@@ -112,7 +113,7 @@ export function useRemoveLiquidity(pairAddress: string | null) {
 
     fetchPosition()
     return () => { cancelled = true }
-  }, [account?.address, evmAddress, pairAddress, refreshNonce, tokenList])
+  }, [account?.address, evmAddress, liquidityVersion, pairAddress, refreshNonce, tokenList])
 
   async function remove(liquidity: bigint) {
     if (!account?.address || !evmAddress) {
@@ -173,15 +174,15 @@ export function useRemoveLiquidity(pairAddress: string | null) {
         toast.success('LP token approved')
       }
 
-      const { amount0, amount1 } = computeUnderlyingAmounts(
+      const expected = computeUnderlyingAmounts(
         liquidity,
         position.totalSupply,
         position.reserve0,
         position.reserve1,
       )
 
-      const amount0Min = (amount0 * (10000n - SLIPPAGE_BPS)) / 10000n
-      const amount1Min = (amount1 * (10000n - SLIPPAGE_BPS)) / 10000n
+      const amount0Min = (expected.amount0 * (10000n - SLIPPAGE_BPS)) / 10000n
+      const amount1Min = (expected.amount1 * (10000n - SLIPPAGE_BPS)) / 10000n
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60)
 
       setStep('removing')
@@ -218,7 +219,16 @@ export function useRemoveLiquidity(pairAddress: string | null) {
             ss58Address: account.address,
           })
 
+      setPosition(prev => ({
+        ...prev,
+        userLiquidity: prev.userLiquidity > liquidity ? prev.userLiquidity - liquidity : 0n,
+        totalSupply: prev.totalSupply > liquidity ? prev.totalSupply - liquidity : 0n,
+        reserve0: prev.reserve0 > expected.amount0 ? prev.reserve0 - expected.amount0 : 0n,
+        reserve1: prev.reserve1 > expected.amount1 ? prev.reserve1 - expected.amount1 : 0n,
+      }))
+
       dexStore.send({ type: 'balances.invalidate' })
+      dexStore.send({ type: 'liquidity.invalidate' })
       setTxHash(result.txHash)
       setStep('success')
       setRefreshNonce(value => value + 1)
@@ -226,7 +236,11 @@ export function useRemoveLiquidity(pairAddress: string | null) {
     }
     catch (err) {
       console.error('[useRemoveLiquidity] error', err)
-      const message = err instanceof Error ? err.message : String(err)
+      const rawMessage = err instanceof Error ? err.message : String(err)
+      const lower = rawMessage.toLowerCase()
+      const message = lower.includes('ancientbirthblock')
+        ? 'Transaction payload expired before Talisman submitted it. Approve the retry prompt to send a fresh payload.'
+        : rawMessage
       setError(message)
       setStep('error')
       toast.error('Remove liquidity failed', message)

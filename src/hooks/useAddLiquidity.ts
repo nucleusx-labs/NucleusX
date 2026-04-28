@@ -1,7 +1,7 @@
 import { useAtom } from '@xstate/store/react'
 import { useState } from 'react'
 import type { Token } from '../store/dexStore'
-import { NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
+import { dexStore, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import { contractWrite } from '../utils/contract-write'
 import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contracts'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
@@ -204,6 +204,8 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
 
       setTxHash(result.txHash)
       setStep('success')
+      dexStore.send({ type: 'liquidity.invalidate' })
+      dexStore.send({ type: 'balances.invalidate' })
       toast.success('Liquidity added', result.txHash)
     }
     catch (err) {
