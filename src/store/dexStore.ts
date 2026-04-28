@@ -10,6 +10,7 @@ export interface Token {
   decimals: number
   iconSrc?: string
   iconClass?: string
+  isCustom?: boolean
 }
 
 export interface TokenBalance {
@@ -48,10 +49,99 @@ const INITIAL_TOKEN_LIST: Token[] = [
   { symbol: '$52f', name: '$52f', address: TOKENS.$52F, decimals: 18, iconSrc: fiftyTwoFTokenSrc },
 ]
 
+const CUSTOM_TOKEN_STORAGE_KEY = 'nucleusx:custom-tokens'
+
+function getStorage(): Storage | null {
+  if (typeof window === 'undefined') return null
+  return window.localStorage
+}
+
+function normalizeAddress(address: string): string {
+  return address.toLowerCase()
+}
+
+const WHITELISTED_TOKEN_ADDRESSES = new Set(
+  INITIAL_TOKEN_LIST.map(token => normalizeAddress(token.address)),
+)
+
+export function isWhitelistedTokenAddress(address: string): boolean {
+  return WHITELISTED_TOKEN_ADDRESSES.has(normalizeAddress(address))
+}
+
+function loadCustomTokens(): Token[] {
+  const storage = getStorage()
+  if (!storage) return []
+
+  try {
+    const raw = storage.getItem(CUSTOM_TOKEN_STORAGE_KEY)
+    if (!raw) return []
+
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+
+    return parsed.flatMap((item) => {
+      if (!item || typeof item !== 'object') return []
+
+      const candidate = item as Partial<Token>
+      if (
+        typeof candidate.symbol !== 'string'
+        || typeof candidate.name !== 'string'
+        || typeof candidate.address !== 'string'
+        || typeof candidate.decimals !== 'number'
+      ) {
+        return []
+      }
+
+      if (!/^0x[a-fA-F0-9]{40}$/.test(candidate.address)) return []
+      if (isWhitelistedTokenAddress(candidate.address)) return []
+
+      return [{
+        symbol: candidate.symbol,
+        name: candidate.name,
+        address: candidate.address as `0x${string}`,
+        decimals: candidate.decimals,
+        iconSrc: candidate.iconSrc,
+        iconClass: candidate.iconClass,
+        isCustom: true,
+      }]
+    })
+  }
+  catch (err) {
+    console.error('[dexStore] Failed to load custom tokens', err)
+    return []
+  }
+}
+
+function persistCustomTokens(tokens: Token[]): void {
+  const storage = getStorage()
+  if (!storage) return
+
+  const customTokens = tokens.filter(token =>
+    token.isCustom && !isWhitelistedTokenAddress(token.address),
+  )
+
+  storage.setItem(CUSTOM_TOKEN_STORAGE_KEY, JSON.stringify(customTokens))
+}
+
+function mergeTokenLists(base: Token[], custom: Token[]): Token[] {
+  const merged = [...base]
+
+  for (const token of custom) {
+    const exists = merged.some(existing =>
+      normalizeAddress(existing.address) === normalizeAddress(token.address),
+    )
+    if (!exists) merged.push({ ...token, isCustom: true })
+  }
+
+  return merged
+}
+
+const INITIAL_CONTEXT_TOKEN_LIST = mergeTokenLists(INITIAL_TOKEN_LIST, loadCustomTokens())
+
 export const dexStore = createStore({
   context: {
     nativeToken: NATIVE_TOKEN as Token,
-    tokenList: INITIAL_TOKEN_LIST as Token[],
+    tokenList: INITIAL_CONTEXT_TOKEN_LIST as Token[],
     balances: {} as Record<string, TokenBalance>,
     balancesVersion: 0,
     pairReserves: {} as Record<string, PairReserve>,
@@ -100,7 +190,19 @@ export const dexStore = createStore({
         t => t.address.toLowerCase() === event.token.address.toLowerCase(),
       )
       if (already) return ctx
-      return { ...ctx, tokenList: [...ctx.tokenList, event.token] }
+      const nextTokenList = [...ctx.tokenList, { ...event.token, isCustom: event.token.isCustom ?? true }]
+      persistCustomTokens(nextTokenList)
+      return { ...ctx, tokenList: nextTokenList }
+    },
+
+    'tokenList.remove': (ctx, event: { tokenAddress: string }) => {
+      if (isWhitelistedTokenAddress(event.tokenAddress)) return ctx
+
+      const nextTokenList = ctx.tokenList.filter(token =>
+        normalizeAddress(token.address) !== normalizeAddress(event.tokenAddress),
+      )
+      persistCustomTokens(nextTokenList)
+      return { ...ctx, tokenList: nextTokenList }
     },
   },
 })

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import BrandMark from './BrandMark'
 
 const REPO_URL = 'https://github.com/nucleusx-labs/NucleusX'
 const X_URL = 'https://x.com/nucleusxtr'
@@ -56,9 +57,11 @@ export default function Footer() {
       <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-14">
         <div className="sm:hidden">
           <div className="flex items-center gap-3 mb-5">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-2xl border border-ncx-border-strong bg-ncx-wash text-ncx-purple-300 font-semibold tracking-tight">
-              N
-            </span>
+            <BrandMark
+              alt=""
+              aria-hidden="true"
+              className="w-9 h-9 rounded-[22%] object-cover shadow-[0_10px_24px_rgba(0,0,0,0.24)]"
+            />
             <div>
               <div className="text-lg font-semibold tracking-tight text-ncx-text">NucleusX</div>
               <div className="text-xs text-ncx-text-muted">Fast swaps on QF Network.</div>
@@ -82,9 +85,11 @@ export default function Footer() {
         <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] gap-10 lg:gap-12">
           <div className="max-w-sm">
             <div className="flex items-center gap-3 mb-4">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl border border-ncx-border-strong bg-ncx-wash text-ncx-purple-300 font-semibold tracking-tight">
-                N
-              </span>
+              <BrandMark
+                alt=""
+                aria-hidden="true"
+                className="w-10 h-10 rounded-[22%] object-cover shadow-[0_10px_24px_rgba(0,0,0,0.24)]"
+              />
               <div>
                 <div className="text-xl font-semibold tracking-tight text-ncx-text">NucleusX</div>
                 <div className="text-sm text-ncx-text-muted">Fast swaps and liquidity on QF Network.</div>

@@ -1,20 +1,15 @@
-import { getSs58AddressInfo } from '@polkadot-api/substrate-bindings'
 import { useAtom } from '@xstate/store/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Token } from '../store/dexStore'
 import { NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import { contractWrite } from '../utils/contract-write'
 import { CONTRACTS, ERC20_ABI, FACTORY_ABI, ROUTER_ABI } from '../utils/contracts'
-import { callContract, checkAccountMapping, decodeContractResult, encodeContractCall } from '../utils/revive'
+import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import sdk from '../utils/sdk'
 import { polkadotSigner } from '../utils/sdk-interface'
 import { toast } from '../store/toastStore'
 import { selectedAccount } from './useConnect'
-
-function pubkeyToH160(pubkey: Uint8Array): `0x${string}` {
-  const h160 = pubkey.slice(12)
-  return `0x${Array.from(h160).map(b => b.toString(16).padStart(2, '0')).join('')}` as `0x${string}`
-}
+import { useEvmAddress } from './useEvmAddress'
 
 export type AddLiquidityStep =
   | 'idle'
@@ -42,32 +37,7 @@ export function useAddLiquidity(): UseAddLiquidityReturn {
   const [step, setStep] = useState<AddLiquidityStep>('idle')
   const [txHash, setTxHash] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [evmAddress, setEvmAddress] = useState<`0x${string}` | undefined>()
-
-  // Resolve EVM address on account change (mirrors useSwap pattern)
-  useEffect(() => {
-    if (!account?.address) {
-      setEvmAddress(undefined)
-      return
-    }
-
-    async function resolveEvm() {
-      try {
-        const { api } = sdk('qf_network')
-        const mapping = await checkAccountMapping(api, account!.address)
-        if (mapping.isMapped && mapping.evmAddress) {
-          setEvmAddress(mapping.evmAddress as `0x${string}`)
-          return
-        }
-      }
-      catch { /* fall through to pubkey derivation */ }
-
-      const info = getSs58AddressInfo(account!.address)
-      if (info.isValid) setEvmAddress(pubkeyToH160(info.publicKey))
-    }
-
-    resolveEvm()
-  }, [account?.address])
+  const evmAddress = useEvmAddress(account?.address)
 
   async function supply(tokenA: Token, tokenB: Token, amountA: bigint, amountB: bigint) {
     if (!account?.address || !evmAddress) {

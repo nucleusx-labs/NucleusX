@@ -1,36 +1,47 @@
 import { useAtom, useSelector } from '@xstate/store/react'
 import { useEffect, useState } from 'react'
 import { selectedAccount } from '../hooks/useConnect'
+import { useEvmAddress } from '../hooks/useEvmAddress'
 import type { Token } from '../store/dexStore'
-import { dexStore, NATIVE_TOKEN_ADDRESS, selectTokenList } from '../store/dexStore'
-import { CONTRACTS, FACTORY_ABI, TOKENS } from '../utils/contracts'
+import { dexStore, selectTokenList } from '../store/dexStore'
+import { CONTRACTS, FACTORY_ABI } from '../utils/contracts'
+import { fetchPoolSnapshot, formatTokenAmount, isZeroAddress, ZERO_SS58 } from '../utils/liquidity'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import sdk from '../utils/sdk'
-
-const ZERO_SS58 = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
 
 export interface Pool {
   tokenA: Token
   tokenB: Token
-  pairAddress: string
+  actualTokenA: `0x${string}`
+  actualTokenB: `0x${string}`
+  pairAddress: `0x${string}`
   tvl: string
   volume24h: string
   fee: string
+  userLiquidity: bigint
+  userLiquidityFormatted: string
+  userSharePercent: string
+  hasPosition: boolean
+}
+
+function formatSharePercent(liquidity: bigint, totalSupply: bigint): string {
+  if (liquidity <= 0n || totalSupply <= 0n) return '0.00%'
+
+  const scaled = (liquidity * 10000n * 100n) / totalSupply
+  const whole = scaled / 100n
+  const fraction = (scaled % 100n).toString().padStart(2, '0')
+  return `${whole}.${fraction}%`
 }
 
 export function usePools() {
   const account = useAtom(selectedAccount)
+  const evmAddress = useEvmAddress(account?.address)
   const tokenList = useSelector(dexStore, selectTokenList)
 
   const [pools, setPools] = useState<Pool[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (tokenList.length < 2) {
-      setPools([])
-      return
-    }
-
     let cancelled = false
     setIsLoading(true)
 
@@ -39,51 +50,72 @@ export function usePools() {
         const { api } = sdk('qf_network')
         const origin = account?.address ?? ZERO_SS58
 
-        const combinations: [Token, Token][] = []
-        for (let i = 0; i < tokenList.length; i++) {
-          for (let j = i + 1; j < tokenList.length; j++) {
-            const tokenA = tokenList[i]
-            const tokenB = tokenList[j]
-            if (tokenA.address.toLowerCase() === tokenB.address.toLowerCase()) continue
-            combinations.push([tokenA, tokenB])
-          }
+        const lengthRes = await callContract(api, {
+          origin,
+          dest: CONTRACTS.UniswapV2Factory,
+          value: 0n,
+          calldata: encodeContractCall(FACTORY_ABI, 'allPairsLength', []),
+        })
+
+        if (!lengthRes.result.ok) {
+          throw new Error('Failed to read factory pair count')
         }
 
-        const foundPools: Pool[] = []
+        const allPairsLength = Number(
+          decodeContractResult(FACTORY_ABI, 'allPairsLength', lengthRes.result.ok.data),
+        )
 
-        await Promise.allSettled(
-          combinations.map(async ([tokenA, tokenB]) => {
-            const tAAddress = tokenA.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenA.address
-            const tBAddress = tokenB.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenB.address
+        if (allPairsLength === 0) {
+          if (!cancelled) setPools([])
+          return
+        }
 
-            if (tAAddress.toLowerCase() === tBAddress.toLowerCase()) return
-
-            const calldata = encodeContractCall(FACTORY_ABI, 'getPair', [tAAddress, tBAddress])
-            const res = await callContract(api, {
+        const pairResponses = await Promise.all(
+          Array.from({ length: allPairsLength }, (_, index) =>
+            callContract(api, {
               origin,
               dest: CONTRACTS.UniswapV2Factory,
               value: 0n,
-              calldata,
-            }).catch(() => null)
-
-            if (!res?.result.ok) return
-
-            const pairAddressRaw = decodeContractResult(FACTORY_ABI, 'getPair', res.result.ok.data) as string
-            const pairAddress = pairAddressRaw.toLowerCase()
-            if (!pairAddress || /^0x0+$/.test(pairAddress)) return
-
-            foundPools.push({
-              tokenA,
-              tokenB,
-              pairAddress,
-              tvl: '-',
-              volume24h: '-',
-              fee: '0.3%',
-            })
-          }),
+              calldata: encodeContractCall(FACTORY_ABI, 'allPairs', [BigInt(index)]),
+            }).catch(() => null),
+          ),
         )
 
+        const pairAddresses = pairResponses.flatMap((response) => {
+          if (!response?.result.ok) return []
+          const pairAddress = decodeContractResult(FACTORY_ABI, 'allPairs', response.result.ok.data) as `0x${string}`
+          return isZeroAddress(pairAddress) ? [] : [pairAddress]
+        })
+
+        const snapshots = await Promise.allSettled(
+          pairAddresses.map(pairAddress =>
+            fetchPoolSnapshot(api, pairAddress, tokenList, origin, evmAddress),
+          ),
+        )
+
+        const foundPools = snapshots.flatMap((snapshot): Pool[] => {
+          if (snapshot.status !== 'fulfilled') return []
+
+          const pool = snapshot.value
+          return [{
+            tokenA: pool.token0,
+            tokenB: pool.token1,
+            actualTokenA: pool.actualToken0,
+            actualTokenB: pool.actualToken1,
+            pairAddress: pool.pairAddress,
+            tvl: '-',
+            volume24h: '-',
+            fee: '0.3%',
+            userLiquidity: pool.userLiquidity,
+            userLiquidityFormatted: formatTokenAmount(pool.userLiquidity, 18),
+            userSharePercent: formatSharePercent(pool.userLiquidity, pool.totalSupply),
+            hasPosition: pool.userLiquidity > 0n,
+          }]
+        })
+
         foundPools.sort((a, b) => {
+          if (a.hasPosition !== b.hasPosition) return a.hasPosition ? -1 : 1
+
           const pairA = `${a.tokenA.symbol}/${a.tokenB.symbol}`
           const pairB = `${b.tokenA.symbol}/${b.tokenB.symbol}`
           return pairA.localeCompare(pairB)
@@ -92,7 +124,7 @@ export function usePools() {
         if (!cancelled) setPools(foundPools)
       }
       catch (err) {
-        console.error(err)
+        console.error('[usePools] Failed to fetch pools', err)
         if (!cancelled) setPools([])
       }
       finally {
@@ -103,7 +135,7 @@ export function usePools() {
     fetchPools()
 
     return () => { cancelled = true }
-  }, [account?.address, tokenList])
+  }, [account?.address, evmAddress, tokenList])
 
   return { pools, isLoading }
 }

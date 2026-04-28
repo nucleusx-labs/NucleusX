@@ -2,9 +2,8 @@ import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 import { Layers, Repeat, LayoutDashboard, ChevronDown, Menu, X, Sun, Moon } from 'lucide-react'
 import Connect from './Connect'
+import BrandMark from './BrandMark'
 import { useTheme } from '../hooks/useTheme'
-
-const LOGO_URL = 'https://res.cloudinary.com/dma1c8i6n/image/upload/v1775509981/270346914_oknsqn.png'
 
 export default function Header() {
   const [isTradeMenuOpen, setTradeMenuOpen] = useState(false)
@@ -34,10 +33,10 @@ export default function Header() {
         <div className="flex items-center gap-6">
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2.5 group" onClick={closeMobileMenu}>
-            <img
-              src={LOGO_URL}
-              alt="NucleusX"
-              className="w-9 h-9 object-contain transition-transform duration-300 group-hover:rotate-6"
+            <BrandMark
+              alt=""
+              aria-hidden="true"
+              className="w-9 h-9 rounded-[22%] object-cover transition-transform duration-300 group-hover:rotate-6"
             />
             <span className="text-lg font-semibold tracking-tight text-ncx-text">
               NucleusX

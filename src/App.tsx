@@ -12,6 +12,7 @@ import UserDashboard from './pages/UserDashboard'
 import Home from './pages/Home'
 import AddLiquidity from './pages/AddLiquidity'
 import Pools from './pages/Pools'
+import RemoveLiquidity from './pages/RemoveLiquidity'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
           <Route path="/staking" element={<Staking />} />
           <Route path="/pools" element={<Pools />} />
           <Route path="/add-liquidity" element={<AddLiquidity />} />
+          <Route path="/remove-liquidity" element={<RemoveLiquidity />} />
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

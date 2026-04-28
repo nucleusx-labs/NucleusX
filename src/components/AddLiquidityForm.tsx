@@ -9,6 +9,8 @@ import { useTokenBalances } from '../hooks/useTokenBalances'
 import { useAddLiquidity } from '../hooks/useAddLiquidity'
 import { dexStore, selectTokenList, NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import { TOKENS } from '../utils/contracts'
+import { fetchTokenMetadata, isHexAddress, ZERO_SS58 } from '../utils/liquidity'
+import sdk from '../utils/sdk'
 import TokenSelector from './TokenSelector'
 import type { Token } from '../store/dexStore'
 
@@ -54,17 +56,55 @@ export default function AddLiquidityForm() {
 
   const [searchParams] = useSearchParams()
 
-  // Pre-select tokens from URL query params (?tokenA=WQF&tokenB=QF)
   useEffect(() => {
-    const paramA = searchParams.get('tokenA')
-    const paramB = searchParams.get('tokenB')
-    if (paramA) { const t = tokenList.find(t => t.symbol === paramA); if (t) setTokenA(t) }
-    if (paramB) { const t = tokenList.find(t => t.symbol === paramB); if (t) setTokenB(t) }
-  }, [searchParams, tokenList])
+    let cancelled = false
+
+    async function resolveToken(param: string | null): Promise<Token | undefined> {
+      if (!param) return undefined
+
+      const existing = tokenList.find(token =>
+        token.symbol === param
+        || token.address.toLowerCase() === param.toLowerCase(),
+      )
+      if (existing) return existing
+
+      if (!isHexAddress(param)) return undefined
+
+      try {
+        const { api } = sdk('qf_network')
+        return await fetchTokenMetadata(api, param, tokenList, account?.address ?? ZERO_SS58)
+      }
+      catch (err) {
+        console.error('[AddLiquidityForm] Failed to resolve token from query param', param, err)
+        return undefined
+      }
+    }
+
+    async function hydrateSelectedTokens() {
+      const [resolvedA, resolvedB] = await Promise.all([
+        resolveToken(searchParams.get('tokenA')),
+        resolveToken(searchParams.get('tokenB')),
+      ])
+
+      if (cancelled) return
+      if (resolvedA) setTokenA(resolvedA)
+      if (resolvedB) setTokenB(resolvedB)
+    }
+
+    hydrateSelectedTokens()
+
+    return () => { cancelled = true }
+  }, [account?.address, searchParams, tokenList])
+
+  const balanceTokenAddresses = Array.from(new Set([
+    ...tokenList.map(token => token.address),
+    tokenA?.address,
+    tokenB?.address,
+  ].filter((address): address is `0x${string}` => !!address)))
 
   const balances = useTokenBalances(
     evmAddress,
-    tokenList.map(t => t.address),
+    balanceTokenAddresses,
     account?.address,
   )
 
