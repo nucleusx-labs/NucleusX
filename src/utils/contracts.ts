@@ -17,12 +17,12 @@ import type { Abi } from 'viem'
  *   - getAmountsOut, getAmountsIn, getAmountOut, getAmountIn, quote
  */
 export const CONTRACTS = {
-  UniswapV2Factory: '0xf44c7411bb141a0e1036c92639e9ac64e8dc37fd',
-  UniswapV2Router02: '0x27aab828a5ee9d10699c6dc1d0d0f89aca914d16',
+  UniswapV2Factory: '0x0d69bbfe6c8ef4f220cc4ae2a4e2f9b4f1ec22c0',
+  UniswapV2Router02: '0xf360f52139cee546c2e6856f83b3bb8ed6cba04c',
 } as const satisfies Record<string, `0x${string}`>
 
 export const TOKENS = {
-  WQF: '0x3e3a42e7e25d5004282ce13a96695c2805224f30',
+  WQF: '0x3e0f6253764e624833eac23c4caeff1530070c8b',
   QDPT: '0x2390250C31f88dC1D48E895d2B8dEC68D590B0D6',
   $52F: '0x561814f95454e5f5690f89385772762ff4550234',
   QPAD: '0xA1F13F120Ca2F7A5d84E524406fa4eE9BbD26E93',

@@ -34,9 +34,9 @@ NucleusX is a full-featured DeFi frontend that bridges Polkadot's Substrate acco
 
 | Contract | Address |
 |---|---|
-| UniswapV2Factory | `0xf44c7411bb141a0e1036c92639e9ac64e8dc37fd` |
-| UniswapV2Router02 | `0xcabe3ecba478b17a9b11d15e208f0d7390f3264d` |
-| WQF Token | `0x3e3a42e7e25d5004282ce13a96695c2805224f30` |
+| UniswapV2Factory | `0x0d69bbfe6c8ef4f220cc4ae2a4e2f9b4f1ec22c0` |
+| UniswapV2Router02 | `0xf360f52139cee546c2e6856f83b3bb8ed6cba04c` |
+| WQF Token | `0x3e0f6253764e624833eac23c4caeff1530070c8b` |
 
 ## Getting Started
 
