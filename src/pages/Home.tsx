@@ -1,13 +1,15 @@
 import {
-  Activity,
   ArrowRight,
   BarChart3,
+  Coins,
   Droplets,
   Plus,
   Users,
+  type LucideIcon,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useHomepageMetrics } from '../hooks/useHomepageMetrics'
 import PixelBlast from '../components/ui/PixelBlast'
 import NucleusOrbit from '../components/ui/NucleusOrbit'
 import Typewriter from '../components/ui/Typewriter'
@@ -61,12 +63,13 @@ function useScrollVar() {
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
-const STATS = [
-  { value: 847, suffix: 'M+', prefix: '$', label: 'Total Value Locked', icon: BarChart3 },
-  { value: 124, suffix: 'B+', prefix: '$', label: 'Total Volume', icon: Activity },
-  { value: 156, suffix: '+', prefix: '', label: 'Active Pools', icon: Droplets },
-  { value: 48, suffix: 'K+', prefix: '', label: 'Traders', icon: Users },
-]
+interface HeroStat {
+  value: number
+  suffix: string
+  prefix: string
+  label: string
+  icon: LucideIcon
+}
 
 const PRODUCTS = [
   {
@@ -128,7 +131,7 @@ const FAQS = [
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function StatItem({ stat, active }: { stat: typeof STATS[0]; active: boolean }) {
+function StatItem({ stat, active }: { stat: HeroStat; active: boolean }) {
   const n = useCountUp(stat.value, active)
   const Icon = stat.icon
   return (
@@ -156,6 +159,7 @@ export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const statsRef = useInView(0.2)
   const ctaRef = useInView(0.2)
+  const metrics = useHomepageMetrics()
   useScrollVar()
 
   useEffect(() => {
@@ -168,6 +172,12 @@ export default function Home() {
   const a = (delay: number, name = 'fadeUp') =>
     ready ? `${name} 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s both` : 'none'
   const o = (condition = ready): 0 | undefined => condition ? undefined : 0
+  const stats: HeroStat[] = [
+    { value: metrics.supportedAssets, suffix: '', prefix: '', label: 'Supported Assets', icon: Coins },
+    { value: metrics.totalPairs, suffix: '', prefix: '', label: 'Pairs Created', icon: BarChart3 },
+    { value: metrics.activePools, suffix: '', prefix: '', label: 'Active Pools', icon: Droplets },
+    { value: metrics.traders, suffix: '+', prefix: '', label: 'Traders', icon: Users },
+  ]
 
   return (
     <div className="full-bleed relative -mt-8 -mb-8">
@@ -354,7 +364,7 @@ export default function Home() {
       ════════════════════════════════════════════════════════════════ */}
       <div ref={statsRef.ref} className="border-y border-ncx-border max-w-[1400px] mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-ncx-border">
-          {STATS.map((s, i) => (
+          {stats.map((s, i) => (
             <div
               key={s.label}
               className="ncx-reveal-sm"

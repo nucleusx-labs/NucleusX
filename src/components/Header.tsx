@@ -26,7 +26,7 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full border-b border-ncx-border"
+      className="fixed inset-x-0 top-0 z-50 w-full border-b border-ncx-border"
       style={{ background: 'color-mix(in srgb, var(--ncx-bg) 88%, transparent)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' }}
     >
       <div className="w-full max-w-[1400px] mx-auto flex h-16 items-center justify-between px-4 sm:px-6">

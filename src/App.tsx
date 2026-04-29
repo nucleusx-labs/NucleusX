@@ -28,6 +28,7 @@ function App() {
     <div className="min-h-screen bg-ncx-bg text-ncx-text flex flex-col font-sans relative overflow-x-hidden">
       <div className="ncx-grid-bg" aria-hidden="true" />
       <Header />
+      <div className="h-16 shrink-0" aria-hidden="true" />
       <Toaster />
       <main className="grow w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-8 relative z-[1]">
         <Routes>

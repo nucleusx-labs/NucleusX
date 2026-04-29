@@ -1,7 +1,7 @@
 import { useAtom, useSelector } from '@xstate/store/react'
 import { ArrowDown, Loader2, Settings } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { selectedAccount } from '../hooks/useConnect'
+import { openConnectModal, selectedAccount } from '../hooks/useConnect'
 import { useSwap } from '../hooks/useSwap'
 import { useTokenBalances } from '../hooks/useTokenBalances'
 import SettingsModal from './SettingsModal'
@@ -86,6 +86,10 @@ export default function SwapForm() {
   }
 
   const handleSwap = () => {
+    if (!account) {
+      openConnectModal()
+      return
+    }
     if (!payToken || !receiveToken || !payAmount) return
     clearError()
     swap()
@@ -114,13 +118,13 @@ export default function SwapForm() {
 
   const isProcessing = isCheckingAllowance || isApproving || isSwapping
   const canSwap
-    = !!account
-    && !!payToken
+    = !!payToken
     && !!receiveToken
     && !!payAmount
     && !!quote
     && !isProcessing
     && !hasInsufficientBalance
+  const isSwapDisabled = !!account && !canSwap
 
   function getButtonLabel() {
     if (!account) return 'Connect Wallet'
@@ -270,7 +274,7 @@ export default function SwapForm() {
       {/* ── CTA ── */}
       <button
         onClick={handleSwap}
-        disabled={!canSwap}
+        disabled={isSwapDisabled}
         className="btn-ncx btn-ncx-primary w-full mt-3.5"
         style={{ padding: '0.95rem 1.25rem', fontSize: '0.9375rem' }}
       >

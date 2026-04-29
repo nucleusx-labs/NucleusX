@@ -5,9 +5,9 @@ import { ERC20_ABI, PAIR_ABI, TOKENS } from './contracts'
 import { callContract, decodeContractResult, encodeContractCall } from './revive'
 
 export const ZERO_SS58 = '5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM'
-const ETH_RPC_URL = 'https://archive.mainnet.qfnode.net/eth'
+export const ETH_RPC_URL = 'https://archive.mainnet.qfnode.net/eth'
 
-const ethRpcClient = createPublicClient({
+export const ethRpcClient = createPublicClient({
   transport: http(ETH_RPC_URL),
 })
 

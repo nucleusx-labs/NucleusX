@@ -23,8 +23,17 @@ function removeStorage(key: string) {
 
 export const selectedAccount: Atom<WalletAccount | null> = createAtom(getStorage(storageAccount))
 export const connectedWallet: Atom<Wallet | null> = createAtom(getStorage(storageWallet))
+export const isConnectModalOpen: Atom<boolean> = createAtom(false)
 const listAccounts: Atom<WalletAccount[]> = createAtom([])
 const isConnecting: Atom<string | null> = createAtom(null)
+
+export function openConnectModal() {
+  isConnectModalOpen.set(true)
+}
+
+export function closeConnectModal() {
+  isConnectModalOpen.set(false)
+}
 
 export function useConnect() {
   const wallets = getWallets()
@@ -75,6 +84,7 @@ export function useConnect() {
     listAccounts: useAtom(listAccounts),
     selectedAccount: useAtom(selectedAccount),
     connectedWallet: useAtom(connectedWallet),
+    isConnectModalOpen: useAtom(isConnectModalOpen),
     isConnecting: useAtom(isConnecting),
     wallets,
     installedWallets,
@@ -84,5 +94,7 @@ export function useConnect() {
     connect,
     disconnect,
     selectAccount,
+    openConnectModal,
+    closeConnectModal,
   }
 }

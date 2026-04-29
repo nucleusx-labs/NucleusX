@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Wallet, X, ChevronRight, Check, Download, LogOut } from 'lucide-react'
 import { useConnect } from '../hooks/useConnect'
 import type { Wallet as WalletType, WalletAccount } from '@talismn/connect-wallets'
@@ -11,23 +11,24 @@ export default function Connect() {
     listAccounts,
     selectedAccount,
     connectedWallet,
+    isConnectModalOpen,
     isConnecting,
     installedWallets,
     availableWallets,
     connect,
     selectAccount,
     disconnect,
+    openConnectModal,
+    closeConnectModal,
   } = useConnect()
 
   function handleSelectAccount(account: WalletAccount) {
     if (account) {
       selectAccount(account)
-      modalRef.current?.close()
+      closeConnectModal()
     }
   }
 
-  function openConnectModal() { modalRef.current?.showModal() }
-  function closeConnectModal() { modalRef.current?.close() }
   function toggleOtherWallets() { setShowOtherWallets(!showOtherWallets) }
   function isWalletConnected(wallet: WalletType) { return connectedWallet?.extensionName === wallet.extensionName }
   function isAccountSelected(account: WalletAccount) { return selectedAccount?.address === account.address }
@@ -36,6 +37,19 @@ export default function Connect() {
     if (!address) return ''
     return `${address.slice(0, length)}…${address.slice(-length)}`
   }
+
+  useEffect(() => {
+    const dialog = modalRef.current
+    if (!dialog) return
+
+    if (isConnectModalOpen && !dialog.open) {
+      dialog.showModal()
+    }
+
+    if (!isConnectModalOpen && dialog.open) {
+      dialog.close()
+    }
+  }, [isConnectModalOpen])
 
   return (
     <>
@@ -83,6 +97,7 @@ export default function Connect() {
 
       <dialog
         ref={modalRef}
+        onClose={closeConnectModal}
         className="modal modal-bottom sm:modal-middle"
         style={{ background: 'transparent', padding: 0 }}
       >
