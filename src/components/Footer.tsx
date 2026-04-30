@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import BrandMark from './BrandMark'
 
-const REPO_URL = 'https://github.com/nucleusx-labs/NucleusX'
 const X_URL = 'https://x.com/nucleusxtr'
 const TELEGRAM_URL = 'https://t.me/nucleusxtrade'
 
@@ -17,7 +16,6 @@ const resourceLinks = [
 ]
 
 const communityLinks = [
-  { label: 'GitHub', href: REPO_URL },
   { label: 'X', href: X_URL },
   { label: 'Telegram', href: TELEGRAM_URL },
 ]

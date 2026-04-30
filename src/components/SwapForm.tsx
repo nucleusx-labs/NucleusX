@@ -282,16 +282,6 @@ export default function SwapForm() {
         {getButtonLabel()}
       </button>
 
-      {/* ── Error ── */}
-      {error && (
-        <div
-          className="mt-3 p-3 rounded-2xl text-xs"
-          style={{ background: 'var(--ncx-loss-bg)', color: 'var(--ncx-loss)', border: '1px solid color-mix(in srgb, var(--ncx-loss) 30%, transparent)' }}
-        >
-          {error}
-        </div>
-      )}
-
       {/* ── Success ── */}
       {txHash && !isProcessing && (
         <div
