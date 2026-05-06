@@ -3,7 +3,7 @@ import type { Atom } from '@xstate/store'
 import { getWallets } from '@talismn/connect-wallets'
 import { createAtom } from '@xstate/store'
 import { useAtom } from '@xstate/store/react'
-import { DAPP_NAME } from '~/utils/sdk-interface'
+import { DAPP_NAME } from '~/utils/dapp-name'
 
 const storageWallet = 'dapp:wallet'
 const storageAccount = 'dapp:account'

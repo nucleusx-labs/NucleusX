@@ -1,8 +1,8 @@
 import {
   type KeypairType,
   type InjectedAccount,
-  type InjectedExtension,
-  type InjectedPolkadotAccount,
+  type InjectedExtension as PapiInjectedExtension,
+  type InjectedPolkadotAccount as PapiInjectedPolkadotAccount,
   type SignPayload,
   type SignRaw,
   type SignerPayloadJSON,
@@ -41,6 +41,15 @@ interface PjsInjectedExtension {
     get: () => Promise<InjectedAccount[]>
     subscribe: (cb: (accounts: InjectedAccount[]) => void) => () => void
   }
+}
+
+export type InjectedPolkadotAccount = PapiInjectedPolkadotAccount & {
+  pjsSigner: PjsInjectedExtension['signer']
+}
+
+export type InjectedExtension = Omit<PapiInjectedExtension, 'getAccounts' | 'subscribe'> & {
+  getAccounts: () => InjectedPolkadotAccount[]
+  subscribe: (cb: (accounts: InjectedPolkadotAccount[]) => void) => () => void
 }
 
 type MaybeEthereumKeypairType = KeypairType | 'ethereum'
@@ -258,6 +267,7 @@ export const connectInjectedExtension = async (
           signRaw,
           account.type as MaybeEthereumKeypairType | undefined,
         ),
+        pjsSigner: enabledExtension.signer,
       }))
 
   let currentAccounts = toInjectedAccounts(await enabledExtension.accounts.get())
@@ -281,5 +291,3 @@ export const connectInjectedExtension = async (
     },
   }
 }
-
-export type { InjectedExtension, InjectedPolkadotAccount }

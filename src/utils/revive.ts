@@ -2,7 +2,7 @@ import type { Abi, ContractFunctionArgs, ContractFunctionName } from 'viem'
 import type { PolkadotSigner, TypedApi } from 'polkadot-api'
 import { Binary, FixedSizeBinary } from 'polkadot-api'
 import { decodeFunctionResult, encodeFunctionData } from 'viem'
-import { isRetryableSigningError } from './sign-retry'
+import { getQfPolkadotApi, submitTxAndWait } from './polkadot-submit'
 
 /**
  * Revive API types for contract interactions
@@ -38,6 +38,8 @@ export interface ReviveTransactionOptions {
   storageDepositLimit?: bigint
   data: `0x${string}` // Encoded calldata
   signer: PolkadotSigner
+  pjsSigner?: unknown
+  signerAddress?: string
 }
 
 export interface TransactionCallbacks {
@@ -170,18 +172,12 @@ export async function callContract(
  * Uses Revive.call extrinsic
  */
 export async function submitContractTransaction(
-  api: TypedApi<any>,
+  _api: TypedApi<any>,
   options: ReviveTransactionOptions,
   callbacks: TransactionCallbacks,
 ): Promise<() => void> {
-  const { dest, value, gasLimit, storageDepositLimit, data, signer } = options
+  const { dest, value, gasLimit, storageDepositLimit, data, pjsSigner, signerAddress } = options
   const explicitStorageDepositLimit = storageDepositLimit ?? 0n
-
-  const destHex = dest.startsWith('0x') ? dest.slice(2) : dest
-  const destFixed = FixedSizeBinary.fromArray(
-    destHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)),
-  )
-  const inputData = Binary.fromHex(data)
 
   console.log('[Revive] Submitting tx', {
     dest,
@@ -191,105 +187,63 @@ export async function submitContractTransaction(
     data,
   })
 
-  // Build the revive.call extrinsic fresh on each attempt — retries need a
-  // new nonce, block hash, and metadata snapshot, which PAPI handles when
-  // `.signSubmitAndWatch(...)` is re-invoked on a freshly built tx.
-  const buildTx = () => (api.tx.Revive.call as any)({
-    dest: destFixed,
-    value,
-    gas_limit: gasLimit,
-    storage_deposit_limit: explicitStorageDepositLimit,
-    data: inputData,
-  })
-
-  const maxAttempts = 2
-  let attempt = 0
-  let activeUnsub: (() => void) | null = null
   let cancelled = false
-  let settled = false
-  let watchdog: ReturnType<typeof setTimeout> | null = null
 
-  // Some wallets (notably Talisman) can confirm or reject without the PAPI
-  // subscription ever emitting another event. Without a watchdog the swap UI
-  // would hang indefinitely; 120s is longer than a healthy finalization but
-  // short enough that users aren't left guessing.
-  const WATCHDOG_MS = 120_000
-
-  const cleanup = () => {
-    if (watchdog) {
-      clearTimeout(watchdog)
-      watchdog = null
+  if (!pjsSigner || !signerAddress) {
+    callbacks.onError('QF transaction signing requires the injected wallet signer. Reconnect your QF wallet and retry.')
+    return () => {
+      cancelled = true
     }
-    activeUnsub?.()
-    activeUnsub = null
   }
 
-  const settle = (fn: () => void) => {
-    if (settled) return
-    settled = true
-    cleanup()
-    fn()
-  }
+  callbacks.onBroadcast?.()
 
-  const tryOnce = () => {
-    attempt++
-    const sub = buildTx().signSubmitAndWatch(signer).subscribe({
-      next: (event: any) => {
-        if (settled) return
-        console.log('[Revive] tx event', event)
-        switch (event.type) {
-          case 'txBestBlocksState':
-            if (event.found) {
-              console.log('[Revive] tx in best block, hash:', event.txHash)
-              callbacks.onTxHash?.(event.txHash)
-            }
-            break
-          case 'finalized':
-            if (event.ok === false) {
-              console.error('[Revive] tx finalized with error', event)
-              settle(() => callbacks.onError('Transaction failed on-chain'))
-            }
-            else {
-              console.log('[Revive] tx finalized ok, hash:', event.txHash)
-              settle(() => callbacks.onFinalized())
-            }
-            break
-        }
-      },
-      error: (err: any) => {
-        sub.unsubscribe()
-        activeUnsub = null
-        if (cancelled || settled) return
-        if (attempt < maxAttempts && isRetryableSigningError(err)) {
-          console.warn(
-            `[papi] transient signing failure on attempt ${attempt}/${maxAttempts}; retrying with a fresh payload`,
-            err,
-          )
-          tryOnce()
-          return
-        }
-        console.error('[Revive] tx subscription error:', err)
-        settle(() => callbacks.onError(err instanceof Error ? err.message : 'Unknown error'))
+  try {
+    const pjsApi = await getQfPolkadotApi()
+    let notifiedHash = ''
+    void submitTxAndWait({
+      api: pjsApi,
+      signerAddress,
+      signer: pjsSigner,
+      tx: pjsApi.tx.revive.call(
+        dest,
+        value,
+        gasLimit,
+        explicitStorageDepositLimit,
+        data,
+      ),
+      label: 'Revive.call',
+      timeoutMs: 180_000,
+      onTxHash: (hash) => {
+        if (cancelled || notifiedHash === hash) return
+        notifiedHash = hash
+        console.log('[Revive] tx in block, hash:', hash)
+        callbacks.onTxHash?.(hash)
       },
     })
-    activeUnsub = () => sub.unsubscribe()
+      .then((result) => {
+        if (cancelled) return
+        if (!notifiedHash && result.txHash) {
+          callbacks.onTxHash?.(result.txHash)
+        }
+        console.log('[Revive] tx finalized ok, hash:', result.txHash)
+        callbacks.onFinalized()
+      })
+      .catch((err) => {
+        if (cancelled) return
+        console.error('[Revive] tx error:', err)
+        callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
+      })
   }
-
-  tryOnce()
-
-  watchdog = setTimeout(() => {
-    if (settled) return
-    console.warn(`[Revive] tx watchdog fired after ${WATCHDOG_MS}ms — no terminal event received`)
-    settle(() =>
-      callbacks.onError(
-        'Transaction timed out. Please check your wallet and block explorer before retrying.',
-      ),
-    )
-  }, WATCHDOG_MS)
+  catch (err) {
+    if (!cancelled) {
+      console.error('[Revive] tx setup error:', err)
+      callbacks.onError(err instanceof Error ? err.message : 'Unknown error')
+    }
+  }
 
   return () => {
     cancelled = true
-    cleanup()
   }
 }
 

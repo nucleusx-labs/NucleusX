@@ -6,7 +6,8 @@ import {
 import { Binary, FixedSizeBinary, type PolkadotSigner } from 'polkadot-api'
 import { typedApi } from './client'
 import { ensureMapped } from './map-account'
-import { signAndSubmitWithRetry } from './sign-retry'
+import { polkadotAccount } from './sdk-interface'
+import { getQfPolkadotApi, submitTxAndWait } from './polkadot-submit'
 
 function collectErrorText(input: unknown): string {
   if (input == null) return ''
@@ -92,6 +93,12 @@ export async function contractWrite({
     )
   }
 
+  const injectedAccount = await polkadotAccount(ss58Address)
+  const pjsSigner = injectedAccount?.pjsSigner
+  if (!pjsSigner) {
+    throw new Error('QF contract writes require the injected wallet signer. Reconnect your QF wallet and retry.')
+  }
+
   // 1. Encode calldata
   const calldata = encodeFunctionData({
     abi: abi as Abi,
@@ -103,7 +110,7 @@ export async function contractWrite({
   const inputData = Binary.fromHex(calldata)
 
   // 2. Ensure account mapping
-  await ensureMapped(signer, ss58Address)
+  await ensureMapped(signer, ss58Address, pjsSigner)
 
   // Permissive storage deposit cap — must be supplied to both the dry-run and the
   // actual extrinsic.  When undefined the runtime defaults to 0, which causes any
@@ -199,23 +206,26 @@ export async function contractWrite({
     dryRunStorageDeposit: sd,
   })
 
-  // 4. Submit the transaction. Wrapped in retry to swallow Talisman's
-  // intermittent BadProof — each attempt rebuilds a fresh payload.
-  const result = await signAndSubmitWithRetry<any>(() =>
-    (typedApi as any).tx.Revive.call({
-      dest,
+  // 4. Submit through @polkadot/api, matching the QF scripts. The explicit
+  // withSignedTransaction=false option avoids extension-side metadata hash
+  // payloads that Talisman/SubWallet can sign incorrectly on QF.
+  const pjsApi = await getQfPolkadotApi()
+  const result = await submitTxAndWait({
+    api: pjsApi,
+    signerAddress: ss58Address,
+    signer: pjsSigner,
+    tx: pjsApi.tx.revive.call(
+      address,
       value,
-      gas_limit: gasLimit,
-      storage_deposit_limit: storageDeposit,
-      data: inputData,
-    }).signAndSubmit(signer),
-  )
+      gasLimit,
+      storageDeposit,
+      calldata,
+    ),
+    label: `${functionName} call`,
+    timeoutMs: 180_000,
+  })
 
   console.log('[contractWrite] result', result)
-
-  if (!result.ok) {
-    throw new Error(`Revive.call failed: ${formatDispatchError(result.dispatchError)}`)
-  }
 
   return {
     txHash: result.txHash,

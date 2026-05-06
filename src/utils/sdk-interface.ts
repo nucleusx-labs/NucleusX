@@ -1,8 +1,7 @@
 import { formatValue } from '@polkadot-api/react-components'
 import type { PolkadotSigner } from 'polkadot-api'
-import { Binary } from 'polkadot-api'
-import { name } from '../../package.json'
 import { connectedWallet, selectedAccount } from '../hooks/useConnect'
+import { DAPP_NAME } from './dapp-name'
 import type {
   EstimatedCallResources,
   ReviveCallOptions,
@@ -12,12 +11,10 @@ import type {
 import { callContract, checkAccountMapping, estimateGas, submitContractTransaction } from '../utils/revive'
 import type { Prefix } from '../utils/sdk'
 import sdk from '../utils/sdk'
-import { connectInjectedExtension } from './injected-extensions'
-import { signAndSubmitWithRetry } from './sign-retry'
+import { connectInjectedExtension, type InjectedPolkadotAccount } from './injected-extensions'
+import { getQfPolkadotApi, submitTxAndWait } from './polkadot-submit'
 
-export const DAPP_NAME = name
-
-export async function polkadotSigner(): Promise<PolkadotSigner | undefined> {
+export async function polkadotAccount(address = selectedAccount.get()?.address): Promise<InjectedPolkadotAccount | undefined> {
   const walletName = connectedWallet.get()?.extensionName
   if (!walletName) {
     console.warn('No connected wallet found')
@@ -32,8 +29,13 @@ export async function polkadotSigner(): Promise<PolkadotSigner | undefined> {
   const extension = await connectInjectedExtension(walletName, DAPP_NAME)
   const account = extension
     .getAccounts()
-    .find(acc => acc.address === selectedAccount.get()?.address)
+    .find(acc => acc.address === address)
 
+  return account
+}
+
+export async function polkadotSigner(): Promise<PolkadotSigner | undefined> {
+  const account = await polkadotAccount()
   return account?.polkadotSigner
 }
 
@@ -68,13 +70,22 @@ export async function reviveTransaction(
   options: Omit<ReviveTransactionOptions, 'signer'>,
   callbacks: TransactionCallbacks,
 ): Promise<() => void> {
-  const signer = await polkadotSigner()
-  if (!signer) {
+  const account = await polkadotAccount()
+  if (!account?.polkadotSigner) {
     throw new Error('No signer available')
   }
 
   const { api } = sdk(chainPrefix)
-  return await submitContractTransaction(api, { ...options, signer }, callbacks)
+  return await submitContractTransaction(
+    api,
+    {
+      ...options,
+      signer: account.polkadotSigner,
+      pjsSigner: account.pjsSigner,
+      signerAddress: account.address,
+    },
+    callbacks,
+  )
 }
 
 /**
@@ -143,19 +154,33 @@ export async function createRemarkTransaction(
   chainPrefix: Prefix,
   message: string,
   address = '',
-  signer: PolkadotSigner,
+  _signer: PolkadotSigner,
   callbacks: {
     onTxHash: (hash: string) => void
     onFinalized: () => void
     onError: (error: string) => void
   },
 ) {
-  const { api } = sdk(chainPrefix)
-
   try {
-    const result = await signAndSubmitWithRetry(() => {
-      const remark = Binary.fromText(message)
-      return api.tx.System.remark({ remark }).signAndSubmit(signer)
+    const account = await polkadotAccount(address)
+    if (!account?.pjsSigner) {
+      callbacks.onError('QF transaction signing requires the injected wallet signer. Reconnect your QF wallet and retry.')
+      return
+    }
+
+    const api = await getQfPolkadotApi()
+    let notifiedHash = ''
+    const result = await submitTxAndWait({
+      api,
+      signerAddress: account.address,
+      signer: account.pjsSigner,
+      tx: api.tx.system.remark(message),
+      label: `${chainPrefix} remark`,
+      timeoutMs: 120_000,
+      onTxHash: (hash) => {
+        notifiedHash = hash
+        callbacks.onTxHash(hash)
+      },
     })
 
     if (!result.ok) {
@@ -163,7 +188,9 @@ export async function createRemarkTransaction(
       return
     }
 
-    callbacks.onTxHash(result.txHash)
+    if (!notifiedHash && result.txHash) {
+      callbacks.onTxHash(result.txHash)
+    }
     callbacks.onFinalized()
   }
   catch (err: any) {

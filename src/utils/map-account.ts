@@ -1,6 +1,7 @@
 import type { PolkadotSigner } from 'polkadot-api'
 import sdk from './sdk'
 import { signAndSubmitWithRetry } from './sign-retry'
+import { getQfPolkadotApi, submitTxAndWait } from './polkadot-submit'
 
 const MAPPED_KEY_PREFIX = 'nucleusx:mapped:'
 
@@ -57,7 +58,11 @@ async function isMappedOnChain(ss58Address: string): Promise<boolean> {
  * no-op.  The mapping is required so that EVM contracts can resolve the
  * substrate account's canonical H160 address.
  */
-export async function ensureMapped(signer: PolkadotSigner, ss58Address: string): Promise<void> {
+export async function ensureMapped(
+  signer: PolkadotSigner,
+  ss58Address: string,
+  pjsSigner?: unknown,
+): Promise<void> {
   const { api } = sdk('qf_network')
 
   const cacheKey = `${MAPPED_KEY_PREFIX}${ss58Address}`
@@ -76,15 +81,27 @@ export async function ensureMapped(signer: PolkadotSigner, ss58Address: string):
 
   console.log('[Revive] mapping account', { ss58Address })
   try {
-    const result = await signAndSubmitWithRetry<any>(() =>
-      (api.tx.Revive as any).map_account({}).signAndSubmit(signer),
-    )
-    if (result.ok || isAlreadyMappedDispatchError(result.dispatchError)) {
+    const pjsApi = pjsSigner ? await getQfPolkadotApi() : null
+    const result = pjsSigner
+      ? await submitTxAndWait({
+          api: pjsApi!,
+          signerAddress: ss58Address,
+          signer: pjsSigner,
+          tx: pjsApi!.tx.revive.mapAccount(),
+          label: 'revive.mapAccount',
+          timeoutMs: 120_000,
+        })
+      : await signAndSubmitWithRetry<any>(() =>
+          (api.tx.Revive as any).map_account({}).signAndSubmit(signer),
+        )
+
+    const dispatchError = (result as { dispatchError?: unknown }).dispatchError
+    if (result.ok || isAlreadyMappedDispatchError(dispatchError)) {
       storage?.setItem(cacheKey, 'true')
       console.log('[Revive] account mapped ok')
       return
     }
-    throw new Error(`Revive.map_account failed: ${String(result.dispatchError ?? 'unknown')}`)
+    throw new Error(`Revive.map_account failed: ${String(dispatchError ?? 'unknown')}`)
   }
   catch (err) {
     if (isAlreadyMappedError(err)) {
