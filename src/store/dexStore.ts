@@ -60,12 +60,34 @@ function normalizeAddress(address: string): string {
   return address.toLowerCase()
 }
 
+function normalizeTokenAlias(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 const WHITELISTED_TOKEN_ADDRESSES = new Set(
   INITIAL_TOKEN_LIST.map(token => normalizeAddress(token.address)),
 )
 
+const WHITELISTED_TOKEN_ALIASES = new Map<string, Token>()
+for (const token of INITIAL_TOKEN_LIST) {
+  WHITELISTED_TOKEN_ALIASES.set(normalizeTokenAlias(token.symbol), token)
+  WHITELISTED_TOKEN_ALIASES.set(normalizeTokenAlias(token.name), token)
+}
+
 export function isWhitelistedTokenAddress(address: string): boolean {
   return WHITELISTED_TOKEN_ADDRESSES.has(normalizeAddress(address))
+}
+
+export function getWhitelistedTokenAlias(token: Pick<Token, 'symbol' | 'name' | 'address'>): Token | undefined {
+  const byAddress = INITIAL_TOKEN_LIST.find(candidate =>
+    normalizeAddress(candidate.address) === normalizeAddress(token.address),
+  )
+  if (byAddress) return byAddress
+
+  return (
+    WHITELISTED_TOKEN_ALIASES.get(normalizeTokenAlias(token.symbol))
+    ?? WHITELISTED_TOKEN_ALIASES.get(normalizeTokenAlias(token.name))
+  )
 }
 
 function loadCustomTokens(): Token[] {
@@ -79,7 +101,7 @@ function loadCustomTokens(): Token[] {
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
 
-    return parsed.flatMap((item) => {
+    const loaded = parsed.flatMap((item) => {
       if (!item || typeof item !== 'object') return []
 
       const candidate = item as Partial<Token>
@@ -94,6 +116,7 @@ function loadCustomTokens(): Token[] {
 
       if (!/^0x[a-fA-F0-9]{40}$/.test(candidate.address)) return []
       if (isWhitelistedTokenAddress(candidate.address)) return []
+      if (getWhitelistedTokenAlias(candidate as Token)) return []
 
       return [{
         symbol: candidate.symbol,
@@ -105,6 +128,12 @@ function loadCustomTokens(): Token[] {
         isCustom: true,
       }]
     })
+
+    if (loaded.length !== parsed.length) {
+      storage.setItem(CUSTOM_TOKEN_STORAGE_KEY, JSON.stringify(loaded))
+    }
+
+    return loaded
   }
   catch (err) {
     console.error('[dexStore] Failed to load custom tokens', err)
@@ -127,6 +156,11 @@ function mergeTokenLists(base: Token[], custom: Token[]): Token[] {
   const merged = [...base]
 
   for (const token of custom) {
+    const whitelistedAlias = getWhitelistedTokenAlias(token)
+    if (whitelistedAlias && normalizeAddress(whitelistedAlias.address) !== normalizeAddress(token.address)) {
+      continue
+    }
+
     const exists = merged.some(existing =>
       normalizeAddress(existing.address) === normalizeAddress(token.address),
     )
@@ -192,6 +226,15 @@ export const dexStore = createStore({
     },
 
     'tokenList.add': (ctx, event: { token: Token }) => {
+      const whitelistedAlias = getWhitelistedTokenAlias(event.token)
+      if (whitelistedAlias && normalizeAddress(whitelistedAlias.address) !== normalizeAddress(event.token.address)) {
+        const nextTokenList = ctx.tokenList.filter(token =>
+          normalizeAddress(token.address) !== normalizeAddress(event.token.address),
+        )
+        persistCustomTokens(nextTokenList)
+        return { ...ctx, tokenList: nextTokenList }
+      }
+
       const already = ctx.tokenList.some(
         t => t.address.toLowerCase() === event.token.address.toLowerCase(),
       )

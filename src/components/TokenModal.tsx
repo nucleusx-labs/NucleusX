@@ -2,7 +2,12 @@ import { X, Search, Loader2, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useAtom, useSelector } from '@xstate/store/react'
-import { dexStore, isWhitelistedTokenAddress, selectTokenList } from '../store/dexStore'
+import {
+  dexStore,
+  getWhitelistedTokenAlias,
+  isWhitelistedTokenAddress,
+  selectTokenList,
+} from '../store/dexStore'
 import type { Token } from '../store/dexStore'
 import type { TokenBalance } from '../hooks/useTokenBalances'
 import { fetchTokenMetadata, isHexAddress, ZERO_SS58 } from '../utils/liquidity'
@@ -112,11 +117,18 @@ export default function TokenModal({ isOpen, onClose, onSelectToken, balances, d
   ), [normalizedQuery, tokenList])
 
   function handleSelect(token: Token) {
-    onSelectToken(token)
+    onSelectToken(getWhitelistedTokenAlias(token) ?? token)
     onClose()
   }
 
   function handleAddLocal(token: Token) {
+    const whitelistedAlias = getWhitelistedTokenAlias(token)
+    if (whitelistedAlias) {
+      toast.info(`Using ${whitelistedAlias.symbol}`, whitelistedAlias.address)
+      handleSelect(whitelistedAlias)
+      return
+    }
+
     dexStore.send({ type: 'tokenList.add', token: { ...token, isCustom: true } })
     toast.success(`Added ${token.symbol}`, token.address)
     handleSelect({ ...token, isCustom: true })
