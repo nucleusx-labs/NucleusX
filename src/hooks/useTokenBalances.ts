@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSelector } from '@xstate/store/react'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import { ERC20_ABI } from '../utils/contracts'
-import { dexStore, NATIVE_TOKEN_ADDRESS, selectBalancesVersion } from '../store/dexStore'
+import {
+  dexStore,
+  NATIVE_TOKEN_ADDRESS,
+  selectBalancesVersion,
+  selectBlockNumber,
+} from '../store/dexStore'
 import sdk from '../utils/sdk'
 import type { Address } from 'viem'
 
@@ -31,9 +36,34 @@ export function useTokenBalances(
 ): Map<string, TokenBalance> {
   const [balances, setBalances] = useState<Map<string, TokenBalance>>(new Map())
   const balancesVersion = useSelector(dexStore, selectBalancesVersion)
+  const blockNumber = useSelector(dexStore, selectBlockNumber)
+  const [refreshNonce, setRefreshNonce] = useState(0)
+  const lastSeenVersionRef = useRef(balancesVersion)
+  const lastHandledBlockRef = useRef(blockNumber)
+  const pendingBlockRefreshesRef = useRef(0)
 
   const validAddresses = tokenAddresses.filter((a): a is string => !!a)
   const addressKey = validAddresses.join(',')
+
+  useEffect(() => {
+    if (balancesVersion === lastSeenVersionRef.current) return
+
+    lastSeenVersionRef.current = balancesVersion
+    lastHandledBlockRef.current = blockNumber
+    // QF writes can finalize slightly before the new balances are readable, so
+    // refetch once immediately and again over the next two blocks.
+    pendingBlockRefreshesRef.current = 2
+    setRefreshNonce(value => value + 1)
+  }, [balancesVersion, blockNumber])
+
+  useEffect(() => {
+    if (pendingBlockRefreshesRef.current === 0) return
+    if (blockNumber <= lastHandledBlockRef.current) return
+
+    pendingBlockRefreshesRef.current -= 1
+    lastHandledBlockRef.current = blockNumber
+    setRefreshNonce(value => value + 1)
+  }, [blockNumber])
 
   useEffect(() => {
     if (validAddresses.length === 0) return
@@ -106,7 +136,7 @@ export function useTokenBalances(
 
     fetchBalances()
     return () => { cancelled = true }
-  }, [evmAddress, addressKey, ss58Origin, balancesVersion])
+  }, [evmAddress, addressKey, ss58Origin, refreshNonce])
 
   return balances
 }

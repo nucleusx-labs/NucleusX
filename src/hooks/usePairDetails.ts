@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Token } from '../store/dexStore'
 import { NATIVE_TOKEN_ADDRESS } from '../store/dexStore'
 import { CONTRACTS, FACTORY_ABI, PAIR_ABI, TOKENS } from '../utils/contracts'
+import { ethRpcClient } from '../utils/liquidity'
 import { callContract, decodeContractResult, encodeContractCall } from '../utils/revive'
 import sdk from '../utils/sdk'
 import { selectedAccount } from './useConnect'
@@ -29,6 +30,47 @@ const EMPTY_DETAILS: PairDetails = {
   isLoading: false,
 }
 
+async function fetchPairDetailsViaEthRpc(addrA: `0x${string}`, addrB: `0x${string}`): Promise<PairDetails> {
+  const pairAddress = await ethRpcClient.readContract({
+    address: CONTRACTS.UniswapV2Factory,
+    abi: FACTORY_ABI,
+    functionName: 'getPair',
+    args: [addrA, addrB],
+  })
+
+  if (!pairAddress || /^0x0+$/.test(pairAddress)) {
+    return EMPTY_DETAILS
+  }
+
+  const [reserves, token0, token1] = await Promise.all([
+    ethRpcClient.readContract({
+      address: pairAddress,
+      abi: PAIR_ABI,
+      functionName: 'getReserves',
+    }),
+    ethRpcClient.readContract({
+      address: pairAddress,
+      abi: PAIR_ABI,
+      functionName: 'token0',
+    }),
+    ethRpcClient.readContract({
+      address: pairAddress,
+      abi: PAIR_ABI,
+      functionName: 'token1',
+    }),
+  ])
+
+  return {
+    pairAddress,
+    token0,
+    token1,
+    reserve0: reserves[0],
+    reserve1: reserves[1],
+    exists: true,
+    isLoading: false,
+  }
+}
+
 export function usePairDetails(tokenA: Token | undefined, tokenB: Token | undefined) {
   const account = useAtom(selectedAccount)
   const [details, setDetails] = useState<PairDetails>(EMPTY_DETAILS)
@@ -39,8 +81,8 @@ export function usePairDetails(tokenA: Token | undefined, tokenB: Token | undefi
       return
     }
 
-    const addrA = tokenA.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenA.address
-    const addrB = tokenB.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenB.address
+    const addrA = (tokenA.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenA.address) as `0x${string}`
+    const addrB = (tokenB.address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase() ? TOKENS.WQF : tokenB.address) as `0x${string}`
 
     if (addrA.toLowerCase() === addrB.toLowerCase()) {
       setDetails(EMPTY_DETAILS)
@@ -68,7 +110,8 @@ export function usePairDetails(tokenA: Token | undefined, tokenB: Token | undefi
 
         const pairAddress = decodeContractResult(FACTORY_ABI, 'getPair', getPairRes.result.ok.data) as string
         if (!pairAddress || /^0x0+$/.test(pairAddress)) {
-          if (!cancelled) setDetails(EMPTY_DETAILS)
+          const fallbackDetails = await fetchPairDetailsViaEthRpc(addrA, addrB)
+          if (!cancelled) setDetails(fallbackDetails)
           return
         }
 
@@ -104,7 +147,14 @@ export function usePairDetails(tokenA: Token | undefined, tokenB: Token | undefi
       }
       catch (err) {
         console.error('[usePairDetails] Error:', err)
-        if (!cancelled) setDetails(EMPTY_DETAILS)
+        try {
+          const fallbackDetails = await fetchPairDetailsViaEthRpc(addrA, addrB)
+          if (!cancelled) setDetails(fallbackDetails)
+        }
+        catch (fallbackErr) {
+          console.error('[usePairDetails] ETH-RPC fallback failed:', fallbackErr)
+          if (!cancelled) setDetails(EMPTY_DETAILS)
+        }
       }
     }
 

@@ -37,7 +37,20 @@ export default function SwapForm() {
     if (wqf) setPayToken(wqf)
   }, [payToken, tokenList])
 
-  const { quote, isQuoting, isCheckingAllowance, isApproving, isSwapping, txHash, error, evmAddress, fetchQuote, swap, clearError } = useSwap()
+  const {
+    quote,
+    isQuoting,
+    isCheckingAllowance,
+    isApproving,
+    isSwapping,
+    isSuccess,
+    txHash,
+    error,
+    evmAddress,
+    fetchQuote,
+    swap,
+    clearError,
+  } = useSwap()
 
   const balances = useTokenBalances(
     evmAddress,
@@ -75,6 +88,12 @@ export default function SwapForm() {
       setReceiveAmount('')
     }
   }, [quote, isQuoting])
+
+  useEffect(() => {
+    if (!isSuccess) return
+    setPayAmount('')
+    setReceiveAmount('')
+  }, [isSuccess])
 
   const handleSwapTokens = () => {
     const tempAmt = payAmount

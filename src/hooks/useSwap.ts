@@ -35,6 +35,10 @@ function isNativeQF(address: string): boolean {
   return address.toLowerCase() === NATIVE_TOKEN_ADDRESS.toLowerCase()
 }
 
+function toPoolTokenAddress(address: string): `0x${string}` {
+  return (isNativeQF(address) ? TOKENS.WQF : address) as `0x${string}`
+}
+
 /**
  * Turn a raw router/pair revert into a user-facing message.
  * Most reverts on pallet-revive come back as opaque strings, so the best we
@@ -115,13 +119,17 @@ export function useSwap(): UseSwapReturn {
           const slippage = settingsRef.current.slippage
           const { api } = sdk('qf_network')
           const origin = accountRef.current?.address ?? ''
+          const quotePath = [
+            toPoolTokenAddress(input.tokenIn.address),
+            toPoolTokenAddress(input.tokenOut.address),
+          ] as const
 
           // Pre-check the pair exists so we can give a precise message instead
           // of the generic "Contract call failed" that the router emits when
           // getAmountsOut hits a non-existent pair.
           const pairCalldata = encodeContractCall(FACTORY_ABI, 'getPair', [
-            input.tokenIn.address,
-            input.tokenOut.address,
+            quotePath[0],
+            quotePath[1],
           ])
           const pairResult = await callContract(api, {
             origin,
@@ -164,7 +172,7 @@ export function useSwap(): UseSwapReturn {
 
           const calldata = encodeContractCall(ROUTER_ABI, 'getAmountsOut', [
             input.amountIn,
-            [input.tokenIn.address, input.tokenOut.address],
+            quotePath,
           ])
           const result = await callContract(api, {
             origin,
@@ -343,16 +351,42 @@ export function useSwap(): UseSwapReturn {
           const deadline = BigInt(
             Math.floor(Date.now() / 1000) + Number.parseInt(settingsRef.current.deadline) * 60,
           )
-          const calldata = encodeContractCall(ROUTER_ABI, 'swapExactTokensForTokens', [
-            input.amountIn,
-            input.amountOutMin,
-            [input.tokenIn.address, input.tokenOut.address],
-            input.evmAddress,
-            deadline,
-          ])
+          const canonicalIn = toPoolTokenAddress(input.tokenIn.address)
+          const canonicalOut = toPoolTokenAddress(input.tokenOut.address)
+          let value = 0n
+          let calldata: `0x${string}`
+
+          if (isNativeQF(input.tokenIn.address)) {
+            value = input.amountIn
+            calldata = encodeContractCall(ROUTER_ABI, 'swapExactETHForTokens', [
+              input.amountOutMin,
+              [TOKENS.WQF, canonicalOut],
+              input.evmAddress,
+              deadline,
+            ])
+          }
+          else if (isNativeQF(input.tokenOut.address)) {
+            calldata = encodeContractCall(ROUTER_ABI, 'swapExactTokensForETH', [
+              input.amountIn,
+              input.amountOutMin,
+              [canonicalIn, TOKENS.WQF],
+              input.evmAddress,
+              deadline,
+            ])
+          }
+          else {
+            calldata = encodeContractCall(ROUTER_ABI, 'swapExactTokensForTokens', [
+              input.amountIn,
+              input.amountOutMin,
+              [canonicalIn, canonicalOut],
+              input.evmAddress,
+              deadline,
+            ])
+          }
+
           const gas = await reviveEstimateGas('qf_network', {
             dest: CONTRACTS.UniswapV2Router02,
-            value: 0n,
+            value,
             calldata,
           }).catch(() => ({
             gasConsumed: { ref_time: 500_000n, proof_size: 10_000n },
@@ -373,7 +407,7 @@ export function useSwap(): UseSwapReturn {
               'qf_network',
               {
                 dest: CONTRACTS.UniswapV2Router02,
-                value: 0n,
+                value,
                 gasLimit,
                 storageDepositLimit: gas.storageDepositLimit,
                 data: calldata,

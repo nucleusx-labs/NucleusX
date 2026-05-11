@@ -307,6 +307,17 @@ export const swapMachine = setup({
         4000: { target: 'idle', actions: 'clearAll' },
       },
       on: {
+        QUOTE: {
+          target: 'quoting',
+          actions: {
+            type: 'assignTokensAndAmount',
+            params: ({ event }) => ({
+              tokenIn: event.tokenIn,
+              tokenOut: event.tokenOut,
+              amountIn: event.amountIn,
+            }),
+          },
+        },
         RESET: { target: 'idle', actions: 'clearAll' },
       },
     },
